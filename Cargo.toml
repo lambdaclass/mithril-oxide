@@ -7,4 +7,5 @@ members = [
     "crates/mulir",
     "crates/mulir-sys",
     "crates/mulir-sys-codegen",
+    "crates/mulir-sys-proc",
 ]
