@@ -1,0 +1,10 @@
+[workspace]
+default-members = [
+    "crates/mulir",
+    "crates/mulir-sys",
+]
+members = [
+    "crates/mulir",
+    "crates/mulir-sys",
+    "crates/mulir-sys-codegen",
+]
