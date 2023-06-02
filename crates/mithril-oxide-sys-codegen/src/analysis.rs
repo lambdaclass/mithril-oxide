@@ -25,7 +25,6 @@ pub fn load_cpp<'a>(index: &'a Index<'a>, source_code: &str) -> TranslationUnit<
             "-I/usr/include/x86_64-linux-gnu",
             "-I/usr/include",
             "-I/usr/lib/llvm-16/include",
-
             // Edgar's flags.
             "-std=c++17",
             "-I/usr/include/x86_64-pc-linux-gnu",
@@ -124,31 +123,82 @@ pub fn analyze_cpp<'a>(
 }
 
 fn find_struct<'a>(entity: &Entity<'a>, path: &str) -> Option<Entity<'a>> {
-    let mut result = None;
-    entity.visit_children(|entity, _| match entity.get_kind() {
-        EntityKind::ClassDecl | EntityKind::StructDecl
-            if entity.get_type().unwrap().get_display_name() == path =>
-        {
-            result = Some(entity);
-            EntityVisitResult::Break
-        }
-        _ => EntityVisitResult::Recurse,
-    });
+    fn inner<'a>(entity: &Entity<'a>, path: &[&str]) -> Option<Entity<'a>> {
+        let mut result = None;
+        entity.visit_children(|entity, _| {
+            let name_matches = entity.get_name().as_deref() == Some(path[0]);
+            if path.len() == 1 {
+                let kind_matches = matches!(
+                    entity.get_kind(),
+                    EntityKind::ClassDecl | EntityKind::StructDecl
+                );
 
-    result
+                if kind_matches && name_matches {
+                    result = Some(entity);
+                }
+            } else {
+                let kind_matches = matches!(
+                    entity.get_kind(),
+                    EntityKind::ClassDecl | EntityKind::StructDecl | EntityKind::Namespace
+                );
+
+                if kind_matches && name_matches {
+                    result = inner(&entity, &path[1..]);
+                }
+            }
+
+            if result.is_some() {
+                EntityVisitResult::Break
+            } else {
+                EntityVisitResult::Continue
+            }
+        });
+
+        result
+    }
+
+    let path = path.split("::").collect::<Vec<_>>();
+    assert!(!path.is_empty());
+
+    inner(entity, &path)
 }
 
 fn find_enum<'a>(entity: &Entity<'a>, path: &str) -> Option<Entity<'a>> {
-    let mut result = None;
-    entity.visit_children(|entity, _| match entity.get_kind() {
-        EntityKind::EnumDecl if entity.get_type().unwrap().get_display_name() == path => {
-            result = Some(entity);
-            EntityVisitResult::Break
-        }
-        _ => EntityVisitResult::Recurse,
-    });
+    fn inner<'a>(entity: &Entity<'a>, path: &[&str]) -> Option<Entity<'a>> {
+        let mut result = None;
+        entity.visit_children(|entity, _| {
+            let name_matches = entity.get_name().as_deref() == Some(path[0]);
+            if path.len() == 1 {
+                let kind_matches = matches!(entity.get_kind(), EntityKind::EnumDecl);
 
-    result
+                if kind_matches && name_matches {
+                    result = Some(entity);
+                }
+            } else {
+                let kind_matches = matches!(
+                    entity.get_kind(),
+                    EntityKind::ClassDecl | EntityKind::StructDecl | EntityKind::Namespace
+                );
+
+                if kind_matches && name_matches {
+                    result = inner(&entity, &path[1..]);
+                }
+            }
+
+            if result.is_some() {
+                EntityVisitResult::Break
+            } else {
+                EntityVisitResult::Continue
+            }
+        });
+
+        result
+    }
+
+    let path = path.split("::").collect::<Vec<_>>();
+    assert!(!path.is_empty());
+
+    inner(entity, &path)
 }
 
 fn find_variant<'a>(entity: &Entity<'a>, name: &str) -> Option<Entity<'a>> {
