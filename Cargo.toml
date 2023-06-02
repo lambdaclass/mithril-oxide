@@ -1,8 +1,8 @@
 [workspace]
 resolver = "2"
 members = [
-    "crates/mulir",
-    "crates/mulir-sys",
-    "crates/mulir-sys-codegen",
-    "crates/mulir-sys-proc",
+    "crates/mithril-oxide",
+    "crates/mithril-oxide-sys",
+    "crates/mithril-oxide-sys-codegen",
+    "crates/mithril-oxide-sys-proc",
 ]

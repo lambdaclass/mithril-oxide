@@ -1,5 +1,5 @@
 [package]
-name = "mulir-sys-proc"
+name = "mithril-oxide-sys-proc"
 version = "0.1.0"
 edition = "2021"
 

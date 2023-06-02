@@ -1,4 +1,4 @@
-use mulir_sys_proc::codegen;
+use mithril_oxide_sys_proc::codegen;
 
 #[codegen]
 pub mod ffi {
