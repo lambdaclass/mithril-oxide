@@ -1,3 +1,6 @@
+#![allow(dead_code)]
+#![allow(unused)]
+
 use analysis::{analyze_cpp, load_cpp};
 use clang::{Clang, Index};
 use codegen::{codegen_cpp, codegen_rust};

@@ -1,6 +1,6 @@
 use crate::request::{
-    RequestConstructor, RequestEnum, RequestItem, RequestMethod, RequestMethodImpl, RequestMod,
-    RequestStruct,
+    RequestConstructor, RequestEnum, RequestFunction, RequestItem, RequestMethod,
+    RequestMethodImpl, RequestMod, RequestStruct,
 };
 use clang::{Entity, EntityKind, EntityVisitResult, Index, TranslationUnit, Type, TypeKind};
 use std::{collections::HashMap, fs};
@@ -90,7 +90,13 @@ pub fn analyze_cpp<'a>(
                     MappedItem::Enum(syn_enum.clone(), clang_enum),
                 )
             }
-            // RequestItem::Function(...) => ...,
+            RequestItem::Function(syn_func) => {
+                let clang_func = find_function(&entity, syn_func).unwrap();
+                (
+                    dbg!(syn_func.name.clone()),
+                    MappedItem::Function(syn_func.clone(), dbg!(clang_func)),
+                )
+            }
         })
         .collect::<HashMap<_, _>>();
 
@@ -129,11 +135,64 @@ pub fn analyze_cpp<'a>(
                     MappedItemWithWithMethods::Enum(syn_enum, clang_enum, variants),
                 )
             }
-            // MappedItem::Function(...) => ...,
+            MappedItem::Function(syn_func, clang_func) => {
+                todo!()
+            }
         })
         .collect::<HashMap<_, _>>();
 
     mappings
+}
+
+fn find_function2<'a>(entity: &Entity<'a>, path: &str) -> Option<Entity<'a>> {
+    let mut result = None;
+    entity.visit_children(|entity, _| match entity.get_kind() {
+        EntityKind::FunctionDecl if entity.get_display_name().unwrap() == path => {
+            result = Some(entity);
+            EntityVisitResult::Break
+        }
+        _ => EntityVisitResult::Recurse,
+    });
+
+    dbg!(result)
+}
+
+fn find_function<'a>(entity: &Entity<'a>, request: &RequestFunction) -> Option<Entity<'a>> {
+    let mut result = None;
+    entity.visit_children(|entity, _| {
+        match entity.get_kind() {
+            EntityKind::FunctionDecl if entity.get_name().unwrap() == request.cxx_ident => {
+                let ty = entity.get_type().unwrap();
+
+                let ret_matches = match &request.ret {
+                    ReturnType::Default => {
+                        ty.get_result_type().unwrap().get_kind() == TypeKind::Void
+                    }
+                    ReturnType::Type(_, syn_arg) => {
+                        type_matches(syn_arg, &ty.get_result_type().unwrap())
+                    }
+                };
+                let args_match = entity
+                    .get_type()
+                    .unwrap()
+                    .get_argument_types()
+                    .unwrap()
+                    .iter()
+                    .zip(&request.args)
+                    .all(|(clang_arg, (_, syn_arg))| type_matches(syn_arg, clang_arg));
+
+                if ret_matches && args_match {
+                    result = dbg!(Some(entity));
+                    return EntityVisitResult::Break;
+                }
+            }
+            _ => {}
+        }
+
+        EntityVisitResult::Recurse
+    });
+
+    result
 }
 
 fn find_struct<'a>(entity: &Entity<'a>, path: &str) -> Option<Entity<'a>> {
@@ -311,6 +370,10 @@ fn type_matches(syn_arg: &syn::Type, clang_arg: &Type) -> bool {
                 )
                 .unwrap()
         }
+        TypeKind::Void => syn_arg == &syn::parse_quote!(()),
+        TypeKind::LValueReference => {
+            todo!("IMPLEMENT THIS, should match &MLIRContext")
+        }
         x => todo!("type {x:?} not implemented"),
     }
 }
@@ -319,12 +382,12 @@ fn type_matches(syn_arg: &syn::Type, clang_arg: &Type) -> bool {
 pub enum MappedItem<'a> {
     Struct(RequestStruct, Entity<'a>),
     Enum(RequestEnum, Entity<'a>),
-    // Function(...),
+    Function(RequestFunction, Entity<'a>),
 }
 
 #[derive(Debug)]
 pub enum MappedItemWithWithMethods<'a> {
     Struct(RequestStruct, Entity<'a>, Vec<Entity<'a>>),
     Enum(RequestEnum, Entity<'a>, Vec<Entity<'a>>),
-    // Function(...),
+    Function(RequestFunction, Entity<'a>, Vec<Entity<'a>>),
 }
