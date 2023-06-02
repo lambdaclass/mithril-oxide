@@ -1,12 +1,12 @@
-use mulir_sys::ffi::Threading;
+use mithril_oxide_sys::ffi::{MlirContext, Threading};
 
 fn main() {
-    let mut context = unsafe { mulir_sys::ffi::MlirContext::new(Threading::DISABLED) };
+    let mut context = unsafe { MlirContext::new(Threading::DISABLED) };
     println!("MLIR context is multithreaded? {}", unsafe {
         context.isMultithreadingEnabled()
     });
 
-    let mut context = unsafe { mulir_sys::ffi::MlirContext::new(Threading::ENABLED) };
+    let mut context = unsafe { MlirContext::new(Threading::ENABLED) };
     println!("MLIR context is multithreaded? {}", unsafe {
         context.isMultithreadingEnabled()
     });

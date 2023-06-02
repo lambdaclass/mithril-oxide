@@ -14,7 +14,7 @@ pub fn codegen(attr: pm::TokenStream, input: pm::TokenStream) -> pm::TokenStream
 fn codegen_impl(attr: pm2::TokenStream, input: pm2::TokenStream) -> pm2::TokenStream {
     assert!(attr.is_empty());
 
-    let mut process = Command::new("/home/esteve/Documents/LambdaClass/mulir/target/debug/mulir-sys-codegen")
+    let mut process = Command::new("/home/esteve/Documents/LambdaClass/mulir/target/debug/mithril-oxide-sys-codegen")
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .spawn()
