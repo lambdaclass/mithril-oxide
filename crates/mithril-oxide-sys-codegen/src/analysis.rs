@@ -90,6 +90,7 @@ pub fn analyze_cpp<'a>(
                     MappedItem::Enum(syn_enum.clone(), clang_enum),
                 )
             }
+            // RequestItem::Function(...) => ...,
         })
         .collect::<HashMap<_, _>>();
 
@@ -128,6 +129,7 @@ pub fn analyze_cpp<'a>(
                     MappedItemWithWithMethods::Enum(syn_enum, clang_enum, variants),
                 )
             }
+            // MappedItem::Function(...) => ...,
         })
         .collect::<HashMap<_, _>>();
 
@@ -317,10 +319,12 @@ fn type_matches(syn_arg: &syn::Type, clang_arg: &Type) -> bool {
 pub enum MappedItem<'a> {
     Struct(RequestStruct, Entity<'a>),
     Enum(RequestEnum, Entity<'a>),
+    // Function(...),
 }
 
 #[derive(Debug)]
 pub enum MappedItemWithWithMethods<'a> {
     Struct(RequestStruct, Entity<'a>, Vec<Entity<'a>>),
     Enum(RequestEnum, Entity<'a>, Vec<Entity<'a>>),
+    // Function(...),
 }

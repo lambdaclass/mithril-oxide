@@ -10,6 +10,7 @@ pub struct RequestMod {
 pub enum RequestItem {
     Struct(RequestStruct),
     Enum(RequestEnum),
+    // Function(),
 }
 
 #[derive(Clone, Debug)]
@@ -30,6 +31,10 @@ pub struct RequestEnum {
 
     pub variants: Vec<String>,
 }
+
+// #[derive(Clone, Debug)]
+// pub struct RequestFunction {
+// }
 
 #[derive(Clone, Debug)]
 pub enum RequestStructKind {

@@ -31,6 +31,7 @@ pub fn codegen_rust(mappings: &HashMap<String, MappedItemWithWithMethods>) -> To
             MappedItemWithWithMethods::Enum(request, decl, variants) => {
                 codegen_enum(request, decl, variants)
             }
+            // MappedItemWithWithMethods::Function(...) => ...,
         });
     }
 
