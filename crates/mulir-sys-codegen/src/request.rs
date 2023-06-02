@@ -1,4 +1,4 @@
-use syn::{ReturnType, Type, Pat};
+use syn::{ReturnType, Type, Pat, Visibility};
 
 #[derive(Debug)]
 pub struct RequestMod {
@@ -17,6 +17,7 @@ pub struct RequestStruct {
     pub name: String,
     pub path: String,
     pub kind: RequestStructKind,
+    pub vis: Visibility,
 
     pub items: Vec<RequestMethodImpl>,
 }
@@ -25,6 +26,7 @@ pub struct RequestStruct {
 pub struct RequestEnum {
     pub name: String,
     pub path: String,
+    pub vis: Visibility,
 
     pub variants: Vec<String>,
 }
@@ -60,12 +62,14 @@ pub enum RequestMethodImpl {
 #[derive(Clone, Debug)]
 pub struct RequestConstructor {
     pub name: String,
+    pub vis: Visibility,
     pub args: Vec<(Pat, Type)>,
 }
 
 #[derive(Clone, Debug)]
 pub struct RequestMethod {
     pub name: String,
+    pub vis: Visibility,
     pub args: Vec<(Option<Pat>, Type)>,
     pub ret: ReturnType,
 }

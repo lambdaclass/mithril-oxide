@@ -71,6 +71,7 @@ fn parse_struct(
         name: item.ident.to_string(),
         path: item.ident.to_string(),
         kind: RequestStructKind::OpaqueUnsized,
+        vis: item.vis,
         items: Vec::new(),
     };
 
@@ -130,6 +131,7 @@ fn parse_enum(parent: &mut RequestMod, item: ItemEnum) -> Result<(), Box<dyn std
     let mut target = RequestEnum {
         name: item.ident.to_string(),
         path: item.ident.to_string(),
+        vis: item.vis,
         variants: Vec::new(),
     };
 
@@ -219,6 +221,7 @@ fn parse_impl(
             });
             target.push(RequestMethodImpl::Constructor(RequestConstructor {
                 name: item.sig.ident.to_string(),
+                vis: item.vis,
                 args: item
                     .sig
                     .inputs
@@ -232,6 +235,7 @@ fn parse_impl(
         } else {
             target.push(RequestMethodImpl::Method(RequestMethod {
                 name: item.sig.ident.to_string(),
+                vis: item.vis,
                 args: item
                     .sig
                     .inputs

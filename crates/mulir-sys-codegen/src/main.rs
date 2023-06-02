@@ -31,6 +31,7 @@ fn codegen_impl(input: TokenStream) -> TokenStream {
     // TODO: Parse macro input into bindings to generate.
     let item_mod = syn::parse2::<ItemMod>(input).unwrap();
     let mod_name = item_mod.ident.clone();
+    let mod_vis = item_mod.vis.clone();
     let request = parse::parse_macro_input(item_mod).unwrap();
 
     // TODO: Generate C++ source file.
@@ -44,7 +45,7 @@ fn codegen_impl(input: TokenStream) -> TokenStream {
     let stream = codegen_rust(&mappings);
 
     quote! {
-        mod #mod_name {
+        #mod_vis mod #mod_name {
             #stream
         }
     }

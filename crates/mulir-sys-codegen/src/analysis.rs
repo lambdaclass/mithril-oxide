@@ -222,7 +222,21 @@ fn find_method<'a>(entity: &Entity<'a>, request: &RequestMethod) -> Option<Entit
 fn type_matches(syn_arg: &syn::Type, clang_arg: &Type) -> bool {
     match clang_arg.get_kind() {
         TypeKind::Bool => syn_arg == &syn::parse_quote!(bool),
-        _ => todo!(),
+        TypeKind::Elaborated => type_matches(syn_arg, &clang_arg.get_elaborated_type().unwrap()),
+        TypeKind::Enum => {
+            // TODO: Investigate potential bug when there's a naming collision between
+            //   clang_arg.get_display_name() and syn_arg.
+            syn_arg
+                == &syn::parse_str(
+                    &clang_arg
+                        .get_declaration()
+                        .unwrap()
+                        .get_display_name()
+                        .unwrap(),
+                )
+                .unwrap()
+        }
+        x => todo!("type {x:?} not implemented"),
     }
 }
 

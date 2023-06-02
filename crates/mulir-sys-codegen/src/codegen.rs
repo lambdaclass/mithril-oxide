@@ -44,12 +44,14 @@ fn codegen_struct(request: &RequestStruct, decl: &Entity, methods: &[Entity]) ->
         RequestStructKind::OpaqueUnsized => todo!(),
         RequestStructKind::OpaqueSized => {
             let ty = decl.get_type().unwrap();
+            let vis = &request.vis;
+
             let align = LitInt::new(&format!("{}", ty.get_alignof().unwrap()), Span::call_site());
             let size = LitInt::new(&format!("{}", ty.get_sizeof().unwrap()), Span::call_site());
 
             quote! {
                 #[repr(C, align(#align))]
-                pub struct #type_name {
+                #vis struct #type_name {
                     data: [u8; #size],
                     phantom: ::std::marker::PhantomData<::std::marker::PhantomPinned>,
                 }
@@ -66,6 +68,7 @@ fn codegen_struct(request: &RequestStruct, decl: &Entity, methods: &[Entity]) ->
         .map(|(method_decl, method)| match method_decl {
             RequestMethodImpl::Constructor(request) => {
                 let name = format_ident!("{}", request.name);
+                let vis = &request.vis;
                 let args = request
                     .args
                     .iter()
@@ -92,7 +95,7 @@ fn codegen_struct(request: &RequestStruct, decl: &Entity, methods: &[Entity]) ->
                     }
 
                     impl #type_name {
-                        unsafe fn #name(#args) -> Self {
+                        #vis unsafe fn #name(#args) -> Self {
                             let mut this = std::mem::MaybeUninit::<#type_name>::uninit();
                             #mangled_name(this.as_mut_ptr(), #args_fw);
                             this.assume_init()
@@ -102,6 +105,7 @@ fn codegen_struct(request: &RequestStruct, decl: &Entity, methods: &[Entity]) ->
             }
             RequestMethodImpl::Method(request) => {
                 let name = format_ident!("{}", request.name);
+                let vis = &request.vis;
                 let args = request
                     .args
                     .iter()
@@ -144,7 +148,7 @@ fn codegen_struct(request: &RequestStruct, decl: &Entity, methods: &[Entity]) ->
                     }
 
                     impl #type_name {
-                        unsafe fn #name(#self_arg, #args) #ret_ty {
+                        #vis unsafe fn #name(#self_arg, #args) #ret_ty {
                             #mangled_name(#self_fw, #args_fw)
                         }
                     }
@@ -163,6 +167,7 @@ fn codegen_enum(request: &RequestEnum, decl: &Entity, variants: &[Entity]) -> To
     let underlying_type = decl.get_enum_underlying_type().unwrap();
 
     let name = format_ident!("{}", request.name);
+    let vis = &request.vis;
     let ty = codegen_type(&underlying_type);
 
     let variants = variants
@@ -189,7 +194,7 @@ fn codegen_enum(request: &RequestEnum, decl: &Entity, variants: &[Entity]) -> To
 
     quote! {
         #[repr(#ty)]
-        pub enum #name {
+        #vis enum #name {
             #variants
         }
     }

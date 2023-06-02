@@ -1,7 +1,7 @@
 use mulir_sys_proc::codegen;
 
 #[codegen]
-mod ffi {
+pub mod ffi {
     #![codegen(include = "mlir/IR/MLIRContext.h")]
 
     #[codegen(cxx_path = "mlir::MLIRContext::Threading")]
@@ -15,7 +15,7 @@ mod ffi {
 
     impl MlirContext {
         #[codegen(constructor)]
-        pub fn new() -> Self;
+        pub fn new(threading: Threading) -> Self;
 
         pub fn isMultithreadingEnabled(&mut self) -> bool;
     }
