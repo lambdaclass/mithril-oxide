@@ -7,7 +7,8 @@ edition = "2021"
 proc-macro = true
 
 [dependencies]
-clang = "2.0.0"
+clang = { version = "2.0.0", features = ["clang_10_0"] }
 proc-macro2 = "1.0.58"
 quote = "1.0.27"
 syn = { version = "2.0.16", features = ["extra-traits", "full"] }
+tempfile = "3.5.0"

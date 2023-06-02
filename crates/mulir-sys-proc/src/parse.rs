@@ -1,12 +1,12 @@
 //! Rust macro input parsing.
 
 use crate::request::{
-    RequestConstructor, RequestItem, RequestMethod, RequestMethodImpl, RequestMod, RequestStruct,
-    RequestStructKind,
+    RequestConstructor, RequestEnum, RequestItem, RequestMethod, RequestMethodImpl, RequestMod,
+    RequestStruct, RequestStructKind,
 };
 use syn::{
-    punctuated::Punctuated, Fields, ForeignItemFn, ItemImpl, ItemMod, ItemStruct, MetaNameValue,
-    Token, Type,
+    punctuated::Punctuated, Fields, ForeignItemFn, ItemEnum, ItemImpl, ItemMod, ItemStruct,
+    MetaNameValue, Token, Type,
 };
 
 pub fn parse_macro_input(input: ItemMod) -> Result<RequestMod, Box<dyn std::error::Error>> {
@@ -41,7 +41,7 @@ pub fn parse_macro_input(input: ItemMod) -> Result<RequestMod, Box<dyn std::erro
     for item in content {
         match item {
             syn::Item::Const(_) => todo!(),
-            syn::Item::Enum(_) => todo!(),
+            syn::Item::Enum(x) => parse_enum(&mut target, x)?,
             syn::Item::ExternCrate(_) => todo!(),
             syn::Item::Fn(_) => todo!(),
             syn::Item::ForeignMod(_) => todo!(),
@@ -126,6 +126,47 @@ fn parse_struct(
     Ok(())
 }
 
+fn parse_enum(parent: &mut RequestMod, item: ItemEnum) -> Result<(), Box<dyn std::error::Error>> {
+    let mut target = RequestEnum {
+        name: item.ident.to_string(),
+        path: item.ident.to_string(),
+        variants: Vec::new(),
+    };
+
+    for attr in &item.attrs {
+        if attr.path().is_ident("codegen") {
+            let items: Punctuated<MetaNameValue, Token![,]> = attr
+                .parse_args_with(Punctuated::parse_separated_nonempty)
+                .unwrap();
+            for item in items {
+                match () {
+                    _ if item.path.is_ident("cxx_path") => {
+                        target.path = match item.value {
+                            syn::Expr::Lit(x) => match x.lit {
+                                syn::Lit::Str(x) => x.value(),
+                                _ => panic!(),
+                            },
+                            _ => panic!(),
+                        };
+                    }
+                    _ => panic!("{:?}", item.path),
+                }
+            }
+        } else {
+            // TODO: Support forwarding other attributes.
+            panic!();
+        }
+    }
+
+    for variant in item.variants {
+        assert_eq!(variant.fields, Fields::Unit);
+        target.variants.push(variant.ident.to_string());
+    }
+
+    parent.items.push(RequestItem::Enum(target));
+    Ok(())
+}
+
 fn parse_impl(
     parent: &mut RequestMod,
     root_item: ItemImpl,
@@ -184,7 +225,7 @@ fn parse_impl(
                     .into_iter()
                     .map(|x| match x {
                         syn::FnArg::Receiver(_) => panic!(),
-                        syn::FnArg::Typed(x) => *x.ty,
+                        syn::FnArg::Typed(x) => (*x.pat, *x.ty),
                     })
                     .collect(),
             }));
@@ -200,9 +241,9 @@ fn parse_impl(
                         syn::FnArg::Receiver(_x) => {
                             assert_eq!(i, 0);
                             // assert_eq!(*x.ty, syn::parse_quote!(&mut self));
-                            (*root_item.self_ty).clone()
+                            (None, (*root_item.self_ty).clone())
                         }
-                        syn::FnArg::Typed(x) => (*x.ty).clone(),
+                        syn::FnArg::Typed(x) => (Some((*x.pat).clone()), (*x.ty).clone()),
                     })
                     .collect(),
                 ret: item.sig.output,
@@ -215,6 +256,7 @@ fn parse_impl(
         .iter_mut()
         .find_map(|x| match x {
             RequestItem::Struct(x) => (x.name == self_ty).then_some(x),
+            _ => None,
         })
         .unwrap();
     parent.items.extend(target.into_iter());

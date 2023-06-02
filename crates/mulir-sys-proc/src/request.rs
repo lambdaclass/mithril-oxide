@@ -1,4 +1,4 @@
-use syn::{Type, ReturnType};
+use syn::{ReturnType, Type, Pat};
 
 #[derive(Debug)]
 pub struct RequestMod {
@@ -9,9 +9,10 @@ pub struct RequestMod {
 #[derive(Debug)]
 pub enum RequestItem {
     Struct(RequestStruct),
+    Enum(RequestEnum),
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct RequestStruct {
     pub name: String,
     pub path: String,
@@ -20,7 +21,15 @@ pub struct RequestStruct {
     pub items: Vec<RequestMethodImpl>,
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
+pub struct RequestEnum {
+    pub name: String,
+    pub path: String,
+
+    pub variants: Vec<String>,
+}
+
+#[derive(Clone, Debug)]
 pub enum RequestStructKind {
     OpaqueUnsized,
     OpaqueSized,
@@ -42,21 +51,21 @@ impl TryFrom<&str> for RequestStructKind {
     }
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub enum RequestMethodImpl {
     Constructor(RequestConstructor),
     Method(RequestMethod),
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct RequestConstructor {
     pub name: String,
-    pub args: Vec<Type>,
+    pub args: Vec<(Pat, Type)>,
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct RequestMethod {
     pub name: String,
-    pub args: Vec<Type>,
+    pub args: Vec<(Option<Pat>, Type)>,
     pub ret: ReturnType,
 }

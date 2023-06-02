@@ -4,3 +4,4 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+mulir-sys-proc = { path = "../mulir-sys-proc" }
