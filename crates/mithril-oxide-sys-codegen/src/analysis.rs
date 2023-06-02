@@ -15,6 +15,7 @@ pub fn load_cpp<'a>(index: &'a Index<'a>, source_code: &str) -> TranslationUnit<
     let translation_unit = index
         .parser(path)
         .arguments(&[
+            // Esteve's flags.
             "-D__cplusplus=201703L",
             "-I/usr/bin/../lib/gcc/x86_64-linux-gnu/12/../../../../include/c++/12",
             "-I/usr/bin/../lib/gcc/x86_64-linux-gnu/12/../../../../include/x86_64-linux-gnu/c++/12",
@@ -24,6 +25,16 @@ pub fn load_cpp<'a>(index: &'a Index<'a>, source_code: &str) -> TranslationUnit<
             "-I/usr/include/x86_64-linux-gnu",
             "-I/usr/include",
             "-I/usr/lib/llvm-16/include",
+
+            // Edgar's flags.
+            "-std=c++17",
+            "-I/usr/include/x86_64-pc-linux-gnu",
+            "-I/usr/lib/gcc/x86_64-pc-linux-gnu/12/include",
+            "-I/usr/lib/gcc/x86_64-pc-linux-gnu/12/include/g++-v12",
+            "-I/usr/local/include",
+            "-I/usr/include",
+            "-I/home/edgar/data/work/cairo_sierra_2_MLIR/llvm/dist/lib/clang/16/include",
+            "-I/home/edgar/data/work/cairo_sierra_2_MLIR/llvm/dist/include",
         ])
         .skip_function_bodies(true)
         .parse()

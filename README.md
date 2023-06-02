@@ -11,6 +11,8 @@ Rust bindings to MLIR via the C++ API.
     generation).
   - `mithril-oxide-sys-proc`: Automated binding generation (via proc macros).
 
+> Note: The actual code generation needs to be a separate process because Clang's LLVM would
+    otherwise collide with Rust's LLVM making the compiler crash.
 
 ## Compilation instructions
 
@@ -40,3 +42,14 @@ cargo build
 # Run an example (or not).
 cargo run --example hello
 ```
+
+
+## Stuff to do
+
+  - Design the Rusty API.
+
+  - Remove hardcoded paths.
+  - Improve development experience.
+  - Proper error handling for the code generation.
+  - Autodetect `Clone`, `Copy` and `Pin` requirements.
+  - Implement `Debug` for the generated types.

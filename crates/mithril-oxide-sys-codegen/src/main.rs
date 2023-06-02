@@ -28,20 +28,20 @@ fn codegen_impl(input: TokenStream) -> TokenStream {
     let clang = Clang::new().unwrap();
     let index = Index::new(&clang, true, true);
 
-    // TODO: Parse macro input into bindings to generate.
+    // Parse macro input into bindings to generate.
     let item_mod = syn::parse2::<ItemMod>(input).unwrap();
     let mod_name = item_mod.ident.clone();
     let mod_vis = item_mod.vis.clone();
     let request = parse::parse_macro_input(item_mod).unwrap();
 
-    // TODO: Generate C++ source file.
+    // Generate C++ source file.
     let cpp_source = codegen_cpp(&request);
     let translation_unit = load_cpp(&index, &cpp_source);
 
-    // TODO: Parse C++ source file.
+    // Parse C++ source file.
     let mappings = analyze_cpp(&translation_unit, &request);
 
-    // TODO: Generate Rust bindings.
+    // Generate Rust bindings.
     let stream = codegen_rust(&mappings);
 
     quote! {
