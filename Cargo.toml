@@ -1,10 +1,5 @@
 [workspace]
 resolver = "2"
-
-default-members = [
-    "crates/mulir",
-    "crates/mulir-sys",
-]
 members = [
     "crates/mulir",
     "crates/mulir-sys",

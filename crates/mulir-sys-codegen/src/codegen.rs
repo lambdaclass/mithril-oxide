@@ -88,17 +88,14 @@ fn codegen_struct(request: &RequestStruct, decl: &Entity, methods: &[Entity]) ->
                 // TODO: Handle different binding kinds.
                 quote! {
                     extern #calling_convention {
-                        fn #mangled_name(this: *mut #name, #args);
+                        fn #mangled_name(this: *mut #type_name, #args);
                     }
 
                     impl #type_name {
-                        fn #name(#args) -> Self {
-                            let this = Self {
-                                data: unsafe { ::std::mem::uninitialized() },
-                                phantom: PhantomData,
-                            };
-                            #mangled_name(&mut this as *mut _, #args_fw);
-                            this
+                        unsafe fn #name(#args) -> Self {
+                            let mut this = std::mem::MaybeUninit::<#type_name>::uninit();
+                            #mangled_name(this.as_mut_ptr(), #args_fw);
+                            this.assume_init()
                         }
                     }
                 }
@@ -125,13 +122,13 @@ fn codegen_struct(request: &RequestStruct, decl: &Entity, methods: &[Entity]) ->
                     (
                         quote!(&self),
                         quote!(self as *const _),
-                        quote!(*const #name),
+                        quote!(*const #type_name),
                     )
                 } else {
                     (
                         quote!(&mut self),
                         quote!(self as *mut _),
-                        quote!(*mut #name),
+                        quote!(*mut #type_name),
                     )
                 };
 
@@ -147,7 +144,7 @@ fn codegen_struct(request: &RequestStruct, decl: &Entity, methods: &[Entity]) ->
                     }
 
                     impl #type_name {
-                        fn #name(#self_arg, #args) #ret_ty {
+                        unsafe fn #name(#self_arg, #args) #ret_ty {
                             #mangled_name(#self_fw, #args_fw)
                         }
                     }
