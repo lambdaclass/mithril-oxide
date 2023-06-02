@@ -1,0 +1,8 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/mithril-oxide",
+    "crates/mithril-oxide-sys",
+    "crates/mithril-oxide-sys-codegen",
+    "crates/mithril-oxide-sys-proc",
+]

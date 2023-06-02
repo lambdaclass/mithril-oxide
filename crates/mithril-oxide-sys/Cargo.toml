@@ -1,0 +1,7 @@
+[package]
+name = "mithril-oxide-sys"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+mithril-oxide-sys-proc = { path = "../mithril-oxide-sys-proc" }
