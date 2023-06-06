@@ -34,6 +34,18 @@ pub fn load_cpp<'a>(index: &'a Index<'a>, source_code: &str) -> TranslationUnit<
             "-I/usr/include",
             "-I/home/edgar/data/work/cairo_sierra_2_MLIR/llvm/dist/lib/clang/16/include",
             "-I/home/edgar/data/work/cairo_sierra_2_MLIR/llvm/dist/include",
+            // Mac OS
+            // "-D__cplusplus=1",
+            // "-D_LIBCPP_STD_VER=17",
+            "-isysroot",
+            "-I/usr/local/include",
+            "-I/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1",
+            "-I/Library/Developer/CommandLineTools/usr/lib/clang/14.0.3/include",
+            "-I/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include",
+            "-I/Library/Developer/CommandLineTools/usr/include",
+            "-I/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks",
+            "-I/opt/homebrew/Cellar/llvm/16.0.4/include",
+            "-I/opt/homebrew/Cellar/llvm/16.0.4/lib/clang/16/include",
         ])
         .skip_function_bodies(true)
         .parse()
