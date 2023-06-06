@@ -75,7 +75,12 @@ fn codegen_struct(request: &RequestStruct, decl: &Entity, methods: &[Entity]) ->
                     .map(|(pat, ty)| quote!(#pat: #ty,))
                     .collect::<TokenStream>();
 
-                let mangled_name = format_ident!("{}", method.get_mangled_name().unwrap());
+                let mangled_name = match method.get_mangled_name().unwrap() {
+                    x if x.starts_with('_') => {
+                        format_ident!("{}", x.strip_prefix('_').unwrap())
+                    }
+                    x => format_ident!("{}", x),
+                };
                 let args_fw = request
                     .args
                     .iter()
@@ -113,7 +118,12 @@ fn codegen_struct(request: &RequestStruct, decl: &Entity, methods: &[Entity]) ->
                     .map(|(pat, ty)| quote!(#pat: #ty,))
                     .collect::<TokenStream>();
 
-                let mangled_name = format_ident!("{}", method.get_mangled_name().unwrap());
+                let mangled_name = match method.get_mangled_name().unwrap() {
+                    x if x.starts_with('_') => {
+                        format_ident!("{}", x.strip_prefix('_').unwrap())
+                    }
+                    x => format_ident!("{}", x),
+                };
                 let args_fw = request
                     .args
                     .iter()
