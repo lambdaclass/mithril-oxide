@@ -4,7 +4,7 @@ use crate::request::{
 };
 use clang::{Entity, EntityKind, EntityVisitResult, Index, TranslationUnit, Type, TypeKind};
 use std::{collections::HashMap, fs};
-use syn::{ReturnType};
+use syn::ReturnType;
 use tempfile::tempdir;
 
 pub fn load_cpp<'a>(index: &'a Index<'a>, source_code: &str) -> TranslationUnit<'a> {
@@ -91,10 +91,11 @@ pub fn analyze_cpp<'a>(
                 )
             }
             RequestItem::Function(syn_func) => {
-                let clang_func = find_function(&entity, syn_func).unwrap();
+                let clang_func = find_function(&entity, syn_func)
+                    .expect(&format!("couldn't find matching function: {:?}", syn_func));
                 (
-                    dbg!(syn_func.name.clone()),
-                    MappedItem::Function(syn_func.clone(), dbg!(clang_func)),
+                    syn_func.name.clone(),
+                    MappedItem::Function(syn_func.clone(), clang_func),
                 )
             }
         })
@@ -135,24 +136,12 @@ pub fn analyze_cpp<'a>(
                     MappedItemWithWithMethods::Enum(syn_enum, clang_enum, variants),
                 )
             }
-            MappedItem::Function(syn_func, clang_func) => {
-                todo!()
-            }
+            MappedItem::Function(syn_func, clang_func) => (
+                name,
+                MappedItemWithWithMethods::Function(syn_func, clang_func, vec![]),
+            ),
         })
         .collect::<HashMap<_, _>>()
-}
-
-fn find_function2<'a>(entity: &Entity<'a>, path: &str) -> Option<Entity<'a>> {
-    let mut result = None;
-    entity.visit_children(|entity, _| match entity.get_kind() {
-        EntityKind::FunctionDecl if entity.get_display_name().unwrap() == path => {
-            result = Some(entity);
-            EntityVisitResult::Break
-        }
-        _ => EntityVisitResult::Recurse,
-    });
-
-    dbg!(result)
 }
 
 fn find_function<'a>(entity: &Entity<'a>, request: &RequestFunction) -> Option<Entity<'a>> {
@@ -161,7 +150,6 @@ fn find_function<'a>(entity: &Entity<'a>, request: &RequestFunction) -> Option<E
         match entity.get_kind() {
             EntityKind::FunctionDecl if entity.get_name().unwrap() == request.cxx_ident => {
                 let ty = entity.get_type().unwrap();
-
                 let ret_matches = match &request.ret {
                     ReturnType::Default => {
                         ty.get_result_type().unwrap().get_kind() == TypeKind::Void
@@ -180,7 +168,7 @@ fn find_function<'a>(entity: &Entity<'a>, request: &RequestFunction) -> Option<E
                     .all(|(clang_arg, (_, syn_arg))| type_matches(syn_arg, clang_arg));
 
                 if ret_matches && args_match {
-                    result = dbg!(Some(entity));
+                    result = Some(entity);
                     return EntityVisitResult::Break;
                 }
             }
@@ -372,20 +360,17 @@ fn type_matches(syn_arg: &syn::Type, clang_arg: &Type) -> bool {
         TypeKind::LValueReference => {
             if let syn::Type::Reference(type_ref) = syn_arg {
                 let is_mut = type_ref.mutability.is_some();
-                if is_mut == !clang_arg.is_const_qualified() {
-
+                if is_mut != clang_arg.is_const_qualified() {
+                    let name = clang_arg.get_display_name();
+                    let clang_name = name.strip_suffix("&").unwrap().trim();
                     if let syn::Type::Path(p) = &*type_ref.elem {
-                        p.path.is_ident(clang_arg.);
+                        if p.path.is_ident(&clang_name) {
+                            return true;
+                        }
                     }
                 }
-
-
-                dbg!(type_ref);
-            } else {
-                panic!("syn type should be a reference of a clang lvalue reference!");
             }
-            dbg!(syn_arg);
-            todo!("IMPLEMENT THIS, should match &MLIRContext")
+            false
         }
         x => todo!("type {x:?} not implemented"),
     }

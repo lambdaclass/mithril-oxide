@@ -14,9 +14,9 @@ pub mod ffi {
     }
 
     #[codegen(cxx_path = "mlir::MLIRContext", kind = "opaque-sized")]
-    pub struct MlirContext;
+    pub struct MLIRContext;
 
-    impl MlirContext {
+    impl MLIRContext {
         #[codegen(constructor)]
         pub fn new(threading: Threading) -> Self;
 
@@ -24,5 +24,5 @@ pub mod ffi {
     }
 
     #[codegen(cxx_ident = "registerAllDialects")]
-    pub fn register_all_dialects(context: &mut MlirContext) -> bool {}
+    pub fn register_all_dialects(context: &mut MLIRContext) {}
 }
