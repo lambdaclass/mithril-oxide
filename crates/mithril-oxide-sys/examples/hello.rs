@@ -1,4 +1,4 @@
-use mithril_oxide_sys::ffi::{register_all_dialects, MLIRContext, Threading};
+use mithril_oxide_sys::ffi::{DialectRegistry, MLIRContext, Threading};
 
 fn main() {
     let mut context = unsafe { MLIRContext::new(Threading::DISABLED) };
@@ -10,8 +10,10 @@ fn main() {
     println!("MLIR context is multithreaded? {}", unsafe {
         context.isMultithreadingEnabled()
     });
+
+    let registry = unsafe { DialectRegistry::new() };
     unsafe {
-        register_all_dialects(&mut context);
-        println!("all dialects registered")
+        //register_all_dialects(&mut context);
+        //println!("all dialects registered")
     };
 }

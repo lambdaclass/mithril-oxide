@@ -6,6 +6,7 @@ use mithril_oxide_sys_proc::codegen;
 pub mod ffi {
     #![codegen(include = "mlir/IR/MLIRContext.h")]
     #![codegen(include = "mlir/InitAllDialects.h")]
+    #![codegen(include = "mlir/IR/DialectRegistry.h")]
 
     #[codegen(cxx_path = "mlir::MLIRContext::Threading")]
     pub enum Threading {
@@ -23,6 +24,14 @@ pub mod ffi {
         pub fn isMultithreadingEnabled(&mut self) -> bool;
     }
 
-    #[codegen(cxx_ident = "registerAllDialects")]
-    pub fn register_all_dialects(context: &mut MLIRContext) {}
+    #[codegen(cxx_path = "mlir::DialectRegistry", kind = "opaque-sized")]
+    pub struct DialectRegistry;
+
+    impl DialectRegistry {
+        #[codegen(constructor)]
+        pub fn new() -> Self;
+    }
+
+    //#[codegen(cxx_ident = "registerAllDialects")]
+    //pub fn register_all_dialects(context: &mut MLIRContext) {}
 }

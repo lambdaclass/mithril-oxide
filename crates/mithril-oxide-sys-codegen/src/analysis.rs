@@ -192,7 +192,7 @@ fn find_struct<'a>(entity: &Entity<'a>, path: &str) -> Option<Entity<'a>> {
                     EntityKind::ClassDecl | EntityKind::StructDecl
                 );
 
-                if kind_matches && name_matches {
+                if kind_matches && name_matches && entity.is_definition() {
                     result = Some(entity);
                 }
             } else {
@@ -201,7 +201,7 @@ fn find_struct<'a>(entity: &Entity<'a>, path: &str) -> Option<Entity<'a>> {
                     EntityKind::ClassDecl | EntityKind::StructDecl | EntityKind::Namespace
                 );
 
-                if kind_matches && name_matches {
+                if kind_matches && name_matches && entity.is_definition() {
                     result = inner(&entity, &path[1..]);
                 }
             }
@@ -275,6 +275,7 @@ fn find_variant<'a>(entity: &Entity<'a>, name: &str) -> Option<Entity<'a>> {
 
 fn find_constructor<'a>(entity: &Entity<'a>, request: &RequestConstructor) -> Option<Entity<'a>> {
     let mut result = None;
+
     entity.visit_children(|entity, _| {
         match entity.get_kind() {
             EntityKind::Constructor => {
