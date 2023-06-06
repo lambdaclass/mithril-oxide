@@ -114,7 +114,8 @@ pub fn analyze_cpp<'a>(
                             find_constructor(&clang_struct, syn_method).unwrap()
                         }
                         RequestMethodImpl::Method(syn_method) => {
-                            find_method(&clang_struct, syn_method).unwrap()
+                            find_method(&clang_struct, syn_method)
+                                .expect(&format!("couldn't find method for {:?}", syn_method))
                         }
                     })
                     .collect::<Vec<_>>();
@@ -302,9 +303,9 @@ fn find_constructor<'a>(entity: &Entity<'a>, request: &RequestConstructor) -> Op
     result
 }
 
-fn find_method<'a>(entity: &Entity<'a>, request: &RequestMethod) -> Option<Entity<'a>> {
+fn find_method<'a>(struct_entity: &Entity<'a>, request: &RequestMethod) -> Option<Entity<'a>> {
     let mut result = None;
-    entity.visit_children(|entity, _| {
+    struct_entity.visit_children(|entity, _| {
         match entity.get_kind() {
             EntityKind::Method if entity.get_name().unwrap() == request.name => {
                 let ty = entity.get_type().unwrap();
@@ -323,7 +324,7 @@ fn find_method<'a>(entity: &Entity<'a>, request: &RequestMethod) -> Option<Entit
                     .get_argument_types()
                     .unwrap()
                     .iter()
-                    .zip(&request.args)
+                    .zip(request.args.iter().skip(1)) // skip self on the rust side. todo: check self is correct?
                     .all(|(clang_arg, (_, syn_arg))| type_matches(syn_arg, clang_arg));
 
                 if ret_matches && args_match {
@@ -372,6 +373,32 @@ fn type_matches(syn_arg: &syn::Type, clang_arg: &Type) -> bool {
                 }
             }
             false
+        }
+        TypeKind::UInt => {
+            if let syn::Type::Path(p) = syn_arg {
+                match clang_arg.get_sizeof().unwrap() {
+                    1 => p.path.is_ident("u8"),
+                    2 => p.path.is_ident("u16"),
+                    4 => p.path.is_ident("u32"),
+                    8 => p.path.is_ident("u64"),
+                    _ => unreachable!(),
+                }
+            } else {
+                false
+            }
+        }
+        TypeKind::Int => {
+            if let syn::Type::Path(p) = syn_arg {
+                match clang_arg.get_sizeof().unwrap() {
+                    1 => p.path.is_ident("i8"),
+                    2 => p.path.is_ident("i16"),
+                    4 => p.path.is_ident("i32"),
+                    8 => p.path.is_ident("i64"),
+                    _ => unreachable!(),
+                }
+            } else {
+                false
+            }
         }
         x => todo!("type {x:?} not implemented"),
     }
