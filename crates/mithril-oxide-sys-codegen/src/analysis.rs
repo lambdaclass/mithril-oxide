@@ -4,7 +4,7 @@ use crate::request::{
 };
 use clang::{Entity, EntityKind, EntityVisitResult, Index, TranslationUnit, Type, TypeKind};
 use std::{collections::HashMap, fs};
-use syn::ReturnType;
+use syn::{ReturnType};
 use tempfile::tempdir;
 
 pub fn load_cpp<'a>(index: &'a Index<'a>, source_code: &str) -> TranslationUnit<'a> {
@@ -44,8 +44,8 @@ pub fn load_cpp<'a>(index: &'a Index<'a>, source_code: &str) -> TranslationUnit<
             "-I/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include",
             "-I/Library/Developer/CommandLineTools/usr/include",
             "-I/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks",
-            "-I/opt/homebrew/Cellar/llvm/16.0.4/include",
-            "-I/opt/homebrew/Cellar/llvm/16.0.4/lib/clang/16/include",
+            "-I/opt/homebrew/opt/llvm@16/include",
+            "-I/opt/homebrew/opt/llvm@16/lib/clang/16/include",
         ])
         .skip_function_bodies(true)
         .parse()
@@ -101,7 +101,7 @@ pub fn analyze_cpp<'a>(
         .collect::<HashMap<_, _>>();
 
     // Find mappings from syn methods to clang ones.
-    let mappings = mappings
+    mappings
         .into_iter()
         .map(|(name, mapped_item)| match mapped_item {
             MappedItem::Struct(syn_struct, clang_struct) => {
@@ -139,9 +139,7 @@ pub fn analyze_cpp<'a>(
                 todo!()
             }
         })
-        .collect::<HashMap<_, _>>();
-
-    mappings
+        .collect::<HashMap<_, _>>()
 }
 
 fn find_function2<'a>(entity: &Entity<'a>, path: &str) -> Option<Entity<'a>> {
@@ -372,6 +370,21 @@ fn type_matches(syn_arg: &syn::Type, clang_arg: &Type) -> bool {
         }
         TypeKind::Void => syn_arg == &syn::parse_quote!(()),
         TypeKind::LValueReference => {
+            if let syn::Type::Reference(type_ref) = syn_arg {
+                let is_mut = type_ref.mutability.is_some();
+                if is_mut == !clang_arg.is_const_qualified() {
+
+                    if let syn::Type::Path(p) = &*type_ref.elem {
+                        p.path.is_ident(clang_arg.);
+                    }
+                }
+
+
+                dbg!(type_ref);
+            } else {
+                panic!("syn type should be a reference of a clang lvalue reference!");
+            }
+            dbg!(syn_arg);
             todo!("IMPLEMENT THIS, should match &MLIRContext")
         }
         x => todo!("type {x:?} not implemented"),
