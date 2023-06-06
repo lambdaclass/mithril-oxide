@@ -1,3 +1,6 @@
+#![allow(dead_code)]
+#![allow(unused)]
+
 pub use self::context::Context;
 
 pub mod attributes;
