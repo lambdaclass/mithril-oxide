@@ -51,6 +51,21 @@ pub mod ffi {
         pub fn isF128(&self) -> bool;
 
         pub fn isInteger(&self, width: u32) -> bool;
+        pub fn isSignlessInteger(&self) -> bool;
+        // pub fn isSignlessInteger(&self, width: u32) -> bool;
+        pub fn isUnsignedInteger(&self) -> bool;
+        // pub fn isUnsignedInteger(&self, width: u32) -> bool;
+        pub fn getIntOrFloatBitWidth() -> u32;
+
+        pub fn isSignlessIntOrIndex(&self) -> bool;
+        pub fn isSignlessIntOrIndexOrFloat(&self) -> bool;
+        pub fn isSignlessIntOrFloat(&self) -> bool;
+
+        pub fn isIntOrIndex(&self) -> bool;
+        pub fn isIntOrFloat(&self) -> bool;
+        pub fn isIntOrIndexOrFloat(&self) -> bool;
+
+        pub fn dump(&self);
     }
 
     //#[codegen(cxx_ident = "registerAllDialects")]
