@@ -91,6 +91,18 @@ pub mod ffi {
         pub fn dump(&self);
     }
 
+    #[codegen(cxx_path = "mlir::Block", kind = "opaque-sized")]
+    pub struct Block;
+
+    impl Block {
+        pub fn dump(&self);
+    }
+
+    #[codegen(cxx_path = "mlir::Region", kind = "opaque-sized")]
+    pub struct Region;
+
+    impl Region {}
+
     #[codegen(cxx_path = "mlir::Builder", kind = "opaque-sized")]
     pub struct Builder;
 
