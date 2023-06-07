@@ -1,6 +1,9 @@
 use crate::{
     analysis::MappedItemWithWithMethods,
-    request::{RequestEnum, RequestMethodImpl, RequestMod, RequestStruct, RequestStructKind},
+    request::{
+        RequestEnum, RequestFunction, RequestMethodImpl, RequestMod, RequestStruct,
+        RequestStructKind,
+    },
 };
 use clang::{CallingConvention, Entity, Type, TypeKind};
 use proc_macro2::{Span, TokenStream};
@@ -31,6 +34,7 @@ pub fn codegen_rust(mappings: &HashMap<String, MappedItemWithWithMethods>) -> To
             MappedItemWithWithMethods::Enum(request, decl, variants) => {
                 codegen_enum(request, decl, variants)
             }
+            MappedItemWithWithMethods::Function(request, decl, _) => codegen_func(request, decl),
         });
     }
 
@@ -76,6 +80,7 @@ fn codegen_struct(request: &RequestStruct, decl: &Entity, methods: &[Entity]) ->
                     .collect::<TokenStream>();
 
                 let mangled_name = match method.get_mangled_name().unwrap() {
+                    #[cfg(target_os = "macos")]
                     x if x.starts_with('_') => {
                         format_ident!("{}", x.strip_prefix('_').unwrap())
                     }
@@ -119,6 +124,7 @@ fn codegen_struct(request: &RequestStruct, decl: &Entity, methods: &[Entity]) ->
                     .collect::<TokenStream>();
 
                 let mangled_name = match method.get_mangled_name().unwrap() {
+                    #[cfg(target_os = "macos")]
                     x if x.starts_with('_') => {
                         format_ident!("{}", x.strip_prefix('_').unwrap())
                     }
@@ -214,5 +220,45 @@ fn codegen_type(ty: &Type) -> TokenStream {
     match ty.get_kind() {
         TypeKind::Int => quote!(i32),
         _ => todo!(),
+    }
+}
+
+fn codegen_func(request: &RequestFunction, decl: &Entity) -> TokenStream {
+    let name = format_ident!("{}", request.name);
+    let vis = &request.vis;
+    let args = request
+        .args
+        .iter()
+        .map(|(pat, ty)| quote!(#pat: #ty,))
+        .collect::<TokenStream>();
+
+    let mangled_name = match decl.get_mangled_name().unwrap() {
+        #[cfg(target_os = "macos")]
+        x if x.starts_with('_') => {
+            format_ident!("{}", x.strip_prefix('_').unwrap())
+        }
+        x => format_ident!("{}", x),
+    };
+    let args_fw = request
+        .args
+        .iter()
+        .map(|(pat, _)| quote!(#pat,))
+        .collect::<TokenStream>();
+
+    let ret_ty = &request.ret;
+
+    let calling_convention = match decl.get_type().unwrap().get_calling_convention().unwrap() {
+        CallingConvention::Cdecl => "C",
+        _ => panic!(),
+    };
+
+    quote! {
+        extern #calling_convention {
+            fn #mangled_name(#args) #ret_ty;
+        }
+
+        #vis unsafe fn #name(#args) #ret_ty {
+            #mangled_name(#args_fw)
+        }
     }
 }

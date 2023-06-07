@@ -1,6 +1,6 @@
 use crate::request::{
-    RequestConstructor, RequestEnum, RequestItem, RequestMethod, RequestMethodImpl, RequestMod,
-    RequestStruct,
+    RequestConstructor, RequestEnum, RequestFunction, RequestItem, RequestMethod,
+    RequestMethodImpl, RequestMod, RequestStruct,
 };
 use clang::{Entity, EntityKind, EntityVisitResult, Index, TranslationUnit, Type, TypeKind};
 use std::{collections::HashMap, fs};
@@ -44,8 +44,8 @@ pub fn load_cpp<'a>(index: &'a Index<'a>, source_code: &str) -> TranslationUnit<
             "-I/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include",
             "-I/Library/Developer/CommandLineTools/usr/include",
             "-I/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks",
-            "-I/opt/homebrew/Cellar/llvm/16.0.4/include",
-            "-I/opt/homebrew/Cellar/llvm/16.0.4/lib/clang/16/include",
+            "-I/opt/homebrew/opt/llvm@16/include",
+            "-I/opt/homebrew/opt/llvm@16/lib/clang/16/include",
         ])
         .skip_function_bodies(true)
         .parse()
@@ -90,11 +90,19 @@ pub fn analyze_cpp<'a>(
                     MappedItem::Enum(syn_enum.clone(), clang_enum),
                 )
             }
+            RequestItem::Function(syn_func) => {
+                let clang_func = find_function(&entity, syn_func)
+                    .expect(&format!("couldn't find matching function: {:?}", syn_func));
+                (
+                    syn_func.name.clone(),
+                    MappedItem::Function(syn_func.clone(), clang_func),
+                )
+            }
         })
         .collect::<HashMap<_, _>>();
 
     // Find mappings from syn methods to clang ones.
-    let mappings = mappings
+    mappings
         .into_iter()
         .map(|(name, mapped_item)| match mapped_item {
             MappedItem::Struct(syn_struct, clang_struct) => {
@@ -106,7 +114,8 @@ pub fn analyze_cpp<'a>(
                             find_constructor(&clang_struct, syn_method).unwrap()
                         }
                         RequestMethodImpl::Method(syn_method) => {
-                            find_method(&clang_struct, syn_method).unwrap()
+                            find_method(&clang_struct, syn_method)
+                                .expect(&format!("couldn't find method for {:?}", syn_method))
                         }
                     })
                     .collect::<Vec<_>>();
@@ -128,10 +137,49 @@ pub fn analyze_cpp<'a>(
                     MappedItemWithWithMethods::Enum(syn_enum, clang_enum, variants),
                 )
             }
+            MappedItem::Function(syn_func, clang_func) => (
+                name,
+                MappedItemWithWithMethods::Function(syn_func, clang_func, vec![]),
+            ),
         })
-        .collect::<HashMap<_, _>>();
+        .collect::<HashMap<_, _>>()
+}
 
-    mappings
+fn find_function<'a>(entity: &Entity<'a>, request: &RequestFunction) -> Option<Entity<'a>> {
+    let mut result = None;
+    entity.visit_children(|entity, _| {
+        match entity.get_kind() {
+            EntityKind::FunctionDecl if entity.get_name().unwrap() == request.cxx_ident => {
+                let ty = entity.get_type().unwrap();
+                let ret_matches = match &request.ret {
+                    ReturnType::Default => {
+                        ty.get_result_type().unwrap().get_kind() == TypeKind::Void
+                    }
+                    ReturnType::Type(_, syn_arg) => {
+                        type_matches(syn_arg, &ty.get_result_type().unwrap())
+                    }
+                };
+                let args_match = entity
+                    .get_type()
+                    .unwrap()
+                    .get_argument_types()
+                    .unwrap()
+                    .iter()
+                    .zip(&request.args)
+                    .all(|(clang_arg, (_, syn_arg))| type_matches(syn_arg, clang_arg));
+
+                if ret_matches && args_match {
+                    result = Some(entity);
+                    return EntityVisitResult::Break;
+                }
+            }
+            _ => {}
+        }
+
+        EntityVisitResult::Recurse
+    });
+
+    result
 }
 
 fn find_struct<'a>(entity: &Entity<'a>, path: &str) -> Option<Entity<'a>> {
@@ -145,7 +193,7 @@ fn find_struct<'a>(entity: &Entity<'a>, path: &str) -> Option<Entity<'a>> {
                     EntityKind::ClassDecl | EntityKind::StructDecl
                 );
 
-                if kind_matches && name_matches {
+                if kind_matches && name_matches && entity.is_definition() {
                     result = Some(entity);
                 }
             } else {
@@ -154,7 +202,7 @@ fn find_struct<'a>(entity: &Entity<'a>, path: &str) -> Option<Entity<'a>> {
                     EntityKind::ClassDecl | EntityKind::StructDecl | EntityKind::Namespace
                 );
 
-                if kind_matches && name_matches {
+                if kind_matches && name_matches && entity.is_definition() {
                     result = inner(&entity, &path[1..]);
                 }
             }
@@ -228,35 +276,32 @@ fn find_variant<'a>(entity: &Entity<'a>, name: &str) -> Option<Entity<'a>> {
 
 fn find_constructor<'a>(entity: &Entity<'a>, request: &RequestConstructor) -> Option<Entity<'a>> {
     let mut result = None;
+
     entity.visit_children(|entity, _| {
-        match entity.get_kind() {
-            EntityKind::Constructor => {
-                let args_match = entity
-                    .get_type()
-                    .unwrap()
-                    .get_argument_types()
-                    .unwrap()
-                    .iter()
-                    .zip(&request.args)
-                    .all(|(clang_arg, (_, syn_arg))| type_matches(syn_arg, clang_arg));
+        if let EntityKind::Constructor = entity.get_kind() {
+            let args_match = entity
+                .get_type()
+                .unwrap()
+                .get_argument_types()
+                .unwrap()
+                .iter()
+                .zip(&request.args)
+                .all(|(clang_arg, (_, syn_arg))| type_matches(syn_arg, clang_arg));
 
-                if args_match {
-                    result = Some(entity);
-                    return EntityVisitResult::Break;
-                }
+            if args_match {
+                result = Some(entity);
+                return EntityVisitResult::Break;
             }
-            _ => {}
         }
-
         EntityVisitResult::Recurse
     });
 
     result
 }
 
-fn find_method<'a>(entity: &Entity<'a>, request: &RequestMethod) -> Option<Entity<'a>> {
+fn find_method<'a>(struct_entity: &Entity<'a>, request: &RequestMethod) -> Option<Entity<'a>> {
     let mut result = None;
-    entity.visit_children(|entity, _| {
+    struct_entity.visit_children(|entity, _| {
         match entity.get_kind() {
             EntityKind::Method if entity.get_name().unwrap() == request.name => {
                 let ty = entity.get_type().unwrap();
@@ -275,7 +320,7 @@ fn find_method<'a>(entity: &Entity<'a>, request: &RequestMethod) -> Option<Entit
                     .get_argument_types()
                     .unwrap()
                     .iter()
-                    .zip(&request.args)
+                    .zip(request.args.iter().skip(1)) // skip self on the rust side. todo: check self is correct?
                     .all(|(clang_arg, (_, syn_arg))| type_matches(syn_arg, clang_arg));
 
                 if ret_matches && args_match {
@@ -309,6 +354,48 @@ fn type_matches(syn_arg: &syn::Type, clang_arg: &Type) -> bool {
                 )
                 .unwrap()
         }
+        TypeKind::Void => syn_arg == &syn::parse_quote!(()),
+        TypeKind::LValueReference => {
+            if let syn::Type::Reference(type_ref) = syn_arg {
+                let is_mut = type_ref.mutability.is_some();
+                if is_mut != clang_arg.is_const_qualified() {
+                    let name = clang_arg.get_display_name();
+                    let clang_name = name.strip_suffix("&").unwrap().trim();
+                    if let syn::Type::Path(p) = &*type_ref.elem {
+                        if p.path.is_ident(&clang_name) {
+                            return true;
+                        }
+                    }
+                }
+            }
+            false
+        }
+        TypeKind::UInt => {
+            if let syn::Type::Path(p) = syn_arg {
+                match clang_arg.get_sizeof().unwrap() {
+                    1 => p.path.is_ident("u8"),
+                    2 => p.path.is_ident("u16"),
+                    4 => p.path.is_ident("u32"),
+                    8 => p.path.is_ident("u64"),
+                    _ => unreachable!(),
+                }
+            } else {
+                false
+            }
+        }
+        TypeKind::Int => {
+            if let syn::Type::Path(p) = syn_arg {
+                match clang_arg.get_sizeof().unwrap() {
+                    1 => p.path.is_ident("i8"),
+                    2 => p.path.is_ident("i16"),
+                    4 => p.path.is_ident("i32"),
+                    8 => p.path.is_ident("i64"),
+                    _ => unreachable!(),
+                }
+            } else {
+                false
+            }
+        }
         x => todo!("type {x:?} not implemented"),
     }
 }
@@ -317,10 +404,12 @@ fn type_matches(syn_arg: &syn::Type, clang_arg: &Type) -> bool {
 pub enum MappedItem<'a> {
     Struct(RequestStruct, Entity<'a>),
     Enum(RequestEnum, Entity<'a>),
+    Function(RequestFunction, Entity<'a>),
 }
 
 #[derive(Debug)]
 pub enum MappedItemWithWithMethods<'a> {
     Struct(RequestStruct, Entity<'a>, Vec<Entity<'a>>),
     Enum(RequestEnum, Entity<'a>, Vec<Entity<'a>>),
+    Function(RequestFunction, Entity<'a>, Vec<Entity<'a>>),
 }

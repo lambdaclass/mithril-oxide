@@ -1,11 +1,11 @@
 //! Rust macro input parsing.
 
 use crate::request::{
-    RequestConstructor, RequestEnum, RequestItem, RequestMethod, RequestMethodImpl, RequestMod,
-    RequestStruct, RequestStructKind,
+    RequestConstructor, RequestEnum, RequestFunction, RequestItem, RequestMethod,
+    RequestMethodImpl, RequestMod, RequestStruct, RequestStructKind,
 };
 use syn::{
-    punctuated::Punctuated, Fields, ForeignItemFn, ItemEnum, ItemImpl, ItemMod, ItemStruct,
+    punctuated::Punctuated, Fields, ForeignItemFn, ItemEnum, ItemFn, ItemImpl, ItemMod, ItemStruct,
     MetaNameValue, Token, Type,
 };
 
@@ -43,7 +43,7 @@ pub fn parse_macro_input(input: ItemMod) -> Result<RequestMod, Box<dyn std::erro
             syn::Item::Const(_) => todo!(),
             syn::Item::Enum(x) => parse_enum(&mut target, x)?,
             syn::Item::ExternCrate(_) => todo!(),
-            syn::Item::Fn(_) => todo!(),
+            syn::Item::Fn(x) => parse_fn(&mut target, x)?,
             syn::Item::ForeignMod(_) => todo!(),
             syn::Item::Impl(x) => parse_impl(&mut target, x)?,
             syn::Item::Macro(_) => todo!(),
@@ -204,7 +204,7 @@ fn parse_impl(
         for attr in item.attrs {
             if attr.path().is_ident("codegen") {
                 let item = attr.parse_args::<syn::Ident>().unwrap();
-                if item.to_string() == "constructor" {
+                if item == "constructor" {
                     is_constructor = true;
                 } else {
                     panic!()
@@ -264,5 +264,54 @@ fn parse_impl(
         })
         .unwrap();
     parent.items.extend(target.into_iter());
+    Ok(())
+}
+
+fn parse_fn(parent: &mut RequestMod, item: ItemFn) -> Result<(), Box<dyn std::error::Error>> {
+    let mut target = RequestFunction {
+        name: item.sig.ident.to_string(),
+        vis: item.vis,
+        cxx_ident: item.sig.ident.to_string(),
+        args: item
+            .sig
+            .inputs
+            .iter()
+            .enumerate()
+            .map(|(i, x)| match x {
+                syn::FnArg::Receiver(_x) => {
+                    todo!()
+                }
+                syn::FnArg::Typed(x) => (Some((*x.pat).clone()), (*x.ty).clone()),
+            })
+            .collect(),
+        ret: item.sig.output,
+    };
+
+    for attr in &item.attrs {
+        if attr.path().is_ident("codegen") {
+            let items: Punctuated<MetaNameValue, Token![,]> = attr
+                .parse_args_with(Punctuated::parse_separated_nonempty)
+                .unwrap();
+            for item in items {
+                match () {
+                    _ if item.path.is_ident("cxx_ident") => {
+                        target.cxx_ident = match item.value {
+                            syn::Expr::Lit(x) => match x.lit {
+                                syn::Lit::Str(x) => x.value(),
+                                _ => panic!(),
+                            },
+                            _ => panic!(),
+                        };
+                    }
+                    _ => panic!("{:?}", item.path),
+                }
+            }
+        } else {
+            // TODO: Support forwarding other attributes.
+            panic!();
+        }
+    }
+
+    parent.items.push(RequestItem::Function(target));
     Ok(())
 }
