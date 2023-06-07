@@ -80,6 +80,7 @@ fn codegen_struct(request: &RequestStruct, decl: &Entity, methods: &[Entity]) ->
                     .collect::<TokenStream>();
 
                 let mangled_name = match method.get_mangled_name().unwrap() {
+                    #[cfg(target_os = "macos")]
                     x if x.starts_with('_') => {
                         format_ident!("{}", x.strip_prefix('_').unwrap())
                     }
@@ -123,6 +124,7 @@ fn codegen_struct(request: &RequestStruct, decl: &Entity, methods: &[Entity]) ->
                     .collect::<TokenStream>();
 
                 let mangled_name = match method.get_mangled_name().unwrap() {
+                    #[cfg(target_os = "macos")]
                     x if x.starts_with('_') => {
                         format_ident!("{}", x.strip_prefix('_').unwrap())
                     }
@@ -231,6 +233,7 @@ fn codegen_func(request: &RequestFunction, decl: &Entity) -> TokenStream {
         .collect::<TokenStream>();
 
     let mangled_name = match decl.get_mangled_name().unwrap() {
+        #[cfg(target_os = "macos")]
         x if x.starts_with('_') => {
             format_ident!("{}", x.strip_prefix('_').unwrap())
         }

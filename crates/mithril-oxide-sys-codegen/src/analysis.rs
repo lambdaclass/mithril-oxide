@@ -278,25 +278,21 @@ fn find_constructor<'a>(entity: &Entity<'a>, request: &RequestConstructor) -> Op
     let mut result = None;
 
     entity.visit_children(|entity, _| {
-        match entity.get_kind() {
-            EntityKind::Constructor => {
-                let args_match = entity
-                    .get_type()
-                    .unwrap()
-                    .get_argument_types()
-                    .unwrap()
-                    .iter()
-                    .zip(&request.args)
-                    .all(|(clang_arg, (_, syn_arg))| type_matches(syn_arg, clang_arg));
+        if let EntityKind::Constructor = entity.get_kind() {
+            let args_match = entity
+                .get_type()
+                .unwrap()
+                .get_argument_types()
+                .unwrap()
+                .iter()
+                .zip(&request.args)
+                .all(|(clang_arg, (_, syn_arg))| type_matches(syn_arg, clang_arg));
 
-                if args_match {
-                    result = Some(entity);
-                    return EntityVisitResult::Break;
-                }
+            if args_match {
+                result = Some(entity);
+                return EntityVisitResult::Break;
             }
-            _ => {}
         }
-
         EntityVisitResult::Recurse
     });
 
