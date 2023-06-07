@@ -54,6 +54,7 @@ fn codegen_struct(request: &RequestStruct, decl: &Entity, methods: &[Entity]) ->
             let size = LitInt::new(&format!("{}", ty.get_sizeof().unwrap()), Span::call_site());
 
             quote! {
+                #[derive(Debug)]
                 #[repr(C, align(#align))]
                 #vis struct #type_name {
                     data: [u8; #size],
@@ -97,6 +98,10 @@ fn codegen_struct(request: &RequestStruct, decl: &Entity, methods: &[Entity]) ->
                         CallingConvention::Cdecl => "C",
                         _ => panic!(),
                     };
+
+                if method.is_inline_function() {
+                    eprintln!("found inline constructor!: {:#?}", method);
+                }
 
                 // TODO: Handle different binding kinds.
                 quote! {
@@ -210,6 +215,7 @@ fn codegen_enum(request: &RequestEnum, decl: &Entity, variants: &[Entity]) -> To
 
     quote! {
         #[repr(#ty)]
+        #[derive(Debug, Clone, Copy, Eq, PartialEq)]
         #vis enum #name {
             #variants
         }

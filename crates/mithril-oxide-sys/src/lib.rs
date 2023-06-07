@@ -69,6 +69,14 @@ pub mod ffi {
         pub fn dump(&self);
     }
 
+    #[codegen(cxx_path = "mlir::Builder", kind = "opaque-sized")]
+    pub struct Builder;
+
+    impl Builder {
+        //#[codegen(constructor)]
+        //pub fn new(context: *mut MLIRContext) -> Self;
+    }
+
     //#[codegen(cxx_ident = "registerAllDialects")]
     //pub fn register_all_dialects(context: &mut MLIRContext) {}
 }

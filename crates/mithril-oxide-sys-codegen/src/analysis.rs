@@ -327,9 +327,11 @@ fn type_matches(syn_arg: &syn::Type, clang_arg: &Type) -> bool {
         TypeKind::LValueReference => {
             if let syn::Type::Reference(type_ref) = syn_arg {
                 let is_mut = type_ref.mutability.is_some();
+                dbg!("ref");
+                dbg!(clang_arg.get_class_type());
                 if is_mut != clang_arg.is_const_qualified() {
                     let name = clang_arg.get_display_name();
-                    let clang_name = name.strip_suffix("&").unwrap().trim();
+                    let clang_name = name.strip_suffix('&').unwrap().trim();
                     if let syn::Type::Path(p) = &*type_ref.elem {
                         if p.path.is_ident(&clang_name) {
                             return true;
@@ -365,13 +367,18 @@ fn type_matches(syn_arg: &syn::Type, clang_arg: &Type) -> bool {
                 false
             }
         }
-        TypeKind::Record => {
-            eprintln!("found unhandled TypeKind::Record !: {:#?}", clang_arg);
-            false
-        }
-        TypeKind::Unexposed => {
-            eprintln!("found unhandled TypeKind::Unexposed !: {:#?}", clang_arg);
-            false
+        TypeKind::Pointer => {
+            let pointee = clang_arg.get_pointee_type().unwrap();
+            match syn_arg {
+                syn::Type::Ptr(ptr) => {
+                    if let syn::Type::Path(path) = &*ptr.elem {
+                        path.path.is_ident(&pointee.get_display_name())
+                    } else {
+                        false
+                    }
+                }
+                _ => false,
+            }
         }
         x => todo!("type {x:?} not implemented"),
     }
