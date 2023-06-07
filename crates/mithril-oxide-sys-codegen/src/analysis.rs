@@ -378,7 +378,18 @@ fn type_matches(syn_arg: &syn::Type, clang_arg: &Type) -> bool {
                 _ => false,
             }
         }
-        x => todo!("type {x:?} not implemented"),
+        TypeKind::Record => match syn_arg {
+            syn::Type::Path(path) => {
+                if let Some(x) = clang_arg.get_display_name().strip_prefix("mlir::") {
+                    if path.path.is_ident(x) {
+                        return true;
+                    }
+                }
+                path.path.is_ident(&clang_arg.get_display_name())
+            }
+            _ => false,
+        },
+        x => todo!("type {x:?} not implemented for {:?}", clang_arg),
     }
 }
 

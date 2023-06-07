@@ -10,6 +10,10 @@ pub mod ffi {
     #![codegen(include = "mlir/IR/Types.h")]
     #![codegen(include = "mlir/IR/Builders.h")]
     #![codegen(include = "mlir/IR/Location.h")]
+    #![codegen(include = "mlir/IR/Block.h")]
+    #![codegen(include = "mlir/IR/Region.h")]
+    #![codegen(include = "mlir/IR/Operation.h")]
+    #![codegen(include = "mlir/Interfaces/DataLayoutInterfaces.h")]
 
     #[codegen(cxx_path = "mlir::MLIRContext::Threading")]
     pub enum Threading {
@@ -91,6 +95,9 @@ pub mod ffi {
         pub fn dump(&self);
     }
 
+    #[codegen(cxx_path = "mlir::ModuleOp", kind = "opaque-sized")]
+    pub struct ModuleOp;
+
     #[codegen(cxx_path = "mlir::Block", kind = "opaque-sized")]
     pub struct Block;
 
@@ -113,4 +120,24 @@ pub mod ffi {
 
     //#[codegen(cxx_ident = "registerAllDialects")]
     //pub fn register_all_dialects(context: &mut MLIRContext) {}
+
+    #[codegen(cxx_path = "mlir::DataLayout", kind = "opaque-sized")]
+    pub struct DataLayout;
+
+    impl DataLayout {
+        #[codegen(constructor)]
+        pub fn new(op: ModuleOp) -> Self;
+
+        /// Returns the size of the given type in the current scope.
+        pub fn getTypeSize(&self, t: Type) -> u32;
+
+        /// Returns the size in bits of the given type in the current scope.
+        pub fn getTypeSizeInBits(&self, t: Type) -> u32;
+
+        /// Returns the required alignment of the given type in the current scope.
+        pub fn getTypeABIAlignment(&self, t: Type) -> u32;
+
+        /// Returns the preferred of the given type in the current scope.
+        pub fn getTypePreferredAlignment(&self, t: Type) -> u32;
+    }
 }
