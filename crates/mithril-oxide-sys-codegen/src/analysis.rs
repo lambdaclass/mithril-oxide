@@ -327,8 +327,6 @@ fn type_matches(syn_arg: &syn::Type, clang_arg: &Type) -> bool {
         TypeKind::LValueReference => {
             if let syn::Type::Reference(type_ref) = syn_arg {
                 let is_mut = type_ref.mutability.is_some();
-                dbg!("ref");
-                dbg!(clang_arg.get_class_type());
                 if is_mut != clang_arg.is_const_qualified() {
                     let name = clang_arg.get_display_name();
                     let clang_name = name.strip_suffix('&').unwrap().trim();
