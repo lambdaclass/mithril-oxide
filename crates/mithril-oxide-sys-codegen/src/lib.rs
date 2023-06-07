@@ -1,3 +1,4 @@
+#![feature(iter_intersperse)]
 #![feature(iterator_try_collect)]
 
 use crate::parsing::{CxxForeignAttr, CxxForeignItem, CxxForeignMod};
@@ -5,8 +6,12 @@ use clang::{Clang, EntityKind, Index};
 use proc_macro2::TokenStream;
 use quote::TokenStreamExt;
 use std::{
+    borrow::Cow,
+    collections::HashMap,
+    env::var,
     fs::File,
     io::{self, Write},
+    path::PathBuf,
 };
 use tempfile::tempdir;
 
@@ -41,7 +46,7 @@ pub fn codegen(stream: TokenStream) -> Result<TokenStream, Box<dyn std::error::E
     let translation_unit = analysis::parse_cpp(&index, &ast_source_path);
 
     let mut out_stream = TokenStream::new();
-    let mut aux_source = File::create(aux_source_path)?;
+    let mut aux_source = File::create(&aux_source_path)?;
     let mut aux_source_required = false;
 
     // Insert include statements into the aux library.
@@ -50,36 +55,65 @@ pub fn codegen(stream: TokenStream) -> Result<TokenStream, Box<dyn std::error::E
             writeln!(aux_source, "#include <{file}>")?;
         }
     }
+    writeln!(aux_source)?;
 
+    // Process types and generate their mappings.
+    let mut mappings = HashMap::new();
     for item in &foreign_mod.items {
         match item {
             CxxForeignItem::Enum(req) => {
-                let entity = analysis::find_enum(
-                    &translation_unit,
-                    find_cxx_path(&req.attrs).unwrap_or(&req.ident.to_string()),
-                )
-                .expect("Entity not found");
+                let cxx_path = find_cxx_path(&req.attrs)
+                    .map(Cow::Borrowed)
+                    .unwrap_or_else(|| Cow::Owned(req.ident.to_string()));
+                let entity =
+                    analysis::find_enum(&translation_unit, &cxx_path).expect("Entity not found");
+
+                mappings.insert(req.ident.clone(), cxx_path.to_string());
 
                 let (out_chunk, aux_chunk) = codegen::generate_enum(req, entity)?;
                 out_stream.append_all(out_chunk);
                 aux_source.write_all(&aux_chunk)?;
             }
+            CxxForeignItem::Struct(req) => {
+                let cxx_path = find_cxx_path(&req.attrs)
+                    .map(Cow::Borrowed)
+                    .unwrap_or_else(|| Cow::Owned(req.ident.to_string()));
+                let entity =
+                    analysis::find_struct(&translation_unit, &cxx_path).expect("Entity not found");
+
+                mappings.insert(req.ident.clone(), cxx_path.to_string());
+
+                let (out_chunk, aux_chunk) = codegen::generate_struct(req, entity)?;
+                out_stream.append_all(out_chunk);
+                aux_source.write_all(&aux_chunk)?;
+            }
+            _ => {}
+        }
+    }
+
+    // Process functions and methods using the precomputed mappings.
+    for item in &foreign_mod.items {
+        match item {
             CxxForeignItem::Fn(req) => {
                 let entity = analysis::find_fn(
                     &translation_unit,
                     find_cxx_path(&req.attrs).unwrap_or(&req.sig.ident.to_string()),
                     &req.sig,
+                    &mappings,
                 )
                 .expect("Entity not found");
                 assert_eq!(
                     entity.get_kind(),
                     EntityKind::FunctionDecl,
-                    "Non-impl methods are not allowed."
+                    "Non-impl methods (functions with self) are not allowed."
                 );
 
-                let (out_chunk, aux_chunk) = codegen::generate_fn(req, entity)?;
-                out_stream.append_all(out_chunk);
+                let (out_chunk_decl, out_chunk_impl, aux_chunk) =
+                    codegen::generate_fn(req, entity)?;
+                out_stream.append_all(out_chunk_decl);
+                out_stream.append_all(out_chunk_impl);
                 aux_source.write_all(&aux_chunk)?;
+                aux_source_required |= !aux_chunk.is_empty();
             }
             CxxForeignItem::Impl(req) => {
                 // let struct_ty = foreign_mod.items.iter().find_map(|x| match x {
@@ -91,27 +125,25 @@ pub fn codegen(stream: TokenStream) -> Result<TokenStream, Box<dyn std::error::E
 
                 todo!()
             }
-            CxxForeignItem::Struct(req) => {
-                let entity = analysis::find_struct(
-                    &translation_unit,
-                    find_cxx_path(&req.attrs).unwrap_or(&req.ident.to_string()),
-                )
-                .expect("Entity not found");
-
-                let (out_chunk, aux_chunk) = codegen::generate_struct(req, entity)?;
-                out_stream.append_all(out_chunk);
-                aux_source.write_all(&aux_chunk)?;
-            }
-            CxxForeignItem::IncludeAttr(_) => {}
+            _ => {}
         }
     }
 
+    // Build the auxiliary library if required.
+    if aux_source_required {
+        wrappers::build_auxiliary_library(
+            &PathBuf::from(var("OUT_DIR")?).join("libauxlib.a"),
+            &aux_source_path,
+        )
+    }
+
+    println!("{}", std::fs::read_to_string(&aux_source_path)?);
     println!("{out_stream}");
 
     todo!()
 }
 
-fn find_cxx_path<'a>(attrs: &'a [CxxForeignAttr]) -> Option<&'a str> {
+fn find_cxx_path(attrs: &[CxxForeignAttr]) -> Option<&str> {
     attrs.iter().find_map(|x| match x {
         CxxForeignAttr::CxxPath(x) => Some(x.as_str()),
         _ => None,

@@ -1,10 +1,11 @@
 use crate::parsing::{
     CxxBindingKind, CxxForeignAttr, CxxForeignEnum, CxxForeignFn, CxxForeignStruct,
 };
-use clang::{Entity, EntityKind, EntityVisitResult};
+use clang::{CallingConvention, Entity, EntityKind, EntityVisitResult};
 use proc_macro2::{Literal, TokenStream};
 use quote::{format_ident, quote, TokenStreamExt};
-use std::io::Cursor;
+use std::io::{Cursor, Write};
+use syn::{FnArg, Pat};
 
 pub fn generate_enum(
     req: &CxxForeignEnum,
@@ -76,18 +77,135 @@ pub fn generate_enum(
 pub fn generate_fn(
     req: &CxxForeignFn,
     entity: Entity,
-) -> Result<(TokenStream, Vec<u8>), Box<dyn std::error::Error>> {
-    let mut stream = TokenStream::new();
+) -> Result<(TokenStream, TokenStream, Vec<u8>), Box<dyn std::error::Error>> {
     let mut auxlib = Cursor::new(Vec::new());
-
     let mangled_name = if entity.is_inline_function() {
-        // todo!("Write auxiliary wrapper.")
-        entity.get_mangled_name().unwrap()
+        let mangled_name = entity.get_mangled_name().unwrap();
+
+        let has_self = req
+            .sig
+            .inputs
+            .first()
+            .is_some_and(|x| matches!(x, FnArg::Receiver(_)));
+        let arg_decls = has_self
+            .then(|| "self".to_string())
+            .into_iter()
+            .chain(
+                req.sig
+                    .inputs
+                    .iter()
+                    .skip(has_self as _)
+                    .zip(entity.get_arguments().unwrap())
+                    .map(|(l, r)| match l {
+                        FnArg::Typed(x) => match x.pat.as_ref() {
+                            Pat::Ident(x) => {
+                                format!(
+                                    "{} {}",
+                                    r.get_type()
+                                        .unwrap()
+                                        .get_canonical_type()
+                                        .get_display_name(),
+                                    x.ident
+                                )
+                            }
+                            _ => panic!(),
+                        },
+                        FnArg::Receiver(_) => unreachable!(),
+                    }),
+            )
+            .intersperse_with(|| ", ".to_string())
+            .collect::<String>();
+        let arg_names = has_self
+            .then(|| "self".to_string())
+            .into_iter()
+            .chain(
+                req.sig
+                    .inputs
+                    .iter()
+                    .skip(has_self as _)
+                    .map(|ty| match ty {
+                        FnArg::Typed(x) => match x.pat.as_ref() {
+                            Pat::Ident(x) => x.ident.to_string(),
+                            _ => panic!(),
+                        },
+                        FnArg::Receiver(_) => unreachable!(),
+                    }),
+            )
+            .intersperse_with(|| ", ".to_string())
+            .collect::<String>();
+
+        writeln!(
+            auxlib,
+            "extern \"C\" {} wrap_{}({}) {{",
+            entity.get_result_type().unwrap().get_display_name(),
+            mangled_name,
+            arg_decls
+        )?;
+        writeln!(
+            auxlib,
+            "    return {}({});",
+            entity.get_name().unwrap(),
+            arg_names
+        )?;
+        writeln!(auxlib, "}}")?;
+        writeln!(auxlib)?;
+
+        format_ident!("wrap_{}", mangled_name)
     } else {
-        entity.get_mangled_name().unwrap()
+        format_ident!("{}", entity.get_mangled_name().unwrap())
     };
 
-    Ok((stream, auxlib.into_inner()))
+    // Mac OS nonsense.
+    #[cfg(target_os = "macos")]
+    let mangled_name = mangled_name.strip_prefix('_').unwrap();
+
+    let arg_decls = req
+        .sig
+        .inputs
+        .iter()
+        .map(|arg| quote!(#arg,))
+        .collect::<TokenStream>();
+    let arg_names = req
+        .sig
+        .inputs
+        .iter()
+        .map(|arg| match arg {
+            FnArg::Receiver(arg) => match (&arg.mutability, &arg.reference) {
+                (None, None) => quote!(&self as *const Self),
+                (None, Some(_)) => quote!(self as *const Self),
+                (Some(_), None) => quote!(&mut self as *mut Self),
+                (Some(_), Some(_)) => quote!(self as *mut Self),
+            },
+            FnArg::Typed(arg) => match arg.pat.as_ref() {
+                Pat::Ident(x) => {
+                    let ident = &x.ident;
+                    quote!(#ident)
+                }
+                _ => panic!(),
+            },
+        })
+        .collect::<TokenStream>();
+    let ret_ty = &req.sig.output;
+
+    let calling_convention = match entity.get_type().unwrap().get_calling_convention().unwrap() {
+        CallingConvention::Cdecl => "C",
+        _ => todo!(),
+    };
+    let vis = &req.vis;
+    let ident = &req.sig.ident;
+
+    let decl_stream = quote! {
+        extern #calling_convention {
+            fn #mangled_name(#arg_decls) #ret_ty;
+        }
+    };
+    let impl_stream = quote! {
+        #vis unsafe fn #ident(#arg_decls) #ret_ty {
+            #mangled_name(#arg_names)
+        }
+    };
+
+    Ok((decl_stream, impl_stream, auxlib.into_inner()))
 }
 
 pub fn generate_struct(

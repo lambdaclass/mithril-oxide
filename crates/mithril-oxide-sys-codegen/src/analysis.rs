@@ -1,6 +1,6 @@
 use clang::{Entity, EntityKind, EntityVisitResult, Index, TranslationUnit, TypeKind};
-use std::{iter::Peekable, path::Path};
-use syn::{FnArg, ReturnType, Signature, Type};
+use std::{collections::HashMap, iter::Peekable, path::Path};
+use syn::{FnArg, Ident, ReturnType, Signature, Type};
 
 pub fn parse_cpp<'c>(index: &'c Index, path: &Path) -> TranslationUnit<'c> {
     let translation_unit = index
@@ -81,6 +81,7 @@ pub fn find_fn<'c>(
     translation_unit: &'c TranslationUnit,
     path: &str,
     sig: &Signature,
+    mappings: &HashMap<Ident, String>,
 ) -> Option<Entity<'c>> {
     // Recursive helper function. Each invocation will walk a single AST level until it finds the
     // current path item.
@@ -88,6 +89,7 @@ pub fn find_fn<'c>(
         entity: Entity<'c>,
         mut path: Peekable<impl Clone + Iterator<Item = &'a str>>,
         sig: &Signature,
+        mappings: &HashMap<Ident, String>,
     ) -> Option<Entity<'c>> {
         let mut result = None;
 
@@ -114,7 +116,7 @@ pub fn find_fn<'c>(
                                 entity.get_result_type().unwrap().get_kind() == TypeKind::Void
                             }
                             ReturnType::Type(_, ty) => {
-                                compare_types(ty, &entity.get_result_type().unwrap())
+                                compare_types(ty, &entity.get_result_type().unwrap(), mappings)
                             }
                         };
                         let is_same_inputs = {
@@ -133,6 +135,7 @@ pub fn find_fn<'c>(
                                                 FnArg::Typed(x) => &x.ty,
                                             },
                                             &r.get_type().unwrap(),
+                                            mappings,
                                         )
                                     });
 
@@ -155,7 +158,7 @@ pub fn find_fn<'c>(
                 entity.get_kind(),
                 EntityKind::Namespace | EntityKind::ClassDecl | EntityKind::StructDecl
             ) {
-                result = inner(entity, path.clone(), sig);
+                result = inner(entity, path.clone(), sig, mappings);
                 if result.is_some() {
                     return EntityVisitResult::Break;
                 }
@@ -172,6 +175,7 @@ pub fn find_fn<'c>(
         translation_unit.get_entity(),
         path.split("::").peekable(),
         sig,
+        mappings,
     )
 }
 
@@ -224,7 +228,7 @@ pub fn find_struct<'c>(translation_unit: &'c TranslationUnit, path: &str) -> Opt
     inner(translation_unit.get_entity(), path.split("::").peekable())
 }
 
-fn compare_types(lhs: &Type, rhs: &clang::Type) -> bool {
+fn compare_types(lhs: &Type, rhs: &clang::Type, mappings: &HashMap<Ident, String>) -> bool {
     match lhs {
         Type::Array(_) => todo!(),
         Type::BareFn(_) => todo!(),
@@ -234,12 +238,18 @@ fn compare_types(lhs: &Type, rhs: &clang::Type) -> bool {
         Type::Macro(_) => todo!(),
         Type::Never(_) => todo!(),
         Type::Paren(_) => todo!(),
-        Type::Path(ty) => todo!("{ty:?}, {rhs:?}"),
+        Type::Path(ty) => {
+            assert!(ty.qself.is_none());
+
+            // TODO: Builtin primitives (bool, u8, i8, f32, char...).
+            let mapped_ty = &mappings[ty.path.get_ident().unwrap()];
+            mapped_ty == &rhs.get_canonical_type().get_display_name()
+        }
         Type::Ptr(_) => todo!(),
         Type::Reference(ty) => match rhs.get_kind() {
             TypeKind::LValueReference => {
                 ty.mutability.is_some() != rhs.is_const_qualified()
-                    && compare_types(&ty.elem, &rhs.get_canonical_type())
+                    && compare_types(&ty.elem, &rhs.get_pointee_type().unwrap(), mappings)
             }
             _ => panic!(),
         },

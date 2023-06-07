@@ -11,6 +11,11 @@ fn find_llvm_config() -> PathBuf {
         .join("bin/llvm-config")
 }
 
+fn find_ar() -> PathBuf {
+    PathBuf::from(var("MLIR_SYS_160_PREFIX").expect("MLIR_SYS_160_PREFIX is not set"))
+        .join("bin/llvm-ar")
+}
+
 fn find_clang() -> PathBuf {
     PathBuf::from(var("MLIR_SYS_160_PREFIX").expect("MLIR_SYS_160_PREFIX is not set"))
         .join("bin/clang++")
@@ -76,7 +81,31 @@ pub fn build_auxiliary_library(target_path: &Path, source_path: &Path) {
     assert_eq!(source_path.extension().and_then(OsStr::to_str), Some("cpp"));
     assert_eq!(target_path.extension().and_then(OsStr::to_str), Some("a"));
 
-    todo!("build and package auxiliary library")
+    let mut process = Command::new(find_clang())
+        .arg("-c")
+        .arg("-std=c++17")
+        .arg(source_path.to_str().unwrap())
+        .args(
+            &extract_clang_include_paths(source_path)
+                .into_iter()
+                .map(|x| format!("-I{x}"))
+                .collect::<Vec<_>>(),
+        )
+        .arg(&format!("-o{}", source_path.with_extension("o").display()))
+        .stdin(Stdio::null())
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
+        .spawn()
+        .unwrap();
+    assert!(process.wait().unwrap().success());
+
+    let mut process = Command::new(find_ar())
+        .arg("crs")
+        .arg(target_path.to_str().unwrap())
+        .arg(source_path.with_extension("o").to_str().unwrap())
+        .spawn()
+        .unwrap();
+    assert!(process.wait().unwrap().success());
 }
 
 #[cfg(test)]
