@@ -108,7 +108,7 @@ pub fn generate_fn(
                                     x.ident
                                 )
                             }
-                            _ => panic!(),
+                            _ => todo!(),
                         },
                         FnArg::Receiver(_) => unreachable!(),
                     }),
@@ -126,7 +126,7 @@ pub fn generate_fn(
                     .map(|ty| match ty {
                         FnArg::Typed(x) => match x.pat.as_ref() {
                             Pat::Ident(x) => x.ident.to_string(),
-                            _ => panic!(),
+                            _ => todo!(),
                         },
                         FnArg::Receiver(_) => unreachable!(),
                     }),
@@ -181,7 +181,7 @@ pub fn generate_fn(
                     let ident = &x.ident;
                     quote!(#ident)
                 }
-                _ => panic!(),
+                _ => todo!(),
             },
         })
         .collect::<TokenStream>();

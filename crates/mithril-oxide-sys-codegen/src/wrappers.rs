@@ -6,23 +6,20 @@ use std::{
     process::{Command, Stdio},
 };
 
-fn find_llvm_config() -> PathBuf {
-    PathBuf::from(var("MLIR_SYS_160_PREFIX").expect("MLIR_SYS_160_PREFIX is not set"))
-        .join("bin/llvm-config")
+fn find_llvm_config() -> Result<PathBuf, Box<dyn std::error::Error>> {
+    Ok(PathBuf::from(var("MLIR_SYS_160_PREFIX")?).join("bin/llvm-config"))
 }
 
-fn find_ar() -> PathBuf {
-    PathBuf::from(var("MLIR_SYS_160_PREFIX").expect("MLIR_SYS_160_PREFIX is not set"))
-        .join("bin/llvm-ar")
+fn find_ar() -> Result<PathBuf, Box<dyn std::error::Error>> {
+    Ok(PathBuf::from(var("MLIR_SYS_160_PREFIX")?).join("bin/llvm-ar"))
 }
 
-fn find_clang() -> PathBuf {
-    PathBuf::from(var("MLIR_SYS_160_PREFIX").expect("MLIR_SYS_160_PREFIX is not set"))
-        .join("bin/clang++")
+fn find_clang() -> Result<PathBuf, Box<dyn std::error::Error>> {
+    Ok(PathBuf::from(var("MLIR_SYS_160_PREFIX")?).join("bin/clang++"))
 }
 
-pub fn extract_clang_include_paths(path: &Path) -> Vec<String> {
-    let process = Command::new(find_clang())
+pub fn extract_clang_include_paths(path: &Path) -> Result<Vec<String>, Box<dyn std::error::Error>> {
+    let process = Command::new(find_clang()?)
         .arg("-c")
         .arg("-v")
         .arg(path)
@@ -30,21 +27,19 @@ pub fn extract_clang_include_paths(path: &Path) -> Vec<String> {
         .stdin(Stdio::null())
         .stdout(Stdio::null())
         .stderr(Stdio::piped())
-        .spawn()
-        .unwrap();
+        .spawn()?;
 
-    let output = process.wait_with_output().unwrap();
+    let output = process.wait_with_output()?;
     let mut stderr = Cursor::new(output.stderr);
 
     let mut buffer = String::new();
-    while stderr.read_line(&mut buffer).unwrap() != 0
-        && buffer != "#include \"...\" search starts here:\n"
+    while stderr.read_line(&mut buffer)? != 0 && buffer != "#include \"...\" search starts here:\n"
     {
         buffer.clear();
     }
 
     let mut include_paths = Vec::new();
-    while stderr.read_line(&mut buffer).unwrap() != 0 && buffer != "End of search list.\n" {
+    while stderr.read_line(&mut buffer)? != 0 && buffer != "End of search list.\n" {
         if buffer.starts_with("#include") && buffer.ends_with("search starts here:\n") {
             buffer.clear();
             continue;
@@ -58,35 +53,37 @@ pub fn extract_clang_include_paths(path: &Path) -> Vec<String> {
     buffer.clear();
 
     // Append paths from `llvm-config`.
-    let process = Command::new(find_llvm_config())
+    let process = Command::new(find_llvm_config()?)
         .arg("--includedir")
         .stdin(Stdio::null())
         .stdout(Stdio::piped())
         .stderr(Stdio::null())
-        .spawn()
-        .unwrap();
+        .spawn()?;
 
-    let output = process.wait_with_output().unwrap();
+    let output = process.wait_with_output()?;
     let mut stdout = Cursor::new(output.stdout);
-    while stdout.read_line(&mut buffer).unwrap() != 0 {
+    while stdout.read_line(&mut buffer)? != 0 {
         let include_path = buffer.trim();
         include_paths.push(include_path.to_string());
         buffer.clear();
     }
 
-    include_paths
+    Ok(include_paths)
 }
 
-pub fn build_auxiliary_library(target_path: &Path, source_path: &Path) {
+pub fn build_auxiliary_library(
+    target_path: &Path,
+    source_path: &Path,
+) -> Result<(), Box<dyn std::error::Error>> {
     assert_eq!(source_path.extension().and_then(OsStr::to_str), Some("cpp"));
     assert_eq!(target_path.extension().and_then(OsStr::to_str), Some("a"));
 
-    let mut process = Command::new(find_clang())
+    let mut process = Command::new(find_clang()?)
         .arg("-c")
         .arg("-std=c++17")
-        .arg(source_path.to_str().unwrap())
+        .arg(source_path.to_string_lossy().as_ref())
         .args(
-            &extract_clang_include_paths(source_path)
+            &extract_clang_include_paths(source_path)?
                 .into_iter()
                 .map(|x| format!("-I{x}"))
                 .collect::<Vec<_>>(),
@@ -95,17 +92,17 @@ pub fn build_auxiliary_library(target_path: &Path, source_path: &Path) {
         .stdin(Stdio::null())
         .stdout(Stdio::null())
         .stderr(Stdio::null())
-        .spawn()
-        .unwrap();
-    assert!(process.wait().unwrap().success());
+        .spawn()?;
+    assert!(process.wait()?.success());
 
-    let mut process = Command::new(find_ar())
+    let mut process = Command::new(find_ar()?)
         .arg("crs")
-        .arg(target_path.to_str().unwrap())
-        .arg(source_path.with_extension("o").to_str().unwrap())
-        .spawn()
-        .unwrap();
-    assert!(process.wait().unwrap().success());
+        .arg(target_path.to_string_lossy().as_ref())
+        .arg(source_path.with_extension("o").to_string_lossy().as_ref())
+        .spawn()?;
+    assert!(process.wait()?.success());
+
+    Ok(())
 }
 
 #[cfg(test)]
@@ -115,7 +112,7 @@ mod test {
 
     #[test]
     fn test_find_clang() {
-        assert!(find_clang().exists());
+        assert!(find_clang().unwrap().exists());
     }
 
     #[test]
@@ -124,7 +121,7 @@ mod test {
         let temp_cpp = temp_dir.path().join("source.cpp");
         fs::write(&temp_cpp, b"").unwrap();
 
-        let include_paths = extract_clang_include_paths(&temp_cpp);
+        let include_paths = extract_clang_include_paths(&temp_cpp).unwrap();
         assert!(!include_paths.is_empty());
     }
 }

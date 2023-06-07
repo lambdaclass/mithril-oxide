@@ -45,7 +45,7 @@ pub fn codegen(
             Ok(f)
         })?;
 
-    let translation_unit = analysis::parse_cpp(&index, &ast_source_path);
+    let translation_unit = analysis::parse_cpp(&index, &ast_source_path)?;
 
     let mut out_stream = TokenStream::new();
     let mut aux_source = File::create(&aux_source_path)?;
@@ -122,9 +122,7 @@ pub fn codegen(
                     .items
                     .iter()
                     .find_map(|x| match x {
-                        CxxForeignItem::Struct(x)
-                            if &x.ident == req.self_ty.get_ident().unwrap() =>
-                        {
+                        CxxForeignItem::Struct(x) if &x.ident == req.self_ty.get_ident()? => {
                             Some(x)
                         }
                         _ => None,
@@ -168,7 +166,7 @@ pub fn codegen(
 
     // Build the auxiliary library if required.
     if aux_source_required {
-        wrappers::build_auxiliary_library(auxlib_path, &aux_source_path)
+        wrappers::build_auxiliary_library(auxlib_path, &aux_source_path)?;
     }
 
     Ok(out_stream)

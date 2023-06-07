@@ -2,14 +2,17 @@ use clang::{Entity, EntityKind, EntityVisitResult, Index, TranslationUnit, TypeK
 use std::{collections::HashMap, iter::Peekable, path::Path};
 use syn::{FnArg, Ident, ReturnType, Signature, Type};
 
-pub fn parse_cpp<'c>(index: &'c Index, path: &Path) -> TranslationUnit<'c> {
+pub fn parse_cpp<'c>(
+    index: &'c Index,
+    path: &Path,
+) -> Result<TranslationUnit<'c>, Box<dyn std::error::Error>> {
     let translation_unit = index
         .parser(path)
         .arguments(&{
             let mut args = vec!["-std=c++17".to_string()];
 
             args.extend(
-                crate::wrappers::extract_clang_include_paths(path)
+                crate::wrappers::extract_clang_include_paths(path)?
                     .into_iter()
                     .map(|x| format!("-I{x}")),
             );
@@ -17,15 +20,14 @@ pub fn parse_cpp<'c>(index: &'c Index, path: &Path) -> TranslationUnit<'c> {
             args
         })
         .skip_function_bodies(true)
-        .parse()
-        .unwrap();
+        .parse()?;
 
     let diagnostics = translation_unit.get_diagnostics();
     if !diagnostics.is_empty() {
         panic!("{diagnostics:#?}");
     }
 
-    translation_unit
+    Ok(translation_unit)
 }
 
 pub fn find_enum<'c>(translation_unit: &'c TranslationUnit, path: &str) -> Option<Entity<'c>> {

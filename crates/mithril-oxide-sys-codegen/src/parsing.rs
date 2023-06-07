@@ -18,10 +18,7 @@ impl Parse for CxxForeignMod {
     fn parse(input: ParseStream) -> Result<Self> {
         let attr = input.call(Attribute::parse_outer)?;
         assert_eq!(attr.len(), 1);
-        assert_eq!(
-            attr[0].meta.require_path_only()?.get_ident().unwrap(),
-            "codegen"
-        );
+        assert!(attr[0].meta.require_path_only()?.is_ident("codegen"));
 
         let items_buffer;
         Ok(Self {
@@ -60,7 +57,7 @@ impl Parse for CxxForeignItem {
                 if x.path.is_ident("include") {
                     return Ok(Self::IncludeAttr(x.parse_body::<LitStr>()?.value()));
                 } else {
-                    panic!("todo: throw error")
+                    syn::Error::new(x.path.span(), "Unsupported codegen attribute.")
                 }
             }
             Err(e) => e,
@@ -255,24 +252,6 @@ impl CxxForeignAttr {
                                 ));
                             })
                         }
-
-                        // attr.parse_nested_meta(|meta| {
-                        //     foreign_attrs.push(
-                        //         match meta.path.get_ident().map(|x| x.to_string()).as_deref() {
-                        //             Some("cxx_path") => {
-                        //                 Self::CxxPath(meta.value()?.parse::<LitStr>()?.value())
-                        //             }
-                        //             Some("kind") => Self::CxxKind(meta.value()?.parse()?),
-                        //             _ => {
-                        //                 return Err(syn::Error::new(
-                        //                     meta.input.span(),
-                        //                     "Expected a valid codegen attribute.",
-                        //                 ))
-                        //             }
-                        //         },
-                        //     );
-                        //     Ok(())
-                        // })?;
                     } else {
                         foreign_attrs.push(CxxForeignAttr::PassThrough(attr))
                     }
