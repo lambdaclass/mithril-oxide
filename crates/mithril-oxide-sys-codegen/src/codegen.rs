@@ -1,68 +1,34 @@
-use crate::{
-    analysis::MappedItemWithWithMethods,
-    request::{
-        RequestEnum, RequestFunction, RequestMethodImpl, RequestMod, RequestStruct,
-        RequestStructKind,
-    },
-};
-use clang::{CallingConvention, Entity, Type, TypeKind};
-use proc_macro2::{Span, TokenStream};
+use crate::parsing::{CxxForeignAttr, CxxForeignEnum, CxxForeignFn, CxxForeignStruct};
+use clang::{Entity, EntityKind, EntityVisitResult};
+use proc_macro2::TokenStream;
 use quote::{format_ident, quote, TokenStreamExt};
-use std::collections::HashMap;
-use syn::LitInt;
+use std::io::Cursor;
+use syn::FnArg;
 
-pub fn codegen_cpp(request: &RequestMod) -> String {
-    let mut output = String::new();
-
-    output.push_str("#include <type_traits>\n\n");
-    for include in &request.includes {
-        output.push_str(&format!("#include <{include}>\n"));
-    }
-    output.push_str("\n\n");
-
-    output
-}
-
-pub fn codegen_rust(mappings: &HashMap<String, MappedItemWithWithMethods>) -> TokenStream {
+pub fn generate_enum(
+    req: &CxxForeignEnum,
+    entity: Entity,
+) -> Result<(TokenStream, Vec<u8>), Box<dyn std::error::Error>> {
     let mut stream = TokenStream::new();
 
-    for (_, mapping) in mappings {
-        stream.append_all(match mapping {
-            MappedItemWithWithMethods::Struct(request, decl, methods) => {
-                codegen_struct(request, decl, methods)
-            }
-            MappedItemWithWithMethods::Enum(request, decl, variants) => {
-                codegen_enum(request, decl, variants)
-            }
-            MappedItemWithWithMethods::Function(request, decl, _) => codegen_func(request, decl),
-        });
-    }
-
-    stream
-}
-
-fn codegen_struct(request: &RequestStruct, decl: &Entity, methods: &[Entity]) -> TokenStream {
-    let type_name = format_ident!("{}", request.name);
-
-    let struct_decl = match request.kind {
-        RequestStructKind::OpaqueUnsized => todo!(),
-        RequestStructKind::OpaqueSized => {
-            let ty = decl.get_type().unwrap();
-            let vis = &request.vis;
-
-            let align = LitInt::new(&format!("{}", ty.get_alignof().unwrap()), Span::call_site());
-            let size = LitInt::new(&format!("{}", ty.get_sizeof().unwrap()), Span::call_site());
-
-            quote! {
-                #[repr(C, align(#align))]
-                #vis struct #type_name {
-                    data: [u8; #size],
-                    phantom: ::std::marker::PhantomData<::std::marker::PhantomPinned>,
-                }
-            }
-        }
-        RequestStructKind::PartiallyShared => todo!(),
-        RequestStructKind::FullyShared => todo!(),
+    let underlying_type = entity
+        .get_enum_underlying_type()
+        .unwrap()
+        .get_canonical_type();
+    assert!(underlying_type.is_integer());
+    let base_ty = match (
+        underlying_type.get_sizeof()?,
+        underlying_type.is_signed_integer(),
+    ) {
+        (1, false) => quote!(u8),
+        (1, true) => quote!(i8),
+        (2, false) => quote!(u16),
+        (2, true) => quote!(i16),
+        (4, false) => quote!(u32),
+        (4, true) => quote!(i32),
+        (8, false) => quote!(u64),
+        (8, true) => quote!(i64),
+        _ => unreachable!(),
     };
 
     let method_impls = request
@@ -152,61 +118,21 @@ fn codegen_struct(request: &RequestStruct, decl: &Entity, methods: &[Entity]) ->
                     )
                 };
 
-                let calling_convention =
-                    match method.get_type().unwrap().get_calling_convention().unwrap() {
-                        CallingConvention::Cdecl => "C",
-                        _ => panic!(),
-                    };
+        stream.append_all(quote!(#name = #value,));
 
-                quote! {
-                    extern #calling_convention {
-                        fn #mangled_name(this: #self_ty, #args) #ret_ty;
-                    }
+        EntityVisitResult::Continue
+    });
 
-                    impl #type_name {
-                        #vis unsafe fn #name(#self_arg, #args) #ret_ty {
-                            #mangled_name(#self_fw, #args_fw)
-                        }
-                    }
-                }
-            }
-        })
-        .collect::<TokenStream>();
-
-    quote! {
-        #struct_decl
-        #method_impls
-    }
-}
-
-fn codegen_enum(request: &RequestEnum, decl: &Entity, variants: &[Entity]) -> TokenStream {
-    let underlying_type = decl.get_enum_underlying_type().unwrap();
-
-    let name = format_ident!("{}", request.name);
-    let vis = &request.vis;
-    let ty = codegen_type(&underlying_type);
-
-    let variants = variants
+    let attrs = req
+        .attrs
         .iter()
-        .map(|x| {
-            let name = format_ident!("{}", x.get_display_name().unwrap());
-            let value = if underlying_type.is_signed_integer() {
-                let x = LitInt::new(
-                    &format!("{}", x.get_enum_constant_value().unwrap().0),
-                    Span::call_site(),
-                );
-                quote!(#x)
-            } else {
-                let x = LitInt::new(
-                    &format!("{}", x.get_enum_constant_value().unwrap().1),
-                    Span::call_site(),
-                );
-                quote!(#x)
-            };
-
-            quote!(#name = #value,)
+        .filter_map(|x| match x {
+            CxxForeignAttr::PassThrough(x) => Some(quote!(#x)),
+            _ => None,
         })
         .collect::<TokenStream>();
+    let vis = &req.vis;
+    let ident = &req.ident;
 
     quote! {
         #[repr(#ty)]
@@ -237,28 +163,45 @@ fn codegen_func(request: &RequestFunction, decl: &Entity) -> TokenStream {
         x if x.starts_with('_') => {
             format_ident!("{}", x.strip_prefix('_').unwrap())
         }
-        x => format_ident!("{}", x),
-    };
-    let args_fw = request
-        .args
-        .iter()
-        .map(|(pat, _)| quote!(#pat,))
-        .collect::<TokenStream>();
-
-    let ret_ty = &request.ret;
-
-    let calling_convention = match decl.get_type().unwrap().get_calling_convention().unwrap() {
-        CallingConvention::Cdecl => "C",
-        _ => panic!(),
     };
 
-    quote! {
-        extern #calling_convention {
-            fn #mangled_name(#args) #ret_ty;
-        }
+    Ok((stream, Vec::new()))
+}
 
-        #vis unsafe fn #name(#args) #ret_ty {
-            #mangled_name(#args_fw)
-        }
+pub fn generate_fn(
+    req: &CxxForeignFn,
+    entity: Entity,
+) -> Result<(TokenStream, Vec<u8>), Box<dyn std::error::Error>> {
+    let mut stream = TokenStream::new();
+    let mut auxlib = Cursor::new(Vec::new());
+
+    let mangled_name = if entity.is_inline_function() {
+        todo!("Write auxiliary wrapper.")
+    } else {
+        entity.get_mangled_name().unwrap()
+    };
+
+    assert_eq!(
+        req.sig.inputs.len(),
+        entity.get_arguments().unwrap().len(),
+        "Wrong number of arguments."
+    );
+    if req
+        .sig
+        .inputs
+        .first()
+        .is_some_and(|x| matches!(x, FnArg::Receiver(_)))
+    {
+        assert_eq!(entity.get_kind(), EntityKind::Method);
+        assert!(!entity.is_static_method());
     }
+
+    Ok((stream, auxlib.into_inner()))
+}
+
+pub fn generate_struct(
+    req: &CxxForeignStruct,
+    entity: Entity,
+) -> Result<(TokenStream, Vec<u8>), Box<dyn std::error::Error>> {
+    todo!()
 }
