@@ -163,6 +163,10 @@ fn codegen_struct(request: &RequestStruct, decl: &Entity, methods: &[Entity]) ->
                         _ => panic!(),
                     };
 
+                if method.is_inline_function() {
+                    eprintln!("found inline method!: {:#?}", method);
+                }
+
                 quote! {
                     extern #calling_convention {
                         fn #mangled_name(this: #self_ty, #args) #ret_ty;

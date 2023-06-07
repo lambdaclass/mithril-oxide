@@ -9,6 +9,7 @@ pub mod ffi {
     #![codegen(include = "mlir/IR/DialectRegistry.h")]
     #![codegen(include = "mlir/IR/Types.h")]
     #![codegen(include = "mlir/IR/Builders.h")]
+    #![codegen(include = "mlir/IR/Location.h")]
 
     #[codegen(cxx_path = "mlir::MLIRContext::Threading")]
     pub enum Threading {
@@ -66,6 +67,27 @@ pub mod ffi {
         pub fn isIntOrFloat(&self) -> bool;
         pub fn isIntOrIndexOrFloat(&self) -> bool;
 
+        pub fn dump(&self);
+    }
+
+    #[codegen(cxx_path = "mlir::Location", kind = "opaque-sized")]
+    pub struct Location;
+
+    impl Location {
+        pub fn dump(&self);
+    }
+
+    #[codegen(cxx_path = "mlir::Attribute", kind = "opaque-sized")]
+    pub struct Attribute;
+
+    impl Attribute {
+        pub fn dump(&self);
+    }
+
+    #[codegen(cxx_path = "mlir::Operation", kind = "opaque-sized")]
+    pub struct Operation;
+
+    impl Operation {
         pub fn dump(&self);
     }
 
