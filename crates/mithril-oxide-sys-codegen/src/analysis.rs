@@ -104,7 +104,10 @@ pub fn find_fn<'c>(
             // it if it's a match.
             if path.peek().is_none() {
                 return match entity.get_kind() {
-                    EntityKind::FunctionDecl | EntityKind::Method => {
+                    EntityKind::FunctionDecl
+                    | EntityKind::Constructor
+                    | EntityKind::Destructor
+                    | EntityKind::Method => {
                         // TODO: Compare arguments (overloading compatibility) and return values.
                         let is_method = sig
                             .inputs
@@ -242,8 +245,12 @@ fn compare_types(lhs: &Type, rhs: &clang::Type, mappings: &HashMap<Ident, String
             assert!(ty.qself.is_none());
 
             // TODO: Builtin primitives (bool, u8, i8, f32, char...).
-            let mapped_ty = &mappings[ty.path.get_ident().unwrap()];
-            mapped_ty == &rhs.get_canonical_type().get_display_name()
+            if ty.path.is_ident("Self") {
+                true
+            } else {
+                let mapped_ty = &mappings[ty.path.get_ident().unwrap()];
+                mapped_ty == &rhs.get_canonical_type().get_display_name()
+            }
         }
         Type::Ptr(_) => todo!(),
         Type::Reference(ty) => match rhs.get_kind() {

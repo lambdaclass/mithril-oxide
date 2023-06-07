@@ -4,7 +4,7 @@
 use crate::parsing::{CxxForeignAttr, CxxForeignItem, CxxForeignMod};
 use clang::{Clang, EntityKind, Index};
 use proc_macro2::TokenStream;
-use quote::TokenStreamExt;
+use quote::{quote, TokenStreamExt};
 use std::{
     borrow::Cow,
     collections::HashMap,
@@ -116,14 +116,49 @@ pub fn codegen(stream: TokenStream) -> Result<TokenStream, Box<dyn std::error::E
                 aux_source_required |= !aux_chunk.is_empty();
             }
             CxxForeignItem::Impl(req) => {
-                // let struct_ty = foreign_mod.items.iter().find_map(|x| match x {
-                //     CxxForeignItem::Struct(x) if &x.ident == req.self_ty.get_ident().unwrap() => {
-                //         Some(x)
-                //     }
-                //     _ => None,
-                // });
+                let struct_ty = foreign_mod
+                    .items
+                    .iter()
+                    .find_map(|x| match x {
+                        CxxForeignItem::Struct(x)
+                            if &x.ident == req.self_ty.get_ident().unwrap() =>
+                        {
+                            Some(x)
+                        }
+                        _ => None,
+                    })
+                    .unwrap();
+                let base_cxx_path = find_cxx_path(&struct_ty.attrs)
+                    .map(Cow::Borrowed)
+                    .unwrap_or_else(|| Cow::Owned(struct_ty.ident.to_string()));
 
-                todo!()
+                let mut inner_out_stream = TokenStream::new();
+                for item in &req.items {
+                    let entity = analysis::find_fn(
+                        &translation_unit,
+                        &format!(
+                            "{base_cxx_path}::{}",
+                            find_cxx_path(&item.attrs).unwrap_or(&item.sig.ident.to_string())
+                        ),
+                        &item.sig,
+                        &mappings,
+                    )
+                    .expect("Entity not found");
+
+                    let (out_chunk_decl, out_chunk_impl, aux_chunk) =
+                        codegen::generate_fn(item, entity)?;
+                    inner_out_stream.append_all(out_chunk_decl);
+                    inner_out_stream.append_all(out_chunk_impl);
+                    aux_source.write_all(&aux_chunk)?;
+                    aux_source_required |= !aux_chunk.is_empty();
+                }
+
+                let ident = &struct_ty.ident;
+                out_stream.append_all(quote! {
+                    impl #ident {
+                        #inner_out_stream
+                    }
+                });
             }
             _ => {}
         }
@@ -137,10 +172,7 @@ pub fn codegen(stream: TokenStream) -> Result<TokenStream, Box<dyn std::error::E
         )
     }
 
-    println!("{}", std::fs::read_to_string(&aux_source_path)?);
-    println!("{out_stream}");
-
-    todo!()
+    Ok(out_stream)
 }
 
 fn find_cxx_path(attrs: &[CxxForeignAttr]) -> Option<&str> {

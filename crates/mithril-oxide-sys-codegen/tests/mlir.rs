@@ -23,11 +23,13 @@ fn mlir() {
                 #[codegen(cxx_path = "mlir::registerAllDialects")]
                 pub fn registerAllDialects(context: &mut MLIRContext);
 
-                // impl MLIRContext {
-                //     #[codegen(constructor)]
-                //     pub fn new(threading: Threading) -> Self;
-                //     pub fn isMultithreadingEnabled(&mut self) -> bool;
-                // }
+                impl MLIRContext {
+                    #[codegen(cxx_path = "MLIRContext")]
+                    pub fn new(threading: Threading) -> Self;
+
+                    // pub fn isMultithreadingEnabled(&mut self) -> bool;
+                }
+
                 // #[codegen(cxx_path = "mlir::DialectRegistry", kind = "opaque-sized")]
                 // pub struct DialectRegistry;
                 // impl DialectRegistry {
