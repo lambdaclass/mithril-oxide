@@ -8,11 +8,8 @@ fn mlir() {
         codegen(quote! {
             #[codegen]
             extern {
-                include!("mlir/IR/MLIRContext.h");
                 include!("mlir/InitAllDialects.h");
-                include!("mlir/IR/DialectRegistry.h");
-                include!("mlir/IR/Types.h");
-                include!("mlir/IR/Builders.h");
+                include!("mlir/IR/MLIRContext.h");
 
                 #[codegen(cxx_path = "mlir::MLIRContext::Threading")]
                 pub enum Threading {
@@ -20,8 +17,12 @@ fn mlir() {
                     ENABLED,
                 }
 
-                // #[codegen(cxx_path = "mlir::MLIRContext", kind = "opaque-sized")]
-                // pub struct MLIRContext;
+                #[codegen(cxx_path = "mlir::MLIRContext", kind = "opaque-sized")]
+                pub struct MLIRContext;
+
+                #[codegen(cxx_path = "mlir::registerAllDialects")]
+                pub fn registerAllDialects(context: &mut MLIRContext);
+
                 // impl MLIRContext {
                 //     #[codegen(constructor)]
                 //     pub fn new(threading: Threading) -> Self;
@@ -69,9 +70,6 @@ fn mlir() {
                 //     //#[codegen(constructor)]
                 //     //pub fn new(context: *mut MLIRContext) -> Self;
                 // }
-
-                // //#[codegen(cxx_ident = "registerAllDialects")]
-                // //pub fn register_all_dialects(context: &mut MLIRContext) {}
             }
         })
         .unwrap()

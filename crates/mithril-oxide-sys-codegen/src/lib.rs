@@ -68,6 +68,7 @@ pub fn codegen(stream: TokenStream) -> Result<TokenStream, Box<dyn std::error::E
                 let entity = analysis::find_fn(
                     &translation_unit,
                     find_cxx_path(&req.attrs).unwrap_or(&req.sig.ident.to_string()),
+                    &req.sig,
                 )
                 .expect("Entity not found");
                 assert_eq!(
@@ -104,6 +105,8 @@ pub fn codegen(stream: TokenStream) -> Result<TokenStream, Box<dyn std::error::E
             CxxForeignItem::IncludeAttr(_) => {}
         }
     }
+
+    println!("{out_stream}");
 
     todo!()
 }

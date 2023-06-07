@@ -1,7 +1,9 @@
+use quote::ToTokens;
 use syn::{
-    parse::{Parse, ParseStream},
+    parse::{discouraged::Speculative, Parse, ParseStream},
     punctuated::Punctuated,
-    token, Attribute, Fields, FieldsNamed, FieldsUnnamed, Ident, LitStr, Macro, Path, Result,
+    spanned::Spanned,
+    token, Attribute, Fields, FieldsNamed, FieldsUnnamed, Ident, LitStr, Macro, Meta, Path, Result,
     Signature, Token, Visibility,
 };
 
@@ -50,9 +52,11 @@ impl Parse for CxxForeignItem {
     fn parse(input: ParseStream) -> Result<Self> {
         let mut error;
 
-        error = match input.parse::<Macro>() {
+        let fork_input = input.fork();
+        error = match fork_input.parse::<Macro>() {
             Ok(x) => {
-                input.parse::<Token![;]>()?;
+                fork_input.parse::<Token![;]>()?;
+                input.advance_to(&fork_input);
                 if x.path.is_ident("include") {
                     return Ok(Self::IncludeAttr(x.parse_body::<LitStr>()?.value()));
                 } else {
@@ -62,23 +66,39 @@ impl Parse for CxxForeignItem {
             Err(e) => e,
         };
 
-        error.combine(match input.parse::<CxxForeignEnum>() {
-            Ok(x) => return Ok(Self::Enum(x)),
+        let fork_input = input.fork();
+        error.combine(match fork_input.parse::<CxxForeignEnum>() {
+            Ok(x) => {
+                input.advance_to(&fork_input);
+                return Ok(Self::Enum(x));
+            }
             Err(e) => e,
         });
 
-        error.combine(match input.parse::<CxxForeignFn>() {
-            Ok(x) => return Ok(Self::Fn(x)),
+        let fork_input = input.fork();
+        error.combine(match fork_input.parse::<CxxForeignFn>() {
+            Ok(x) => {
+                input.advance_to(&fork_input);
+                return Ok(Self::Fn(x));
+            }
             Err(e) => e,
         });
 
-        error.combine(match input.parse::<CxxForeignImpl>() {
-            Ok(x) => return Ok(Self::Impl(x)),
+        let fork_input = input.fork();
+        error.combine(match fork_input.parse::<CxxForeignImpl>() {
+            Ok(x) => {
+                input.advance_to(&fork_input);
+                return Ok(Self::Impl(x));
+            }
             Err(e) => e,
         });
 
-        error.combine(match input.parse::<CxxForeignStruct>() {
-            Ok(x) => return Ok(Self::Struct(x)),
+        let fork_input = input.fork();
+        error.combine(match fork_input.parse::<CxxForeignStruct>() {
+            Ok(x) => {
+                input.advance_to(&fork_input);
+                return Ok(Self::Struct(x));
+            }
             Err(e) => e,
         });
 
@@ -211,24 +231,48 @@ impl CxxForeignAttr {
                         .get_ident()
                         .is_some_and(|x| x.to_string().as_str() == "codegen")
                     {
-                        let attr = attr.meta.require_list()?;
-                        attr.parse_nested_meta(|meta| {
-                            foreign_attrs.push(
-                                match meta.path.get_ident().map(|x| x.to_string()).as_deref() {
-                                    Some("cxx_path") => {
-                                        Self::CxxPath(meta.value()?.parse::<LitStr>()?.value())
-                                    }
-                                    Some("kind") => Self::CxxKind(meta.value()?.parse()?),
-                                    _ => {
-                                        return Err(syn::Error::new(
-                                            meta.input.span(),
-                                            "Expected a valid codegen attribute.",
-                                        ))
-                                    }
-                                },
-                            );
-                            Ok(())
-                        })?;
+                        let attr_list = attr
+                            .meta
+                            .require_list()?
+                            .parse_args_with(Punctuated::<Meta, Token![,]>::parse_terminated)?;
+
+                        for inner_attr in attr_list {
+                            foreign_attrs.push(if inner_attr.path().is_ident("cxx_path") {
+                                Self::CxxPath(
+                                    syn::parse2::<LitStr>(
+                                        inner_attr.require_name_value()?.value.to_token_stream(),
+                                    )?
+                                    .value(),
+                                )
+                            } else if inner_attr.path().is_ident("kind") {
+                                Self::CxxKind(syn::parse2(
+                                    inner_attr.require_name_value()?.value.to_token_stream(),
+                                )?)
+                            } else {
+                                return Err(syn::Error::new(
+                                    inner_attr.span(),
+                                    "Expected a valid codegen attribute.",
+                                ));
+                            })
+                        }
+
+                        // attr.parse_nested_meta(|meta| {
+                        //     foreign_attrs.push(
+                        //         match meta.path.get_ident().map(|x| x.to_string()).as_deref() {
+                        //             Some("cxx_path") => {
+                        //                 Self::CxxPath(meta.value()?.parse::<LitStr>()?.value())
+                        //             }
+                        //             Some("kind") => Self::CxxKind(meta.value()?.parse()?),
+                        //             _ => {
+                        //                 return Err(syn::Error::new(
+                        //                     meta.input.span(),
+                        //                     "Expected a valid codegen attribute.",
+                        //                 ))
+                        //             }
+                        //         },
+                        //     );
+                        //     Ok(())
+                        // })?;
                     } else {
                         foreign_attrs.push(CxxForeignAttr::PassThrough(attr))
                     }
@@ -260,30 +304,4 @@ impl Parse for CxxBindingKind {
             _ => return Err(syn::Error::new(span, "Expected either `opaque-unsized`, `opaque-sized`, `partially-shared` or `fully-shared`.")),
         })
     }
-}
-
-fn parse_include_attr(input: ParseStream) -> Result<Vec<String>> {
-    input
-        .call(Attribute::parse_inner)?
-        .into_iter()
-        .map(|attr| {
-            let meta = attr.meta.require_list()?;
-            Ok(if meta.path.is_ident("codegen") {
-                let mut value = None;
-                meta.parse_nested_meta(|nested_meta| {
-                    if nested_meta.path.is_ident("include") {
-                        value = Some(nested_meta.value()?.parse::<LitStr>()?.value());
-                    } else {
-                        panic!("todo: throw error");
-                    }
-
-                    Ok(())
-                })?;
-
-                value.unwrap()
-            } else {
-                panic!("todo: throw error")
-            })
-        })
-        .try_collect()
 }

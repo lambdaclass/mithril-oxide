@@ -21,6 +21,7 @@ pub fn extract_clang_include_paths(path: &Path) -> Vec<String> {
         .arg("-c")
         .arg("-v")
         .arg(path)
+        .args(["-o", "-"])
         .stdin(Stdio::null())
         .stdout(Stdio::null())
         .stderr(Stdio::piped())
