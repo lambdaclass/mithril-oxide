@@ -111,7 +111,8 @@ pub fn analyze_cpp<'a>(
                     .iter()
                     .map(move |x| match x {
                         RequestMethodImpl::Constructor(syn_method) => {
-                            find_constructor(&clang_struct, syn_method).unwrap()
+                            find_constructor(&clang_struct, syn_method)
+                                .expect(&format!("couldn't find constructor for {:?}", syn_method))
                         }
                         RequestMethodImpl::Method(syn_method) => {
                             find_method(&clang_struct, syn_method)
@@ -183,82 +184,49 @@ fn find_function<'a>(entity: &Entity<'a>, request: &RequestFunction) -> Option<E
 }
 
 fn find_struct<'a>(entity: &Entity<'a>, path: &str) -> Option<Entity<'a>> {
-    fn inner<'a>(entity: &Entity<'a>, path: &[&str]) -> Option<Entity<'a>> {
-        let mut result = None;
-        entity.visit_children(|entity, _| {
-            let name_matches = entity.get_name().as_deref() == Some(path[0]);
-            if path.len() == 1 {
-                let kind_matches = matches!(
-                    entity.get_kind(),
-                    EntityKind::ClassDecl | EntityKind::StructDecl
-                );
+    find_entity_kind(entity, path, |e| {
+        matches!(e, EntityKind::ClassDecl | EntityKind::StructDecl)
+    })
+}
 
-                if kind_matches && name_matches && entity.is_definition() {
-                    result = Some(entity);
-                }
+fn find_entity_kind<'a, F>(entity: &Entity<'a>, path: &str, is_kind: F) -> Option<Entity<'a>>
+where
+    F: Fn(EntityKind) -> bool,
+{
+    let mut result = None;
+    entity.visit_children(|mut entity, _| {
+        if !entity.is_definition() {
+            let ent_def = entity.get_definition();
+
+            if let Some(ent_def) = ent_def {
+                entity = ent_def;
             } else {
-                let kind_matches = matches!(
-                    entity.get_kind(),
-                    EntityKind::ClassDecl | EntityKind::StructDecl | EntityKind::Namespace
-                );
-
-                if kind_matches && name_matches && entity.is_definition() {
-                    result = inner(&entity, &path[1..]);
-                }
+                return EntityVisitResult::Continue;
             }
+        }
 
-            if result.is_some() {
-                EntityVisitResult::Break
-            } else {
-                EntityVisitResult::Continue
+        let entity_type = entity.get_type();
+
+        if let Some(entity_type) = entity_type {
+            let name_matches = entity_type.get_display_name() == path;
+
+            let kind_matches = is_kind(entity.get_kind());
+            let kind_matches = matches!(entity.get_kind(), kind);
+
+            if kind_matches && name_matches {
+                result = Some(entity);
+                return EntityVisitResult::Break;
             }
-        });
+        }
 
-        result
-    }
+        EntityVisitResult::Recurse
+    });
 
-    let path = path.split("::").collect::<Vec<_>>();
-    assert!(!path.is_empty());
-
-    inner(entity, &path)
+    result
 }
 
 fn find_enum<'a>(entity: &Entity<'a>, path: &str) -> Option<Entity<'a>> {
-    fn inner<'a>(entity: &Entity<'a>, path: &[&str]) -> Option<Entity<'a>> {
-        let mut result = None;
-        entity.visit_children(|entity, _| {
-            let name_matches = entity.get_name().as_deref() == Some(path[0]);
-            if path.len() == 1 {
-                let kind_matches = matches!(entity.get_kind(), EntityKind::EnumDecl);
-
-                if kind_matches && name_matches {
-                    result = Some(entity);
-                }
-            } else {
-                let kind_matches = matches!(
-                    entity.get_kind(),
-                    EntityKind::ClassDecl | EntityKind::StructDecl | EntityKind::Namespace
-                );
-
-                if kind_matches && name_matches {
-                    result = inner(&entity, &path[1..]);
-                }
-            }
-
-            if result.is_some() {
-                EntityVisitResult::Break
-            } else {
-                EntityVisitResult::Continue
-            }
-        });
-
-        result
-    }
-
-    let path = path.split("::").collect::<Vec<_>>();
-    assert!(!path.is_empty());
-
-    inner(entity, &path)
+    find_entity_kind(entity, path, |e| matches!(e, EntityKind::EnumDecl))
 }
 
 fn find_variant<'a>(entity: &Entity<'a>, name: &str) -> Option<Entity<'a>> {
@@ -338,6 +306,7 @@ fn find_method<'a>(struct_entity: &Entity<'a>, request: &RequestMethod) -> Optio
 }
 
 fn type_matches(syn_arg: &syn::Type, clang_arg: &Type) -> bool {
+    //eprintln!("matching: {:?} - {}", syn_arg, clang_arg.get_display_name());
     match clang_arg.get_kind() {
         TypeKind::Bool => syn_arg == &syn::parse_quote!(bool),
         TypeKind::Elaborated => type_matches(syn_arg, &clang_arg.get_elaborated_type().unwrap()),
@@ -395,6 +364,14 @@ fn type_matches(syn_arg: &syn::Type, clang_arg: &Type) -> bool {
             } else {
                 false
             }
+        }
+        TypeKind::Record => {
+            eprintln!("found unhandled TypeKind::Record !: {:#?}", clang_arg);
+            false
+        }
+        TypeKind::Unexposed => {
+            eprintln!("found unhandled TypeKind::Unexposed !: {:#?}", clang_arg);
+            false
         }
         x => todo!("type {x:?} not implemented"),
     }

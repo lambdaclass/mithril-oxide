@@ -8,6 +8,7 @@ pub mod ffi {
     #![codegen(include = "mlir/InitAllDialects.h")]
     #![codegen(include = "mlir/IR/DialectRegistry.h")]
     #![codegen(include = "mlir/IR/Types.h")]
+    #![codegen(include = "mlir/IR/Builders.h")]
 
     #[codegen(cxx_path = "mlir::MLIRContext::Threading")]
     pub enum Threading {
