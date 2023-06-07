@@ -233,14 +233,6 @@ pub fn find_struct<'c>(translation_unit: &'c TranslationUnit, path: &str) -> Opt
 
 fn compare_types(lhs: &Type, rhs: &clang::Type, mappings: &HashMap<Ident, String>) -> bool {
     match lhs {
-        Type::Array(_) => todo!(),
-        Type::BareFn(_) => todo!(),
-        Type::Group(_) => todo!(),
-        Type::ImplTrait(_) => todo!(),
-        Type::Infer(_) => todo!(),
-        Type::Macro(_) => todo!(),
-        Type::Never(_) => todo!(),
-        Type::Paren(_) => todo!(),
         Type::Path(ty) => {
             assert!(ty.qself.is_none());
 
@@ -252,7 +244,6 @@ fn compare_types(lhs: &Type, rhs: &clang::Type, mappings: &HashMap<Ident, String
                 mapped_ty == &rhs.get_canonical_type().get_display_name()
             }
         }
-        Type::Ptr(_) => todo!(),
         Type::Reference(ty) => match rhs.get_kind() {
             TypeKind::LValueReference => {
                 ty.mutability.is_some() != rhs.is_const_qualified()
@@ -260,10 +251,6 @@ fn compare_types(lhs: &Type, rhs: &clang::Type, mappings: &HashMap<Ident, String
             }
             _ => panic!(),
         },
-        Type::Slice(_) => todo!(),
-        Type::TraitObject(_) => todo!(),
-        Type::Tuple(_) => todo!(),
-        Type::Verbatim(_) => todo!(),
-        _ => unreachable!(),
+        _ => todo!(),
     }
 }

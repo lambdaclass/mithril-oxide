@@ -1,5 +1,9 @@
 use proc_macro2::TokenStream;
-use std::io::{stdin, stdout, Read, Write};
+use std::{
+    env::args,
+    io::{stdin, stdout, Read, Write},
+    path::Path,
+};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Read input code.
@@ -8,7 +12,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Process code.
     let stream: TokenStream = data.parse()?;
-    let stream = mithril_oxide_sys_codegen::codegen(stream)?;
+    let stream = mithril_oxide_sys_codegen::codegen(
+        Path::new(
+            &args()
+                .nth(1)
+                .expect("Auxiliary library target path required."),
+        ),
+        stream,
+    )?;
 
     // Write output code.
     let data = stream.to_string();

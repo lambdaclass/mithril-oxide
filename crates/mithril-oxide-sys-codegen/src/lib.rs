@@ -8,10 +8,9 @@ use quote::{quote, TokenStreamExt};
 use std::{
     borrow::Cow,
     collections::HashMap,
-    env::var,
     fs::File,
     io::{self, Write},
-    path::PathBuf,
+    path::Path,
 };
 use tempfile::tempdir;
 
@@ -20,7 +19,10 @@ mod codegen;
 mod parsing;
 mod wrappers;
 
-pub fn codegen(stream: TokenStream) -> Result<TokenStream, Box<dyn std::error::Error>> {
+pub fn codegen(
+    auxlib_path: &Path,
+    stream: TokenStream,
+) -> Result<TokenStream, Box<dyn std::error::Error>> {
     let foreign_mod: CxxForeignMod = syn::parse2(stream)?;
 
     let clang = Clang::new()?;
@@ -166,10 +168,7 @@ pub fn codegen(stream: TokenStream) -> Result<TokenStream, Box<dyn std::error::E
 
     // Build the auxiliary library if required.
     if aux_source_required {
-        wrappers::build_auxiliary_library(
-            &PathBuf::from(var("OUT_DIR")?).join("libauxlib.a"),
-            &aux_source_path,
-        )
+        wrappers::build_auxiliary_library(auxlib_path, &aux_source_path)
     }
 
     Ok(out_stream)
