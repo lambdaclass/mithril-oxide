@@ -3,8 +3,10 @@
 
 use mithril_oxide_sys_proc::codegen;
 
+// Notes: if a method seems to not be found, check the mutability on the rust side matches constness on c++ side.
+
 #[codegen]
-mod ffi {
+pub mod ffi {
     include!("mlir/InitAllDialects.h");
     include!("mlir/IR/MLIRContext.h");
     include!("mlir/IR/Types.h");
@@ -90,7 +92,7 @@ mod ffi {
     pub struct Operation;
 
     impl Operation {
-        //pub fn dump(&self);
+        pub fn dump(&mut self);
     }
 
     #[codegen(cxx_path = "mlir::ModuleOp", kind = "opaque-sized")]
@@ -100,13 +102,13 @@ mod ffi {
     pub struct Block;
 
     impl Block {
-        //pub fn dump(&self);
+        pub fn dump(&mut self);
     }
 
     #[codegen(cxx_path = "mlir::Region", kind = "opaque-sized")]
     pub struct Region;
 
-    //impl Region {}
+    impl Region {}
 
     #[codegen(cxx_path = "mlir::Builder", kind = "opaque-sized")]
     pub struct Builder;

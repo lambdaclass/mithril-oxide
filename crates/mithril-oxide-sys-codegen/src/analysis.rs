@@ -188,7 +188,6 @@ pub fn find_fn<'c>(
 
         result
     }
-
     inner(
         translation_unit.get_entity(),
         path.split("::").peekable(),
