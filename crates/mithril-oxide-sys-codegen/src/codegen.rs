@@ -230,15 +230,40 @@ pub fn generate_fn(
     let vis = &req.vis;
     let ident = &req.sig.ident;
 
-    let decl_stream = quote! {
-        #link_attr
-        extern #calling_convention {
-            fn #mangled_name(#extern_arg_decls) #ret_ty;
+    let (decl_stream, impl_stream) = match entity.get_kind() {
+        EntityKind::Constructor => {
+            let self_ty = self_ty.unwrap();
+            (
+                quote! {
+                    #link_attr
+                    extern #calling_convention {
+                        fn #mangled_name(this: *mut #self_ty, #extern_arg_decls);
+                    }
+                },
+                quote! {
+                    #vis unsafe fn #ident(#arg_decls) #ret_ty {
+                        let mut this = ::std::mem::MaybeUninit::<#self_ty>::uninit();
+                        #mangled_name(this.as_mut_ptr(), #arg_names);
+                        this.assume_init()
+                    }
+                },
+            )
         }
-    };
-    let impl_stream = quote! {
-        #vis unsafe fn #ident(#arg_decls) #ret_ty {
-            #mangled_name(#arg_names)
+        EntityKind::Destructor => todo!(),
+        _ => {
+            (
+                quote! {
+                    #link_attr
+                    extern #calling_convention {
+                        fn #mangled_name(#extern_arg_decls) #ret_ty;
+                    }
+                },
+                quote! {
+                    #vis unsafe fn #ident(#arg_decls) #ret_ty {
+                        #mangled_name(#arg_names)
+                    }
+                },
+            )
         }
     };
 
