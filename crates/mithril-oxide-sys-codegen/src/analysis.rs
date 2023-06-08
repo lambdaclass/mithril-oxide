@@ -218,7 +218,6 @@ pub fn find_struct<'c>(translation_unit: &'c TranslationUnit, path: &str) -> Opt
             if path.peek().is_none() {
                 return match entity.get_kind() {
                     EntityKind::ClassDecl | EntityKind::StructDecl => {
-                        // structs should always have a definition.
                         result = Some(entity);
                         EntityVisitResult::Break
                     }

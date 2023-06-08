@@ -1,2 +1,5 @@
 [toolchain]
-channel = "nightly"
+channel = "nightly-2023-06-05"
+
+# Pinned to that specific version because of this bug:
+#   https://github.com/rust-lang/rust-analyzer/issues/14991
