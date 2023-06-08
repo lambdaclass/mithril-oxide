@@ -157,11 +157,17 @@ pub fn generate_fn(
         writeln!(auxlib, "}}")?;
         writeln!(auxlib)?;
 
+        // Mac OS nonsense.
+        #[cfg(not(target_os = "macos"))]
+        let cpp_runtime = "stdc++";
+        #[cfg(target_os = "macos")]
+        let cpp_runtime = "c++";
+
         (
             format_ident!("wrap_{}", mangled_name),
             quote! {
                 #[link(name = #auxlib_name, kind = "static")]
-                #[link(name = "stdc++")]
+                #[link(name = #cpp_runtime)]
             },
         )
     } else {
@@ -173,11 +179,10 @@ pub fn generate_fn(
 
     // Mac OS nonsense.
     #[cfg(target_os = "macos")]
-    let mangled_name = mangled_name
-        .to_string()
-        .strip_prefix('_')
-        .unwrap()
-        .to_string();
+    let mangled_name = match mangled_name.to_string() {
+        x if x.starts_with("wrap_") => mangled_name,
+        x => format_ident!("{}", x.strip_prefix('_').unwrap().to_string()),
+    };
 
     let extern_arg_decls = req
         .sig

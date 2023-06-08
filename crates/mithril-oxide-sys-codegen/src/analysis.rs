@@ -13,6 +13,10 @@ pub fn parse_cpp<'c>(
         .arguments(&{
             let mut args = vec!["-std=c++17".to_string()];
 
+            // Mac OS nonsense.
+            #[cfg(target_os = "macos")]
+            args.push("-isysroot/".to_string());
+
             args.extend(
                 crate::wrappers::extract_clang_include_paths(path)?
                     .into_iter()
