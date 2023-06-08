@@ -32,6 +32,8 @@ jobs:
         run: sudo apt-get install libllvm-16-ocaml-dev libllvm16 llvm-16 llvm-16-dev llvm-16-doc llvm-16-examples llvm-16-runtime clang-16 clang-tools-16 clang-16-doc libclang-common-16-dev libclang-16-dev libclang1-16 lld-16 libpolly-16-dev libclang-rt-16-dev libc++-16-dev libc++abi-16-dev libmlir-16-dev mlir-16-tools
       - name: Ubuntu libclang fix
         run: mkdir lib/ && ln -s /usr/lib/llvm-16/lib/libclang.so.1 lib/libclang.so && export LD_LIBRARY_PATH=$(pwd)/lib && export LIBCLANG_PATH=$(pwd)/lib
+      - name: build
+        run: LD_LIBRARY_PATH=$(pwd)/lib LIBCLANG_PATH=$(pwd)/lib cargo build --all-features --all-targets --workspace
       - name: Clippy
         run: LD_LIBRARY_PATH=$(pwd)/lib LIBCLANG_PATH=$(pwd)/lib cargo clippy --all-features --workspace --all-targets -- -D warnings
 
@@ -74,12 +76,10 @@ jobs:
         run: sudo apt-get install libllvm-16-ocaml-dev libllvm16 llvm-16 llvm-16-dev llvm-16-doc llvm-16-examples llvm-16-runtime clang-16 clang-tools-16 clang-16-doc libclang-common-16-dev libclang-16-dev libclang1-16 lld-16 libpolly-16-dev libclang-rt-16-dev libc++-16-dev libc++abi-16-dev libmlir-16-dev mlir-16-tools
       - name: Ubuntu libclang fix
         run: mkdir lib/ && ln -s /usr/lib/llvm-16/lib/libclang.so.1 lib/libclang.so && export LD_LIBRARY_PATH=$(pwd)/lib && export LIBCLANG_PATH=$(pwd)/lib
-      - name: Ubuntu libclang fix 2
-        run: echo $LD_LIBRARY_PATH
-      - name: Ubuntu libclang fix 3
-        run: echo $LIBCLANG_PATH
+      - name: build
+        run: LD_LIBRARY_PATH=$(pwd)/lib LIBCLANG_PATH=$(pwd)/lib cargo build --profile "ci-coverage" --all-features --all-targets --workspace
       - name: test and generate coverage
-        run: LD_LIBRARY_PATH=$(pwd)/lib LIBCLANG_PATH=$(pwd)/lib cargo llvm-cov --profile "ci-coverage" --all-features --workspace --lcov --output-path lcov.info
+        run: LD_LIBRARY_PATH=$(pwd)/lib LIBCLANG_PATH=$(pwd)/lib cargo llvm-cov --profile "ci-coverage" --all-features --all-targets --workspace --lcov --output-path lcov.info
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
         with:
