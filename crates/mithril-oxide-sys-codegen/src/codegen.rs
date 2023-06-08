@@ -4,8 +4,11 @@ use crate::parsing::{
 use clang::{CallingConvention, Entity, EntityKind, EntityVisitResult};
 use proc_macro2::{Literal, TokenStream};
 use quote::{format_ident, quote, TokenStreamExt};
-use std::io::{Cursor, Write};
-use syn::{FnArg, Pat};
+use std::{
+    borrow::Cow,
+    io::{Cursor, Write},
+};
+use syn::{FnArg, Ident, Pat};
 
 pub fn generate_enum(
     req: &CxxForeignEnum,
@@ -77,6 +80,7 @@ pub fn generate_enum(
 pub fn generate_fn(
     req: &CxxForeignFn,
     entity: Entity,
+    self_ty: Option<&Ident>,
 ) -> Result<(TokenStream, TokenStream, Vec<u8>), Box<dyn std::error::Error>> {
     let mut auxlib = Cursor::new(Vec::new());
     let mangled_name = if entity.is_inline_function() {
@@ -159,6 +163,23 @@ pub fn generate_fn(
     #[cfg(target_os = "macos")]
     let mangled_name = mangled_name.strip_prefix('_').unwrap();
 
+    let extern_arg_decls = req
+        .sig
+        .inputs
+        .iter()
+        .map(|arg| match arg {
+            FnArg::Receiver(x) => {
+                let self_ty = self_ty.unwrap();
+                match (&x.mutability, &x.reference) {
+                    (None, None) => panic!(),
+                    (None, Some(_)) => quote!(this: *const #self_ty,),
+                    (Some(_), None) => panic!(),
+                    (Some(_), Some(_)) => quote!(this: *mut #self_ty,),
+                }
+            }
+            arg => quote!(#arg,),
+        })
+        .collect::<TokenStream>();
     let arg_decls = req
         .sig
         .inputs
@@ -171,10 +192,10 @@ pub fn generate_fn(
         .iter()
         .map(|arg| match arg {
             FnArg::Receiver(arg) => match (&arg.mutability, &arg.reference) {
-                (None, None) => quote!(&self as *const Self),
-                (None, Some(_)) => quote!(self as *const Self),
-                (Some(_), None) => quote!(&mut self as *mut Self),
-                (Some(_), Some(_)) => quote!(self as *mut Self),
+                (None, None) => quote!(&self as *const Self,),
+                (None, Some(_)) => quote!(self as *const Self,),
+                (Some(_), None) => quote!(&mut self as *mut Self,),
+                (Some(_), Some(_)) => quote!(self as *mut Self,),
             },
             FnArg::Typed(arg) => match arg.pat.as_ref() {
                 Pat::Ident(x) => {
@@ -185,7 +206,12 @@ pub fn generate_fn(
             },
         })
         .collect::<TokenStream>();
-    let ret_ty = &req.sig.output;
+    let ret_ty = if req.sig.output == syn::parse_quote!(-> Self) {
+        let x = self_ty.unwrap();
+        Cow::Owned(syn::parse_quote!(-> #x))
+    } else {
+        Cow::Borrowed(&req.sig.output)
+    };
 
     let calling_convention = match entity.get_type().unwrap().get_calling_convention().unwrap() {
         CallingConvention::Cdecl => "C",
@@ -196,7 +222,7 @@ pub fn generate_fn(
 
     let decl_stream = quote! {
         extern #calling_convention {
-            fn #mangled_name(#arg_decls) #ret_ty;
+            fn #mangled_name(#extern_arg_decls) #ret_ty;
         }
     };
     let impl_stream = quote! {

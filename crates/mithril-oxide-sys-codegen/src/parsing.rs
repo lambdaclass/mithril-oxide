@@ -9,20 +9,20 @@ use syn::{
 
 #[derive(Debug, Clone)]
 pub struct CxxForeignMod {
-    pub abi: Token![extern],
+    pub vis: Visibility,
+    pub mod_token: Token![mod],
+    pub ident: Ident,
     pub brace_token: token::Brace,
     pub items: Vec<CxxForeignItem>,
 }
 
 impl Parse for CxxForeignMod {
     fn parse(input: ParseStream) -> Result<Self> {
-        let attr = input.call(Attribute::parse_outer)?;
-        assert_eq!(attr.len(), 1);
-        assert!(attr[0].meta.require_path_only()?.is_ident("codegen"));
-
         let items_buffer;
         Ok(Self {
-            abi: input.parse()?,
+            vis: input.parse()?,
+            mod_token: input.parse()?,
+            ident: input.parse()?,
             brace_token: syn::braced!(items_buffer in input),
             items: {
                 let mut items = Vec::new();
@@ -163,11 +163,13 @@ impl Parse for CxxForeignImpl {
             impl_token: input.parse()?,
             self_ty: input.parse()?,
             brace_token: syn::braced!(items_buffer in input),
-            items: items_buffer
-                .call(Punctuated::<_, Token![;]>::parse_terminated)?
-                .iter()
-                .cloned()
-                .collect(),
+            items: {
+                let mut items = Vec::new();
+                while !items_buffer.is_empty() {
+                    items.push(items_buffer.parse()?);
+                }
+                items
+            },
         })
     }
 }

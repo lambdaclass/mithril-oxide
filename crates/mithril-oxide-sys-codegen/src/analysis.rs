@@ -2,6 +2,8 @@ use clang::{Entity, EntityKind, EntityVisitResult, Index, TranslationUnit, TypeK
 use std::{collections::HashMap, iter::Peekable, path::Path};
 use syn::{FnArg, Ident, ReturnType, Signature, Type};
 
+// TODO: Filter out private and protected APIs (they shouldn't be available from Rust).
+
 pub fn parse_cpp<'c>(
     index: &'c Index,
     path: &Path,
@@ -110,11 +112,19 @@ pub fn find_fn<'c>(
                     | EntityKind::Constructor
                     | EntityKind::Destructor
                     | EntityKind::Method => {
-                        // TODO: Compare arguments (overloading compatibility) and return values.
                         let is_method = sig
                             .inputs
                             .first()
                             .is_some_and(|x| matches!(x, FnArg::Receiver(_)));
+
+                        let is_same_const = is_method
+                            .then(|| match &sig.inputs[0] {
+                                FnArg::Receiver(x) => {
+                                    entity.is_const_method() == x.mutability.is_none()
+                                }
+                                FnArg::Typed(_) => panic!(),
+                            })
+                            .unwrap_or(true);
 
                         let is_same_output = match &sig.output {
                             ReturnType::Default => {
@@ -147,7 +157,7 @@ pub fn find_fn<'c>(
                             len_matches && arg_matches
                         };
 
-                        if is_same_output && is_same_inputs {
+                        if is_same_const && is_same_output && is_same_inputs {
                             result = Some(entity);
                             EntityVisitResult::Break
                         } else {
@@ -239,11 +249,52 @@ fn compare_types(lhs: &Type, rhs: &clang::Type, mappings: &HashMap<Ident, String
             assert!(ty.qself.is_none());
 
             // TODO: Builtin primitives (bool, u8, i8, f32, char...).
+            let canonical_type = rhs.get_canonical_type();
             if ty.path.is_ident("Self") {
                 true
+            } else if ty.path.is_ident("bool") {
+                canonical_type.get_kind() == TypeKind::Bool
+            } else if ty.path.is_ident("u8")
+                || ty.path.is_ident("u16")
+                || ty.path.is_ident("u32")
+                || ty.path.is_ident("u64")
+            {
+                let target_width = if ty.path.is_ident("u8") {
+                    1
+                } else if ty.path.is_ident("u16") {
+                    2
+                } else if ty.path.is_ident("u32") {
+                    4
+                } else {
+                    8
+                };
+
+                canonical_type.is_unsigned_integer()
+                    && canonical_type.get_sizeof().unwrap() == target_width
+            } else if ty.path.is_ident("i8")
+                || ty.path.is_ident("i16")
+                || ty.path.is_ident("i32")
+                || ty.path.is_ident("i64")
+            {
+                let target_width = if ty.path.is_ident("i8") {
+                    1
+                } else if ty.path.is_ident("i16") {
+                    2
+                } else if ty.path.is_ident("i32") {
+                    4
+                } else {
+                    8
+                };
+
+                canonical_type.is_unsigned_integer()
+                    && canonical_type.get_sizeof().unwrap() == target_width
+            } else if ty.path.is_ident("f32") {
+                canonical_type.get_kind() == TypeKind::Float
+            } else if ty.path.is_ident("f64") {
+                canonical_type.get_kind() == TypeKind::Double
             } else {
                 let mapped_ty = &mappings[ty.path.get_ident().unwrap()];
-                mapped_ty == &rhs.get_canonical_type().get_display_name()
+                mapped_ty == &canonical_type.get_display_name()
             }
         }
         Type::Reference(ty) => match rhs.get_kind() {

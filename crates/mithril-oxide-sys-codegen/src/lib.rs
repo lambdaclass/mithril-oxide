@@ -94,6 +94,8 @@ pub fn codegen(
     }
 
     // Process functions and methods using the precomputed mappings.
+    let mut ffi_stream = out_stream;
+    let mut out_stream = TokenStream::new();
     for item in &foreign_mod.items {
         match item {
             CxxForeignItem::Fn(req) => {
@@ -111,8 +113,8 @@ pub fn codegen(
                 );
 
                 let (out_chunk_decl, out_chunk_impl, aux_chunk) =
-                    codegen::generate_fn(req, entity)?;
-                out_stream.append_all(out_chunk_decl);
+                    codegen::generate_fn(req, entity, None)?;
+                ffi_stream.append_all(out_chunk_decl);
                 out_stream.append_all(out_chunk_impl);
                 aux_source.write_all(&aux_chunk)?;
                 aux_source_required |= !aux_chunk.is_empty();
@@ -146,8 +148,8 @@ pub fn codegen(
                     .expect("Entity not found");
 
                     let (out_chunk_decl, out_chunk_impl, aux_chunk) =
-                        codegen::generate_fn(item, entity)?;
-                    inner_out_stream.append_all(out_chunk_decl);
+                        codegen::generate_fn(item, entity, Some(&struct_ty.ident))?;
+                    ffi_stream.append_all(out_chunk_decl);
                     inner_out_stream.append_all(out_chunk_impl);
                     aux_source.write_all(&aux_chunk)?;
                     aux_source_required |= !aux_chunk.is_empty();
@@ -169,7 +171,8 @@ pub fn codegen(
         wrappers::build_auxiliary_library(auxlib_path, &aux_source_path)?;
     }
 
-    Ok(out_stream)
+    ffi_stream.append_all(out_stream);
+    Ok(ffi_stream)
 }
 
 fn find_cxx_path(attrs: &[CxxForeignAttr]) -> Option<&str> {

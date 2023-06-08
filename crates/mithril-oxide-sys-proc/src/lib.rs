@@ -4,6 +4,7 @@ use pm2::TokenStream;
 use proc_macro as pm;
 use proc_macro2 as pm2;
 use std::{
+    env::var,
     io::{Read, Write},
     process::{Command, Stdio},
     str::FromStr,
@@ -39,8 +40,10 @@ fn codegen_impl(attr: pm2::TokenStream, input: pm2::TokenStream) -> pm2::TokenSt
     };
 
     let mut process = Command::new(codegen_path)
+        .arg(format!("{}/libauxlib.a", var("OUT_DIR").unwrap()))
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
+        .stderr(Stdio::inherit())
         .spawn()
         .unwrap();
 
