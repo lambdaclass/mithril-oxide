@@ -1,3 +1,5 @@
+#![deny(clippy::pedantic)]
+#![deny(warnings)]
 #![feature(iter_intersperse)]
 #![feature(iterator_try_collect)]
 
@@ -19,6 +21,9 @@ mod codegen;
 mod parsing;
 mod wrappers;
 
+#[allow(clippy::missing_errors_doc)]
+#[allow(clippy::missing_panics_doc)]
+#[allow(clippy::too_many_lines)]
 pub fn codegen(
     auxlib_path: &Path,
     stream: TokenStream,
@@ -65,8 +70,7 @@ pub fn codegen(
         match item {
             CxxForeignItem::Enum(req) => {
                 let cxx_path = find_cxx_path(&req.attrs)
-                    .map(Cow::Borrowed)
-                    .unwrap_or_else(|| Cow::Owned(req.ident.to_string()));
+                    .map_or_else(|| Cow::Owned(req.ident.to_string()), Cow::Borrowed);
                 let entity =
                     analysis::find_enum(&translation_unit, &cxx_path).expect("Entity not found");
 
@@ -78,8 +82,7 @@ pub fn codegen(
             }
             CxxForeignItem::Struct(req) => {
                 let cxx_path = find_cxx_path(&req.attrs)
-                    .map(Cow::Borrowed)
-                    .unwrap_or_else(|| Cow::Owned(req.ident.to_string()));
+                    .map_or_else(|| Cow::Owned(req.ident.to_string()), Cow::Borrowed);
                 let entity =
                     analysis::find_struct(&translation_unit, &cxx_path).expect("Entity not found");
 
@@ -141,8 +144,7 @@ pub fn codegen(
                     })
                     .unwrap();
                 let base_cxx_path = find_cxx_path(&struct_ty.attrs)
-                    .map(Cow::Borrowed)
-                    .unwrap_or_else(|| Cow::Owned(struct_ty.ident.to_string()));
+                    .map_or_else(|| Cow::Owned(struct_ty.ident.to_string()), Cow::Borrowed);
 
                 let mut inner_out_stream = TokenStream::new();
                 for item in &req.items {

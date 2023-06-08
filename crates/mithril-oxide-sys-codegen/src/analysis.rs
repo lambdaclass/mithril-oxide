@@ -25,9 +25,7 @@ pub fn parse_cpp<'c>(
         .parse()?;
 
     let diagnostics = translation_unit.get_diagnostics();
-    if !diagnostics.is_empty() {
-        panic!("{diagnostics:#?}");
-    }
+    assert!(diagnostics.is_empty(), "{diagnostics:#?}");
 
     Ok(translation_unit)
 }
@@ -137,22 +135,23 @@ pub fn find_fn<'c>(
                         let is_same_inputs = {
                             let args = entity.get_arguments().unwrap();
 
-                            let len_matches = args.len() + is_method as usize == sig.inputs.len();
-                            let arg_matches =
-                                sig.inputs
-                                    .iter()
-                                    .skip(is_method as _)
-                                    .zip(args)
-                                    .all(|(l, r)| {
-                                        compare_types(
-                                            match l {
-                                                FnArg::Receiver(_) => unreachable!(),
-                                                FnArg::Typed(x) => &x.ty,
-                                            },
-                                            &r.get_type().unwrap(),
-                                            mappings,
-                                        )
-                                    });
+                            let len_matches =
+                                args.len() + usize::from(is_method) == sig.inputs.len();
+                            let arg_matches = sig
+                                .inputs
+                                .iter()
+                                .skip(usize::from(is_method))
+                                .zip(args)
+                                .all(|(l, r)| {
+                                    compare_types(
+                                        match l {
+                                            FnArg::Receiver(_) => unreachable!(),
+                                            FnArg::Typed(x) => &x.ty,
+                                        },
+                                        &r.get_type().unwrap(),
+                                        mappings,
+                                    )
+                                });
 
                             len_matches && arg_matches
                         };

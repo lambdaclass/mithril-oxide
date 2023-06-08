@@ -1,3 +1,5 @@
+#![deny(clippy::pedantic)]
+#![deny(warnings)]
 #![feature(proc_macro_diagnostic)]
 
 use pm2::TokenStream;
@@ -15,6 +17,7 @@ pub fn codegen(attr: pm::TokenStream, input: pm::TokenStream) -> pm::TokenStream
     codegen_impl(attr.into(), input.into()).into()
 }
 
+#[allow(clippy::needless_pass_by_value)]
 fn codegen_impl(attr: pm2::TokenStream, input: pm2::TokenStream) -> pm2::TokenStream {
     if !attr.is_empty() {
         let mut iter = attr.into_iter().map(|x| x.span());

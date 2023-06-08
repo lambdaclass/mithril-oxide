@@ -10,6 +10,7 @@ use std::{
 };
 use syn::{FnArg, Ident, Pat, ReturnType};
 
+#[allow(clippy::similar_names)]
 pub fn generate_enum(
     req: &CxxForeignEnum,
     entity: Entity,
@@ -77,6 +78,7 @@ pub fn generate_enum(
     Ok((stream, Vec::new()))
 }
 
+#[allow(clippy::too_many_lines)]
 pub fn generate_fn(
     req: &CxxForeignFn,
     entity: Entity,
@@ -99,7 +101,7 @@ pub fn generate_fn(
                 req.sig
                     .inputs
                     .iter()
-                    .skip(has_self as _)
+                    .skip(usize::from(has_self))
                     .zip(entity.get_arguments().unwrap())
                     .map(|(l, r)| match l {
                         FnArg::Typed(x) => match x.pat.as_ref() {
@@ -127,7 +129,7 @@ pub fn generate_fn(
                 req.sig
                     .inputs
                     .iter()
-                    .skip(has_self as _)
+                    .skip(usize::from(has_self))
                     .map(|ty| match ty {
                         FnArg::Typed(x) => match x.pat.as_ref() {
                             Pat::Ident(x) => x.ident.to_string(),
@@ -185,7 +187,7 @@ pub fn generate_fn(
                     Some(_) => quote!(this: *mut #self_ty,),
                 }
             }
-            arg => quote!(#arg,),
+            arg @ FnArg::Typed(_) => quote!(#arg,),
         })
         .collect::<TokenStream>();
     let arg_decls = req
@@ -261,7 +263,6 @@ pub fn generate_fn(
                 quote! {
                     #vis unsafe fn #ident(#arg_decls) {
                         #mangled_name(&mut self as *mut _);
-                        ::std::mem::forget(self);
                     }
                 },
             )

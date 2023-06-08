@@ -56,9 +56,8 @@ impl Parse for CxxForeignItem {
                 input.advance_to(&fork_input);
                 if x.path.is_ident("include") {
                     return Ok(Self::IncludeAttr(x.parse_body::<LitStr>()?.value()));
-                } else {
-                    syn::Error::new(x.path.span(), "Unsupported codegen attribute.")
                 }
+                syn::Error::new(x.path.span(), "Unsupported codegen attribute.")
             }
             Err(e) => e,
         };
@@ -196,7 +195,7 @@ impl Parse for CxxForeignStruct {
                     Fields::Unit
                 } else if buffer.peek(token::Brace) {
                     Fields::Named(buffer.parse::<FieldsNamed>()?)
-                } else if buffer.peek(token::Brace) {
+                } else if buffer.peek(token::Paren) {
                     Fields::Unnamed(buffer.parse::<FieldsUnnamed>()?)
                 } else {
                     return Err(syn::Error::new(
@@ -252,10 +251,10 @@ impl CxxForeignAttr {
                                     inner_attr.span(),
                                     "Expected a valid codegen attribute.",
                                 ));
-                            })
+                            });
                         }
                     } else {
-                        foreign_attrs.push(CxxForeignAttr::PassThrough(attr))
+                        foreign_attrs.push(CxxForeignAttr::PassThrough(attr));
                     }
 
                     Ok(())

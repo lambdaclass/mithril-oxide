@@ -1,4 +1,5 @@
-#![allow(dead_code)]
+#![deny(clippy::pedantic)]
+#![deny(warnings)]
 
 use mithril_oxide_sys_proc::codegen;
 
