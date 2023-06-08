@@ -14,9 +14,10 @@ jobs:
     env:
       CARGO_REGISTRIES_CRATES_IO_PROTOCOL: sparse
       MLIR_SYS_160_PREFIX: /usr/lib/llvm-16/
+      RUSTUP_TOOLCHAIN: nightly
     steps:
       - uses: actions/checkout@v3
-      - uses: dtolnay/rust-toolchain@nightly-2023-06-05
+      - uses: dtolnay/rust-toolchain@nightly
         with:
           components: clippy
       - uses: Swatinem/rust-cache@v2
@@ -34,9 +35,11 @@ jobs:
   fmt:
     name: rustfmt
     runs-on: ubuntu-latest
+    env:
+      RUSTUP_TOOLCHAIN: nightly
     steps:
       - uses: actions/checkout@v3
-      - uses: dtolnay/rust-toolchain@nightly-2023-06-05
+      - uses: dtolnay/rust-toolchain@nightly
         with:
           components: rustfmt
       - run: cargo fmt --all -- --check
@@ -48,10 +51,11 @@ jobs:
       CARGO_REGISTRIES_CRATES_IO_PROTOCOL: sparse
       MLIR_SYS_160_PREFIX: /usr/lib/llvm-16/
       RUST_LOG: debug
+      RUSTUP_TOOLCHAIN: nightly
     steps:
       - uses: actions/checkout@v3
       - name: Setup rust env
-        uses: dtolnay/rust-toolchain@nightly-2023-06-05
+        uses: dtolnay/rust-toolchain@nightly
       - name: Retreive cached dependecies
         uses: Swatinem/rust-cache@v2
       - name: Install cargo-llvm-cov
