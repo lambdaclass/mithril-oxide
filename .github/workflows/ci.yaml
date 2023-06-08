@@ -16,8 +16,6 @@ jobs:
       MLIR_SYS_160_PREFIX: /usr/lib/llvm-16/
       RUSTUP_TOOLCHAIN: nightly
       LLVM_CONFIG_PATH: /usr/lib/llvm-16/bin/llvm-config
-      LIBCLANG_PATH: /usr/lib/llvm-16/lib
-      LD_LIBRARY_PATH: /usr/lib/llvm-16/lib
     steps:
       - uses: actions/checkout@v3
       - uses: dtolnay/rust-toolchain@nightly
@@ -35,7 +33,7 @@ jobs:
       - name: Ubuntu libclang fix
         run: mkdir lib/ && ln -s /usr/lib/llvm-16/lib/libclang.so.1 lib/libclang.so && export LD_LIBRARY_PATH=$(pwd)/lib && export LIBCLANG_PATH=$(pwd)/lib
       - name: Clippy
-        run: cargo clippy --all-features --workspace --all-targets -- -D warnings
+        run: LD_LIBRARY_PATH=$(pwd)/lib LIBCLANG_PATH=$(pwd)/lib cargo clippy --all-features --workspace --all-targets -- -D warnings
 
   fmt:
     name: rustfmt
@@ -58,8 +56,6 @@ jobs:
       RUST_LOG: debug
       RUSTUP_TOOLCHAIN: nightly
       LLVM_CONFIG_PATH: /usr/lib/llvm-16/bin/llvm-config
-      LIBCLANG_PATH: /usr/lib/llvm-16/lib
-      LD_LIBRARY_PATH: /usr/lib/llvm-16/lib
     steps:
       - uses: actions/checkout@v3
       - name: Setup rust env
@@ -83,7 +79,7 @@ jobs:
       - name: Ubuntu libclang fix 3
         run: echo $LIBCLANG_PATH
       - name: test and generate coverage
-        run: cargo llvm-cov --profile "ci-coverage" --all-features --workspace --lcov --output-path lcov.info
+        run: LD_LIBRARY_PATH=$(pwd)/lib LIBCLANG_PATH=$(pwd)/lib cargo llvm-cov --profile "ci-coverage" --all-features --workspace --lcov --output-path lcov.info
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
         with:
