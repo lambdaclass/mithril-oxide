@@ -159,8 +159,12 @@ pub fn codegen(
                     )
                     .unwrap_or_else(|| panic!("Entity not found: {:#?}", req));
 
-                    let (out_chunk_decl, out_chunk_impl, aux_chunk) =
-                        codegen::generate_fn(item, entity, Some(&struct_ty.ident), &auxlib_name)?;
+                    let (out_chunk_decl, out_chunk_impl, aux_chunk) = codegen::generate_fn(
+                        item,
+                        entity,
+                        Some((&struct_ty.ident, &mappings[&struct_ty.ident])),
+                        &auxlib_name,
+                    )?;
                     ffi_stream.append_all(out_chunk_decl);
                     inner_out_stream.append_all(out_chunk_impl);
                     aux_source.write_all(&aux_chunk)?;
