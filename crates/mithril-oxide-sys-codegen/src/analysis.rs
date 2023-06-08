@@ -1,415 +1,312 @@
-use crate::request::{
-    RequestConstructor, RequestEnum, RequestFunction, RequestItem, RequestMethod,
-    RequestMethodImpl, RequestMod, RequestStruct,
-};
-use clang::{Entity, EntityKind, EntityVisitResult, Index, TranslationUnit, Type, TypeKind};
-use std::{collections::HashMap, fs};
-use syn::ReturnType;
-use tempfile::tempdir;
+use clang::{Entity, EntityKind, EntityVisitResult, Index, TranslationUnit, TypeKind};
+use std::{collections::HashMap, iter::Peekable, path::Path};
+use syn::{FnArg, Ident, ReturnType, Signature, Type};
 
-pub fn load_cpp<'a>(index: &'a Index<'a>, source_code: &str) -> TranslationUnit<'a> {
-    let dir = tempdir().unwrap();
-    let path = dir.path().join("source.cpp");
-    fs::write(&path, source_code).unwrap();
+// TODO: Filter out private and protected APIs (they shouldn't be available from Rust).
 
+pub fn parse_cpp<'c>(
+    index: &'c Index,
+    path: &Path,
+) -> Result<TranslationUnit<'c>, Box<dyn std::error::Error>> {
     let translation_unit = index
         .parser(path)
-        .arguments(&[
-            // Esteve's flags.
-            "-D__cplusplus=201703L",
-            "-I/usr/bin/../lib/gcc/x86_64-linux-gnu/12/../../../../include/c++/12",
-            "-I/usr/bin/../lib/gcc/x86_64-linux-gnu/12/../../../../include/x86_64-linux-gnu/c++/12",
-            "-I/usr/bin/../lib/gcc/x86_64-linux-gnu/12/../../../../include/c++/12/backward",
-            "-I/usr/lib/llvm-16/lib/clang/16/include",
-            "-I/usr/local/include",
-            "-I/usr/include/x86_64-linux-gnu",
-            "-I/usr/include",
-            "-I/usr/lib/llvm-16/include",
-            // Edgar's flags.
-            "-std=c++17",
-            "-I/usr/include/x86_64-pc-linux-gnu",
-            "-I/usr/lib/gcc/x86_64-pc-linux-gnu/12/include",
-            "-I/usr/lib/gcc/x86_64-pc-linux-gnu/12/include/g++-v12",
-            "-I/usr/local/include",
-            "-I/usr/include",
-            "-I/home/edgar/data/work/cairo_sierra_2_MLIR/llvm/dist/lib/clang/16/include",
-            "-I/home/edgar/data/work/cairo_sierra_2_MLIR/llvm/dist/include",
-            // Mac OS
-            // "-D__cplusplus=1",
-            // "-D_LIBCPP_STD_VER=17",
-            "-isysroot",
-            "-I/usr/local/include",
-            "-I/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1",
-            "-I/Library/Developer/CommandLineTools/usr/lib/clang/14.0.3/include",
-            "-I/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include",
-            "-I/Library/Developer/CommandLineTools/usr/include",
-            "-I/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks",
-            "-I/opt/homebrew/opt/llvm@16/include",
-            "-I/opt/homebrew/opt/llvm@16/lib/clang/16/include",
-        ])
+        .arguments(&{
+            let mut args = vec!["-std=c++17".to_string()];
+
+            // Mac OS nonsense.
+            #[cfg(target_os = "macos")]
+            args.push("-isysroot/".to_string());
+
+            args.extend(
+                crate::wrappers::extract_clang_include_paths(path)?
+                    .into_iter()
+                    .map(|x| format!("-I{x}")),
+            );
+
+            args
+        })
         .skip_function_bodies(true)
-        .parse()
-        .unwrap();
+        .parse()?;
 
-    translation_unit
+    let diagnostics = translation_unit.get_diagnostics();
+    assert!(diagnostics.is_empty(), "{diagnostics:#?}");
+
+    Ok(translation_unit)
 }
 
-pub fn analyze_cpp<'a>(
-    translation_unit: &'a TranslationUnit<'a>,
-    request: &RequestMod,
-) -> HashMap<String, MappedItemWithWithMethods<'a>> {
-    // I have:
-    //   - Types (syn) & methods (syn)
-    //
-    // I want:
-    //   - Types (clang) & methods (clang)
-    //
-    // Methods are search by their name and arguments (overloads), therefore I need all types
-    // matched before searching the methods.
-    //
-    // I need a function to check whether a method's arguments match those from syn.
+pub fn find_enum<'c>(translation_unit: &'c TranslationUnit, path: &str) -> Option<Entity<'c>> {
+    // Recursive helper function. Each invocation will walk a single AST level until it finds the
+    // current path item.
+    fn inner<'c, 'a>(
+        entity: Entity<'c>,
+        mut path: Peekable<impl Clone + Iterator<Item = &'a str>>,
+    ) -> Option<Entity<'c>> {
+        let mut result = None;
 
-    let entity = translation_unit.get_entity();
-
-    // Find mappings from syn types to clang ones.
-    let mappings = request
-        .items
-        .iter()
-        .map(|item| match item {
-            RequestItem::Struct(syn_struct) => {
-                let clang_struct = find_struct(&entity, &syn_struct.path).unwrap();
-                (
-                    syn_struct.name.clone(),
-                    MappedItem::Struct(syn_struct.clone(), clang_struct),
-                )
+        let path_segment = path.next().unwrap();
+        entity.visit_children(|entity, _| {
+            // Compare item names. If they differ, skip them.
+            if entity.get_name().as_deref() != Some(path_segment) {
+                return EntityVisitResult::Continue;
             }
-            RequestItem::Enum(syn_enum) => {
-                let clang_enum = find_enum(&entity, &syn_enum.path).unwrap();
-                (
-                    syn_enum.name.clone(),
-                    MappedItem::Enum(syn_enum.clone(), clang_enum),
-                )
-            }
-            RequestItem::Function(syn_func) => {
-                let clang_func = find_function(&entity, syn_func)
-                    .expect(&format!("couldn't find matching function: {:?}", syn_func));
-                (
-                    syn_func.name.clone(),
-                    MappedItem::Function(syn_func.clone(), clang_func),
-                )
-            }
-        })
-        .collect::<HashMap<_, _>>();
 
-    // Find mappings from syn methods to clang ones.
-    mappings
-        .into_iter()
-        .map(|(name, mapped_item)| match mapped_item {
-            MappedItem::Struct(syn_struct, clang_struct) => {
-                let methods = syn_struct
-                    .items
-                    .iter()
-                    .map(move |x| match x {
-                        RequestMethodImpl::Constructor(syn_method) => {
-                            find_constructor(&clang_struct, syn_method).unwrap()
-                        }
-                        RequestMethodImpl::Method(syn_method) => {
-                            find_method(&clang_struct, syn_method)
-                                .expect(&format!("couldn't find method for {:?}", syn_method))
-                        }
-                    })
-                    .collect::<Vec<_>>();
-
-                (
-                    name,
-                    MappedItemWithWithMethods::Struct(syn_struct, clang_struct, methods),
-                )
-            }
-            MappedItem::Enum(syn_enum, clang_enum) => {
-                let variants = syn_enum
-                    .variants
-                    .iter()
-                    .map(|x| find_variant(&clang_enum, x).unwrap())
-                    .collect::<Vec<_>>();
-
-                (
-                    name,
-                    MappedItemWithWithMethods::Enum(syn_enum, clang_enum, variants),
-                )
-            }
-            MappedItem::Function(syn_func, clang_func) => (
-                name,
-                MappedItemWithWithMethods::Function(syn_func, clang_func, vec![]),
-            ),
-        })
-        .collect::<HashMap<_, _>>()
-}
-
-fn find_function<'a>(entity: &Entity<'a>, request: &RequestFunction) -> Option<Entity<'a>> {
-    let mut result = None;
-    entity.visit_children(|entity, _| {
-        match entity.get_kind() {
-            EntityKind::FunctionDecl if entity.get_name().unwrap() == request.cxx_ident => {
-                let ty = entity.get_type().unwrap();
-                let ret_matches = match &request.ret {
-                    ReturnType::Default => {
-                        ty.get_result_type().unwrap().get_kind() == TypeKind::Void
+            // Check if it's the last item in the path (i.e. what we are searching for) and return
+            // it if it's a match.
+            if path.peek().is_none() {
+                return match entity.get_kind() {
+                    EntityKind::EnumDecl => {
+                        result = Some(entity);
+                        EntityVisitResult::Break
                     }
-                    ReturnType::Type(_, syn_arg) => {
-                        type_matches(syn_arg, &ty.get_result_type().unwrap())
-                    }
+                    _ => EntityVisitResult::Continue,
                 };
-                let args_match = entity
-                    .get_type()
-                    .unwrap()
-                    .get_argument_types()
-                    .unwrap()
-                    .iter()
-                    .zip(&request.args)
-                    .all(|(clang_arg, (_, syn_arg))| type_matches(syn_arg, clang_arg));
+            }
 
-                if ret_matches && args_match {
-                    result = Some(entity);
+            // If not the last item in the path, check if it is a container and recurse if so.
+            if matches!(
+                entity.get_kind(),
+                EntityKind::Namespace | EntityKind::ClassDecl | EntityKind::StructDecl
+            ) {
+                result = inner(entity, path.clone());
+                if result.is_some() {
                     return EntityVisitResult::Break;
                 }
             }
-            _ => {}
-        }
 
-        EntityVisitResult::Recurse
-    });
-
-    result
-}
-
-fn find_struct<'a>(entity: &Entity<'a>, path: &str) -> Option<Entity<'a>> {
-    fn inner<'a>(entity: &Entity<'a>, path: &[&str]) -> Option<Entity<'a>> {
-        let mut result = None;
-        entity.visit_children(|entity, _| {
-            let name_matches = entity.get_name().as_deref() == Some(path[0]);
-            if path.len() == 1 {
-                let kind_matches = matches!(
-                    entity.get_kind(),
-                    EntityKind::ClassDecl | EntityKind::StructDecl
-                );
-
-                if kind_matches && name_matches && entity.is_definition() {
-                    result = Some(entity);
-                }
-            } else {
-                let kind_matches = matches!(
-                    entity.get_kind(),
-                    EntityKind::ClassDecl | EntityKind::StructDecl | EntityKind::Namespace
-                );
-
-                if kind_matches && name_matches && entity.is_definition() {
-                    result = inner(&entity, &path[1..]);
-                }
-            }
-
-            if result.is_some() {
-                EntityVisitResult::Break
-            } else {
-                EntityVisitResult::Continue
-            }
+            // Otherwise just continue walking the current level.
+            EntityVisitResult::Continue
         });
 
         result
     }
 
-    let path = path.split("::").collect::<Vec<_>>();
-    assert!(!path.is_empty());
-
-    inner(entity, &path)
+    inner(translation_unit.get_entity(), path.split("::").peekable())
 }
 
-fn find_enum<'a>(entity: &Entity<'a>, path: &str) -> Option<Entity<'a>> {
-    fn inner<'a>(entity: &Entity<'a>, path: &[&str]) -> Option<Entity<'a>> {
+pub fn find_fn<'c>(
+    translation_unit: &'c TranslationUnit,
+    path: &str,
+    sig: &Signature,
+    mappings: &HashMap<Ident, String>,
+) -> Option<Entity<'c>> {
+    // Recursive helper function. Each invocation will walk a single AST level until it finds the
+    // current path item.
+    fn inner<'c, 'a>(
+        entity: Entity<'c>,
+        mut path: Peekable<impl Clone + Iterator<Item = &'a str>>,
+        sig: &Signature,
+        mappings: &HashMap<Ident, String>,
+    ) -> Option<Entity<'c>> {
         let mut result = None;
+
+        let path_segment = path.next().unwrap();
         entity.visit_children(|entity, _| {
-            let name_matches = entity.get_name().as_deref() == Some(path[0]);
-            if path.len() == 1 {
-                let kind_matches = matches!(entity.get_kind(), EntityKind::EnumDecl);
+            // Compare item names. If they differ, skip them.
+            if entity.get_name().as_deref() != Some(path_segment) {
+                return EntityVisitResult::Continue;
+            }
 
-                if kind_matches && name_matches {
-                    result = Some(entity);
-                }
-            } else {
-                let kind_matches = matches!(
-                    entity.get_kind(),
-                    EntityKind::ClassDecl | EntityKind::StructDecl | EntityKind::Namespace
-                );
+            // Check if it's the last item in the path (i.e. what we are searching for) and return
+            // it if it's a match.
+            if path.peek().is_none() {
+                return match entity.get_kind() {
+                    EntityKind::FunctionDecl
+                    | EntityKind::Constructor
+                    | EntityKind::Destructor
+                    | EntityKind::Method => {
+                        let is_method = sig
+                            .inputs
+                            .first()
+                            .is_some_and(|x| matches!(x, FnArg::Receiver(_)));
 
-                if kind_matches && name_matches {
-                    result = inner(&entity, &path[1..]);
+                        let is_same_const = is_method
+                            .then(|| match &sig.inputs[0] {
+                                FnArg::Receiver(x) => {
+                                    entity.is_const_method() == x.mutability.is_none()
+                                }
+                                FnArg::Typed(_) => panic!(),
+                            })
+                            .unwrap_or(true);
+
+                        let is_same_output = match &sig.output {
+                            ReturnType::Default => {
+                                entity.get_result_type().unwrap().get_kind() == TypeKind::Void
+                            }
+                            ReturnType::Type(_, ty) => {
+                                compare_types(ty, &entity.get_result_type().unwrap(), mappings)
+                            }
+                        };
+                        let is_same_inputs = {
+                            let args = entity.get_arguments().unwrap();
+
+                            let len_matches =
+                                args.len() + usize::from(is_method) == sig.inputs.len();
+                            let arg_matches = sig
+                                .inputs
+                                .iter()
+                                .skip(usize::from(is_method))
+                                .zip(args)
+                                .all(|(l, r)| {
+                                    compare_types(
+                                        match l {
+                                            FnArg::Receiver(_) => unreachable!(),
+                                            FnArg::Typed(x) => &x.ty,
+                                        },
+                                        &r.get_type().unwrap(),
+                                        mappings,
+                                    )
+                                });
+
+                            len_matches && arg_matches
+                        };
+
+                        if is_same_const && is_same_output && is_same_inputs {
+                            result = Some(entity);
+                            EntityVisitResult::Break
+                        } else {
+                            EntityVisitResult::Continue
+                        }
+                    }
+                    _ => EntityVisitResult::Continue,
+                };
+            }
+
+            // If not the last item in the path, check if it is a container and recurse if so.
+            if matches!(
+                entity.get_kind(),
+                EntityKind::Namespace | EntityKind::ClassDecl | EntityKind::StructDecl
+            ) {
+                result = inner(entity, path.clone(), sig, mappings);
+                if result.is_some() {
+                    return EntityVisitResult::Break;
                 }
             }
 
-            if result.is_some() {
-                EntityVisitResult::Break
-            } else {
-                EntityVisitResult::Continue
-            }
+            // Otherwise just continue walking the current level.
+            EntityVisitResult::Continue
         });
 
         result
     }
 
-    let path = path.split("::").collect::<Vec<_>>();
-    assert!(!path.is_empty());
-
-    inner(entity, &path)
+    inner(
+        translation_unit.get_entity(),
+        path.split("::").peekable(),
+        sig,
+        mappings,
+    )
 }
 
-fn find_variant<'a>(entity: &Entity<'a>, name: &str) -> Option<Entity<'a>> {
-    let mut result = None;
-    entity.visit_children(|entity, _| match entity.get_kind() {
-        EntityKind::EnumConstantDecl if entity.get_display_name().unwrap() == name => {
-            result = Some(entity);
-            EntityVisitResult::Break
-        }
-        _ => EntityVisitResult::Recurse,
-    });
+pub fn find_struct<'c>(translation_unit: &'c TranslationUnit, path: &str) -> Option<Entity<'c>> {
+    // Recursive helper function. Each invocation will walk a single AST level until it finds the
+    // current path item.
+    fn inner<'c, 'a>(
+        entity: Entity<'c>,
+        mut path: Peekable<impl Clone + Iterator<Item = &'a str>>,
+    ) -> Option<Entity<'c>> {
+        let mut result = None;
 
-    result
-}
-
-fn find_constructor<'a>(entity: &Entity<'a>, request: &RequestConstructor) -> Option<Entity<'a>> {
-    let mut result = None;
-
-    entity.visit_children(|entity, _| {
-        if let EntityKind::Constructor = entity.get_kind() {
-            let args_match = entity
-                .get_type()
-                .unwrap()
-                .get_argument_types()
-                .unwrap()
-                .iter()
-                .zip(&request.args)
-                .all(|(clang_arg, (_, syn_arg))| type_matches(syn_arg, clang_arg));
-
-            if args_match {
-                result = Some(entity);
-                return EntityVisitResult::Break;
+        let path_segment = path.next().unwrap();
+        entity.visit_children(|entity, _| {
+            // Compare item names. If they differ, skip them.
+            if entity.get_name().as_deref() != Some(path_segment) {
+                return EntityVisitResult::Continue;
             }
-        }
-        EntityVisitResult::Recurse
-    });
 
-    result
-}
-
-fn find_method<'a>(struct_entity: &Entity<'a>, request: &RequestMethod) -> Option<Entity<'a>> {
-    let mut result = None;
-    struct_entity.visit_children(|entity, _| {
-        match entity.get_kind() {
-            EntityKind::Method if entity.get_name().unwrap() == request.name => {
-                let ty = entity.get_type().unwrap();
-
-                let ret_matches = match &request.ret {
-                    ReturnType::Default => {
-                        ty.get_result_type().unwrap().get_kind() == TypeKind::Void
+            // Check if it's the last item in the path (i.e. what we are searching for) and return
+            // it if it's a match.
+            if path.peek().is_none() {
+                return match entity.get_kind() {
+                    EntityKind::ClassDecl | EntityKind::StructDecl => {
+                        result = Some(entity);
+                        EntityVisitResult::Break
                     }
-                    ReturnType::Type(_, syn_arg) => {
-                        type_matches(syn_arg, &ty.get_result_type().unwrap())
-                    }
+                    _ => EntityVisitResult::Continue,
                 };
-                let args_match = entity
-                    .get_type()
-                    .unwrap()
-                    .get_argument_types()
-                    .unwrap()
-                    .iter()
-                    .zip(request.args.iter().skip(1)) // skip self on the rust side. todo: check self is correct?
-                    .all(|(clang_arg, (_, syn_arg))| type_matches(syn_arg, clang_arg));
+            }
 
-                if ret_matches && args_match {
-                    result = Some(entity);
+            // If not the last item in the path, check if it is a container and recurse if so.
+            if matches!(
+                entity.get_kind(),
+                EntityKind::Namespace | EntityKind::ClassDecl | EntityKind::StructDecl
+            ) {
+                result = inner(entity, path.clone());
+                if result.is_some() {
                     return EntityVisitResult::Break;
                 }
             }
-            _ => {}
-        }
 
-        EntityVisitResult::Recurse
-    });
+            // Otherwise just continue walking the current level.
+            EntityVisitResult::Continue
+        });
 
-    result
-}
-
-fn type_matches(syn_arg: &syn::Type, clang_arg: &Type) -> bool {
-    match clang_arg.get_kind() {
-        TypeKind::Bool => syn_arg == &syn::parse_quote!(bool),
-        TypeKind::Elaborated => type_matches(syn_arg, &clang_arg.get_elaborated_type().unwrap()),
-        TypeKind::Enum => {
-            // TODO: Investigate potential bug when there's a naming collision between
-            //   clang_arg.get_display_name() and syn_arg.
-            syn_arg
-                == &syn::parse_str(
-                    &clang_arg
-                        .get_declaration()
-                        .unwrap()
-                        .get_display_name()
-                        .unwrap(),
-                )
-                .unwrap()
-        }
-        TypeKind::Void => syn_arg == &syn::parse_quote!(()),
-        TypeKind::LValueReference => {
-            if let syn::Type::Reference(type_ref) = syn_arg {
-                let is_mut = type_ref.mutability.is_some();
-                if is_mut != clang_arg.is_const_qualified() {
-                    let name = clang_arg.get_display_name();
-                    let clang_name = name.strip_suffix("&").unwrap().trim();
-                    if let syn::Type::Path(p) = &*type_ref.elem {
-                        if p.path.is_ident(&clang_name) {
-                            return true;
-                        }
-                    }
-                }
-            }
-            false
-        }
-        TypeKind::UInt => {
-            if let syn::Type::Path(p) = syn_arg {
-                match clang_arg.get_sizeof().unwrap() {
-                    1 => p.path.is_ident("u8"),
-                    2 => p.path.is_ident("u16"),
-                    4 => p.path.is_ident("u32"),
-                    8 => p.path.is_ident("u64"),
-                    _ => unreachable!(),
-                }
-            } else {
-                false
-            }
-        }
-        TypeKind::Int => {
-            if let syn::Type::Path(p) = syn_arg {
-                match clang_arg.get_sizeof().unwrap() {
-                    1 => p.path.is_ident("i8"),
-                    2 => p.path.is_ident("i16"),
-                    4 => p.path.is_ident("i32"),
-                    8 => p.path.is_ident("i64"),
-                    _ => unreachable!(),
-                }
-            } else {
-                false
-            }
-        }
-        x => todo!("type {x:?} not implemented"),
+        result
     }
+
+    inner(translation_unit.get_entity(), path.split("::").peekable())
 }
 
-#[derive(Debug)]
-pub enum MappedItem<'a> {
-    Struct(RequestStruct, Entity<'a>),
-    Enum(RequestEnum, Entity<'a>),
-    Function(RequestFunction, Entity<'a>),
-}
+fn compare_types(lhs: &Type, rhs: &clang::Type, mappings: &HashMap<Ident, String>) -> bool {
+    match lhs {
+        Type::Path(ty) => {
+            assert!(ty.qself.is_none());
 
-#[derive(Debug)]
-pub enum MappedItemWithWithMethods<'a> {
-    Struct(RequestStruct, Entity<'a>, Vec<Entity<'a>>),
-    Enum(RequestEnum, Entity<'a>, Vec<Entity<'a>>),
-    Function(RequestFunction, Entity<'a>, Vec<Entity<'a>>),
+            // TODO: Builtin primitives (bool, u8, i8, f32, char...).
+            let canonical_type = rhs.get_canonical_type();
+            if ty.path.is_ident("Self") {
+                true
+            } else if ty.path.is_ident("bool") {
+                canonical_type.get_kind() == TypeKind::Bool
+            } else if ty.path.is_ident("u8")
+                || ty.path.is_ident("u16")
+                || ty.path.is_ident("u32")
+                || ty.path.is_ident("u64")
+            {
+                let target_width = if ty.path.is_ident("u8") {
+                    1
+                } else if ty.path.is_ident("u16") {
+                    2
+                } else if ty.path.is_ident("u32") {
+                    4
+                } else {
+                    8
+                };
+
+                canonical_type.is_unsigned_integer()
+                    && canonical_type.get_sizeof().unwrap() == target_width
+            } else if ty.path.is_ident("i8")
+                || ty.path.is_ident("i16")
+                || ty.path.is_ident("i32")
+                || ty.path.is_ident("i64")
+            {
+                let target_width = if ty.path.is_ident("i8") {
+                    1
+                } else if ty.path.is_ident("i16") {
+                    2
+                } else if ty.path.is_ident("i32") {
+                    4
+                } else {
+                    8
+                };
+
+                canonical_type.is_unsigned_integer()
+                    && canonical_type.get_sizeof().unwrap() == target_width
+            } else if ty.path.is_ident("f32") {
+                canonical_type.get_kind() == TypeKind::Float
+            } else if ty.path.is_ident("f64") {
+                canonical_type.get_kind() == TypeKind::Double
+            } else {
+                let mapped_ty = &mappings[ty.path.get_ident().unwrap()];
+                mapped_ty == &canonical_type.get_display_name()
+            }
+        }
+        Type::Reference(ty) => match rhs.get_kind() {
+            TypeKind::LValueReference => {
+                ty.mutability.is_some() != rhs.is_const_qualified()
+                    && compare_types(&ty.elem, &rhs.get_pointee_type().unwrap(), mappings)
+            }
+            _ => panic!(),
+        },
+        _ => todo!(),
+    }
 }
