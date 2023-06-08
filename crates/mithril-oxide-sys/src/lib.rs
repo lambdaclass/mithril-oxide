@@ -15,6 +15,7 @@ pub mod ffi {
     include!("mlir/IR/Block.h");
     include!("mlir/IR/Region.h");
     include!("mlir/IR/Operation.h");
+    include!("mlir/IR/Value.h");
     include!("mlir/Interfaces/DataLayoutInterfaces.h");
 
     #[codegen(cxx_path = "mlir::MLIRContext::Threading")]
@@ -35,6 +36,12 @@ pub mod ffi {
         pub fn isMultithreadingEnabled(&mut self) -> bool;
 
         pub fn loadAllAvailableDialects(&mut self);
+        pub fn allowUnregisteredDialects(&mut self, allow: bool);
+        pub fn allowsUnregisteredDialects(&mut self) -> bool;
+
+        pub fn printOpOnDiagnostic(&mut self, enable: bool);
+        pub fn shouldPrintStackTraceOnDiagnostic(&mut self) -> bool;
+        pub fn printStackTraceOnDiagnostic(&mut self, enable: bool);
     }
 
     #[codegen(cxx_path = "mlir::registerAllDialects")]
@@ -92,7 +99,20 @@ pub mod ffi {
     pub struct Operation;
 
     impl Operation {
+        pub fn getBlock(&mut self) -> *mut Block;
+        pub fn getContext(&mut self) -> *mut MLIRContext;
+        pub fn getParentRegion(&mut self) -> *mut Region;
+        pub fn getParentOp(&mut self) -> *mut Operation;
+        pub fn getLoc(&mut self) -> Location;
+        pub fn setLoc(&mut self, loc: Location);
+
+        pub fn isProperAncestor(&mut self, other: *mut Operation) -> bool;
+        pub fn isAncestor(&mut self, other: *mut Operation) -> bool;
+
         pub fn dump(&mut self);
+
+        pub fn getNumResults(&mut self) -> u32;
+        // todo: getresults returns opresult, which inherits value
     }
 
     #[codegen(cxx_path = "mlir::ModuleOp", kind = "opaque-sized")]
@@ -108,7 +128,36 @@ pub mod ffi {
     #[codegen(cxx_path = "mlir::Region", kind = "opaque-sized")]
     pub struct Region;
 
-    impl Region {}
+    impl Region {
+        // todo: support default constructors
+        // #[codegen(cxx_path = "Region")]
+        // pub fn new() -> Self;
+        #[codegen(cxx_path = "Region")]
+        pub fn new_from_container(container: *mut Operation) -> Self;
+
+        #[codegen(cxx_path = "~Region")]
+        pub fn del(mut self);
+
+        pub fn getLoc(&mut self) -> Location;
+        pub fn getContext(&mut self) -> *mut MLIRContext;
+    }
+
+    #[codegen(cxx_path = "mlir::Value", kind = "opaque-sized")]
+    pub struct Value;
+
+    impl Value {
+        pub fn getParentBlock(&mut self) -> *mut Block;
+        pub fn getContext(&self) -> *mut MLIRContext;
+        pub fn getParentRegion(&mut self) -> *mut Region;
+        pub fn getDefiningOp(&self) -> *mut Operation;
+        pub fn getLoc(&self) -> Location;
+        pub fn setLoc(&mut self, loc: Location);
+
+        pub fn getType(&self) -> Type;
+        pub fn setType(&mut self, ty: Type);
+
+        pub fn dump(&mut self);
+    }
 
     #[codegen(cxx_path = "mlir::Builder", kind = "opaque-sized")]
     pub struct Builder;

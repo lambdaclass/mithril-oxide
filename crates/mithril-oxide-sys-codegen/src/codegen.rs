@@ -145,7 +145,11 @@ pub fn generate_fn(
         writeln!(
             auxlib,
             "extern \"C\" {} wrap_{}({}) {{",
-            entity.get_result_type().unwrap().get_display_name(),
+            entity
+                .get_result_type()
+                .unwrap()
+                .get_canonical_type()
+                .get_display_name(),
             mangled_name,
             arg_decls
         )?;
