@@ -6,3 +6,8 @@ members = [
     "crates/mithril-oxide-sys-codegen",
     "crates/mithril-oxide-sys-proc",
 ]
+
+[profile.ci-coverage]
+inherits = "dev"
+opt-level = 3
+debug = true
