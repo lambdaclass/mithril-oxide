@@ -86,9 +86,9 @@ jobs:
       - name: set LD_LIBRARY_PATH
         run: echo "LIBCLANG_PATH=$(pwd)/lib" >> $GITHUB_ENV
       - name: build
-        run: cargo build --profile "ci-coverage" --all-features --all-targets --workspace
+        run: cargo build --all-features --all-targets --workspace
       - name: test and generate coverage
-        run: cargo llvm-cov --profile "ci-coverage" --all-features --all-targets --workspace --lcov --output-path lcov.info
+        run: cargo llvm-cov --all-features --all-targets --workspace --lcov --output-path lcov.info
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
         with:
