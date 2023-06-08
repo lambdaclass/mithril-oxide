@@ -139,6 +139,7 @@ pub fn codegen(
     for item in &foreign_mod.items {
         match item {
             CxxForeignItem::Fn(req) => {
+                // Search for the matching C++ entity using clang.
                 let entity = analysis::find_fn(
                     &translation_unit,
                     find_cxx_path(&req.attrs).unwrap_or(&req.sig.ident.to_string()),
@@ -154,6 +155,7 @@ pub fn codegen(
                     "Non-impl methods (functions with self) are not allowed."
                 );
 
+                // Search for the matching C++ entity using clang.
                 let (out_chunk_decl, out_chunk_impl, aux_chunk) =
                     codegen::generate_fn(req, entity, None, &auxlib_name)?;
                 ffi_stream.append_all(out_chunk_decl);
@@ -162,6 +164,9 @@ pub fn codegen(
                 aux_source_required |= !aux_chunk.is_empty();
             }
             CxxForeignItem::Impl(req) => {
+                // Retrieve the struct type (or self type) from the generated items, then extract
+                // the C++ path (with namespace, etc) of the item and the C++ path (with namespace,
+                // etc).
                 let struct_ty = foreign_mod
                     .items
                     .iter()
@@ -175,6 +180,8 @@ pub fn codegen(
                 let base_cxx_path = find_cxx_path(&struct_ty.attrs)
                     .map_or_else(|| Cow::Owned(struct_ty.ident.to_string()), Cow::Borrowed);
 
+                // Process each item into a separate TokenStream (Rust). The auxlib stream can be
+                // the same.
                 let mut inner_out_stream = TokenStream::new();
                 for item in &req.items {
                     let entity = analysis::find_fn(
@@ -196,6 +203,7 @@ pub fn codegen(
                     aux_source_required |= !aux_chunk.is_empty();
                 }
 
+                // Encapsulate the items' TokenStream into an `impl { ... }` block and append it.
                 let ident = &struct_ty.ident;
                 out_stream.append_all(quote! {
                     impl #ident {
@@ -212,10 +220,12 @@ pub fn codegen(
         wrappers::build_auxiliary_library(auxlib_path, &aux_source_path)?;
     }
 
+    // Revert the switching done earlier and merge both (extern decls & actual bindings) streams.
     ffi_stream.append_all(out_stream);
     Ok(ffi_stream)
 }
 
+/// Return the `cxx_path` attribute's value if present, or the type name if not.
 fn find_cxx_path(attrs: &[CxxForeignAttr]) -> Option<&str> {
     attrs.iter().find_map(|x| match x {
         CxxForeignAttr::CxxPath(x) => Some(x.as_str()),

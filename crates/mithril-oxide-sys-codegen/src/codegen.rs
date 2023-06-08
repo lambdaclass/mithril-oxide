@@ -10,6 +10,11 @@ use std::{
 };
 use syn::{FnArg, Ident, Pat, ReturnType};
 
+/// Generate the bindings for an enum.
+///
+/// The generated enum will contain the requested fields (may not contain all of them), each with
+/// the same value as in C++. The enum will also have the same internal base type as in C++.
+// TODO: Mark as `non_exhaustive` if incomplete.
 #[allow(clippy::similar_names)]
 pub fn generate_enum(
     req: &CxxForeignEnum,
@@ -17,6 +22,7 @@ pub fn generate_enum(
 ) -> Result<(TokenStream, Vec<u8>), Box<dyn std::error::Error>> {
     let mut stream = TokenStream::new();
 
+    // An enum's underlying type must be an integer.
     let underlying_type = entity
         .get_enum_underlying_type()
         .unwrap()
@@ -37,6 +43,7 @@ pub fn generate_enum(
         _ => unreachable!(),
     };
 
+    // Extract and generate the variants with their value.
     entity.visit_children(|entity, _| {
         let (value_i64, value_u64) = match entity.get_kind() {
             EntityKind::EnumConstantDecl => entity.get_enum_constant_value(),
@@ -56,6 +63,7 @@ pub fn generate_enum(
         EntityVisitResult::Continue
     });
 
+    // Pass attributes transparently.
     let attrs = req
         .attrs
         .iter()
@@ -67,6 +75,7 @@ pub fn generate_enum(
     let vis = &req.vis;
     let ident = &req.ident;
 
+    // Merge everything together.
     let stream = quote! {
         #attrs
         #[repr(#base_ty)]
@@ -78,6 +87,7 @@ pub fn generate_enum(
     Ok((stream, Vec::new()))
 }
 
+/// Generate a free function, method, constructor or destructor (aka. anything callable).
 #[allow(clippy::too_many_lines)]
 pub fn generate_fn(
     req: &CxxForeignFn,
@@ -294,6 +304,13 @@ pub fn generate_fn(
     Ok((decl_stream, impl_stream, auxlib.into_inner()))
 }
 
+/// Generate bindings to a struct.
+///
+/// The bindings have four possible levels of integration:
+///   - Opaque unsized: Passed by pointer or reference.
+///   - Opaque sized: Values are available with the correct layout, but without its fields.
+///   - Partially shared: Some fields are exposed to Rust.
+///   - Fully shared: All the fields are exposed to Rust and the struct is constructible from Rust.
 pub fn generate_struct(
     req: &CxxForeignStruct,
     entity: Entity,

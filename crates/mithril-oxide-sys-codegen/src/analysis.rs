@@ -4,6 +4,7 @@ use syn::{FnArg, Ident, ReturnType, Signature, Type};
 
 // TODO: Filter out private and protected APIs (they shouldn't be available from Rust).
 
+/// Parse a C++ file into a clang translation unit.
 pub fn parse_cpp<'c>(
     index: &'c Index,
     path: &Path,
@@ -34,6 +35,7 @@ pub fn parse_cpp<'c>(
     Ok(translation_unit)
 }
 
+/// Search for an enum declaration in the C++ AST.
 pub fn find_enum<'c>(translation_unit: &'c TranslationUnit, path: &str) -> Option<Entity<'c>> {
     // Recursive helper function. Each invocation will walk a single AST level until it finds the
     // current path item.
@@ -83,6 +85,10 @@ pub fn find_enum<'c>(translation_unit: &'c TranslationUnit, path: &str) -> Optio
     inner(translation_unit.get_entity(), path.split("::").peekable())
 }
 
+/// Search for a function declaration in the C++ AST.
+///
+/// Apart from the obvious stuff (same self type if applicable, path, return type and arguments),
+/// the const specification (on methods) is also checked.
 pub fn find_fn<'c>(
     translation_unit: &'c TranslationUnit,
     path: &str,
@@ -246,12 +252,12 @@ pub fn find_struct<'c>(translation_unit: &'c TranslationUnit, path: &str) -> Opt
     inner(translation_unit.get_entity(), path.split("::").peekable())
 }
 
+/// Compare a Rust type with its C++ counterpart.
 fn compare_types(lhs: &Type, rhs: &clang::Type, mappings: &HashMap<Ident, String>) -> bool {
     match lhs {
         Type::Path(ty) => {
             assert!(ty.qself.is_none());
 
-            // TODO: Builtin primitives (bool, u8, i8, f32, char...).
             let canonical_type = rhs.get_canonical_type();
             if ty.path.is_ident("Self") {
                 true

@@ -6,18 +6,22 @@ use std::{
     process::{Command, Stdio},
 };
 
+/// Find the path to `llvm-config`.
 fn find_llvm_config() -> Result<PathBuf, Box<dyn std::error::Error>> {
     Ok(PathBuf::from(var("MLIR_SYS_160_PREFIX")?).join("bin/llvm-config"))
 }
 
+/// Find the path to `llvm-ar`.
 fn find_ar() -> Result<PathBuf, Box<dyn std::error::Error>> {
     Ok(PathBuf::from(var("MLIR_SYS_160_PREFIX")?).join("bin/llvm-ar"))
 }
 
+/// Find the path to `clang++`.
 fn find_clang() -> Result<PathBuf, Box<dyn std::error::Error>> {
     Ok(PathBuf::from(var("MLIR_SYS_160_PREFIX")?).join("bin/clang++"))
 }
 
+/// Find the standard clang include paths, as well as those for LLVM and MLIR.
 pub fn extract_clang_include_paths(path: &Path) -> Result<Vec<String>, Box<dyn std::error::Error>> {
     let process = Command::new(find_clang()?)
         .arg("-c")
@@ -71,6 +75,7 @@ pub fn extract_clang_include_paths(path: &Path) -> Result<Vec<String>, Box<dyn s
     Ok(include_paths)
 }
 
+/// Builds the auxiliary library into an archive file (a static library).
 pub fn build_auxiliary_library(
     target_path: &Path,
     source_path: &Path,
