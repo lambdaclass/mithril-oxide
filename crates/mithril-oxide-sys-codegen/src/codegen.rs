@@ -173,7 +173,11 @@ pub fn generate_fn(
 
     // Mac OS nonsense.
     #[cfg(target_os = "macos")]
-    let mangled_name = mangled_name.strip_prefix('_').unwrap();
+    let mangled_name = mangled_name
+        .to_string()
+        .strip_prefix('_')
+        .unwrap()
+        .to_string();
 
     let extern_arg_decls = req
         .sig
