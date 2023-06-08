@@ -10,5 +10,7 @@ fn main() {
 
         registerAllDialects(&mut context);
         context.loadAllAvailableDialects();
+
+        context.del();
     }
 }

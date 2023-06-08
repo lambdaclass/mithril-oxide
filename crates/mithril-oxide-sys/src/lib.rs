@@ -20,6 +20,8 @@ mod ffi {
     impl MLIRContext {
         #[codegen(cxx_path = "MLIRContext")]
         pub fn new(threading: Threading) -> Self;
+        #[codegen(cxx_path = "~MLIRContext")]
+        pub fn del(mut self);
 
         pub fn isMultithreadingEnabled(&mut self) -> bool;
 

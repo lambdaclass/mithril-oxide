@@ -8,7 +8,7 @@ use std::{
     borrow::Cow,
     io::{Cursor, Write},
 };
-use syn::{FnArg, Ident, Pat};
+use syn::{FnArg, Ident, Pat, ReturnType};
 
 pub fn generate_enum(
     req: &CxxForeignEnum,
@@ -180,11 +180,9 @@ pub fn generate_fn(
         .map(|arg| match arg {
             FnArg::Receiver(x) => {
                 let self_ty = self_ty.unwrap();
-                match (&x.mutability, &x.reference) {
-                    (None, None) => panic!(),
-                    (None, Some(_)) => quote!(this: *const #self_ty,),
-                    (Some(_), None) => panic!(),
-                    (Some(_), Some(_)) => quote!(this: *mut #self_ty,),
+                match &x.mutability {
+                    None => quote!(this: *const #self_ty,),
+                    Some(_) => quote!(this: *mut #self_ty,),
                 }
             }
             arg => quote!(#arg,),
@@ -249,22 +247,38 @@ pub fn generate_fn(
                 },
             )
         }
-        EntityKind::Destructor => todo!(),
-        _ => {
+        EntityKind::Destructor => {
+            assert_eq!(req.sig.inputs.len(), 1);
+            assert!(matches!(ret_ty.as_ref(), &ReturnType::Default));
+
             (
                 quote! {
                     #link_attr
                     extern #calling_convention {
-                        fn #mangled_name(#extern_arg_decls) #ret_ty;
+                        fn #mangled_name(#extern_arg_decls);
                     }
                 },
                 quote! {
-                    #vis unsafe fn #ident(#arg_decls) #ret_ty {
-                        #mangled_name(#arg_names)
+                    #vis unsafe fn #ident(#arg_decls) {
+                        #mangled_name(&mut self as *mut _);
+                        ::std::mem::forget(self);
                     }
                 },
             )
         }
+        _ => (
+            quote! {
+                #link_attr
+                extern #calling_convention {
+                    fn #mangled_name(#extern_arg_decls) #ret_ty;
+                }
+            },
+            quote! {
+                #vis unsafe fn #ident(#arg_decls) #ret_ty {
+                    #mangled_name(#arg_names)
+                }
+            },
+        ),
     };
 
     Ok((decl_stream, impl_stream, auxlib.into_inner()))
