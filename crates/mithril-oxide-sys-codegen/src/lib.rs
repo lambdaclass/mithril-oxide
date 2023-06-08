@@ -21,23 +21,34 @@ mod codegen;
 mod parsing;
 mod wrappers;
 
-#[allow(clippy::missing_errors_doc)]
-#[allow(clippy::missing_panics_doc)]
+/// Generate a `TokenStream` with the C++ bindings and potentially an auxiliary static library from
+/// an input `TokenStream`.
+///
+/// # Errors
+///
+/// > TODO: Why?
+///
+/// # Panics
+///
+/// > TODO: Why?
 #[allow(clippy::too_many_lines)]
 pub fn codegen(
     auxlib_path: &Path,
     stream: TokenStream,
 ) -> Result<TokenStream, Box<dyn std::error::Error>> {
+    // Parse the custom `mod` item (see `parse` module).
     let foreign_mod: CxxForeignMod = syn::parse2(stream)?;
 
+    // Initialize clang for later use.
     let clang = Clang::new()?;
     let index = Index::new(&clang, true, false);
 
+    // Clang only parses files.
     let temp_dir = tempdir()?;
     let ast_source_path = temp_dir.path().join("ast.cpp");
     let aux_source_path = temp_dir.path().join("aux.cpp");
 
-    // Write C++ source for analysis.
+    // Write C++ source for analysis into `ast_source_path`.
     foreign_mod
         .items
         .iter()
@@ -50,8 +61,11 @@ pub fn codegen(
             Ok(f)
         })?;
 
+    // Parse the C++ source for analysis.
     let translation_unit = analysis::parse_cpp(&index, &ast_source_path)?;
 
+    // Initialize the output streams for both the Rust (bindings) and C++ (aux library) along with
+    // a flag on whether the later is necessary.
     let mut out_stream = TokenStream::new();
     let mut aux_source = File::create(&aux_source_path)?;
     let mut aux_source_required = false;
@@ -64,30 +78,41 @@ pub fn codegen(
     }
     writeln!(aux_source)?;
 
-    // Process types and generate their mappings.
+    // Process types and generate their mappings. They are processed first because the funcitons and
+    // methods may depend on them.
     let mut mappings = HashMap::new();
     for item in &foreign_mod.items {
         match item {
             CxxForeignItem::Enum(req) => {
+                // Extract the C++ path (with namespace, etc) of the item, then search for the
+                // matching C++ entity using clang.
                 let cxx_path = find_cxx_path(&req.attrs)
                     .map_or_else(|| Cow::Owned(req.ident.to_string()), Cow::Borrowed);
                 let entity =
                     analysis::find_enum(&translation_unit, &cxx_path).expect("Entity not found");
 
+                // Register the mapping from Rust to C++ (see the function and method processing).
                 mappings.insert(req.ident.clone(), cxx_path.to_string());
 
+                // Generate the item code for both Rust and C++ (aux library) and append it to their
+                // respective streams.
                 let (out_chunk, aux_chunk) = codegen::generate_enum(req, entity)?;
                 out_stream.append_all(out_chunk);
                 aux_source.write_all(&aux_chunk)?;
             }
             CxxForeignItem::Struct(req) => {
+                // Extract the C++ path (with namespace, etc) of the item, then search for the
+                // matching C++ entity using clang.
                 let cxx_path = find_cxx_path(&req.attrs)
                     .map_or_else(|| Cow::Owned(req.ident.to_string()), Cow::Borrowed);
                 let entity =
                     analysis::find_struct(&translation_unit, &cxx_path).expect("Entity not found");
 
+                // Register the mapping from Rust to C++ (see the function and method processing).
                 mappings.insert(req.ident.clone(), cxx_path.to_string());
 
+                // Generate the item code for both Rust and C++ (aux library) and append it to their
+                // respective streams.
                 let (out_chunk, aux_chunk) = codegen::generate_struct(req, entity)?;
                 out_stream.append_all(out_chunk);
                 aux_source.write_all(&aux_chunk)?;
@@ -96,7 +121,8 @@ pub fn codegen(
         }
     }
 
-    // Process functions and methods using the precomputed mappings.
+    // Extract the auxiliary library name (for linking purposes, ex. `libauxlib.a` into `auxlib` to
+    // be used like in `-lauxlib`).
     let auxlib_name = auxlib_path
         .with_extension("")
         .file_name()
@@ -107,6 +133,7 @@ pub fn codegen(
         .unwrap()
         .to_string();
 
+    // Process functions and methods using the precomputed mappings.
     let mut ffi_stream = out_stream;
     let mut out_stream = TokenStream::new();
     for item in &foreign_mod.items {
@@ -119,6 +146,8 @@ pub fn codegen(
                     &mappings,
                 )
                 .expect("Entity not found");
+
+                // Free functions must not be methods.
                 assert_eq!(
                     entity.get_kind(),
                     EntityKind::FunctionDecl,
