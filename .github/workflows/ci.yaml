@@ -16,6 +16,7 @@ jobs:
       MLIR_SYS_160_PREFIX: /usr/lib/llvm-16/
       RUSTUP_TOOLCHAIN: nightly
       LLVM_CONFIG_PATH: /usr/lib/llvm-16/bin/llvm-config
+      RUST_LOG: debug
     steps:
       - uses: actions/checkout@v3
       - uses: dtolnay/rust-toolchain@nightly
@@ -37,9 +38,9 @@ jobs:
       - name: set LD_LIBRARY_PATH
         run: echo "LIBCLANG_PATH=$(pwd)/lib" >> $GITHUB_ENV
       - name: build
-        run: LD_LIBRARY_PATH=$(pwd)/lib LIBCLANG_PATH=$(pwd)/lib cargo build --all-features --all-targets --workspace
+        run: cargo build --all-features --all-targets --workspace
       - name: Clippy
-        run: LD_LIBRARY_PATH=$(pwd)/lib LIBCLANG_PATH=$(pwd)/lib cargo clippy --all-features --workspace --all-targets -- -D warnings
+        run: cargo clippy --all-features --workspace --all-targets -- -D warnings
 
   fmt:
     name: rustfmt
@@ -85,9 +86,9 @@ jobs:
       - name: set LD_LIBRARY_PATH
         run: echo "LIBCLANG_PATH=$(pwd)/lib" >> $GITHUB_ENV
       - name: build
-        run: LD_LIBRARY_PATH=$(pwd)/lib LIBCLANG_PATH=$(pwd)/lib cargo build --profile "ci-coverage" --all-features --all-targets --workspace
+        run: cargo build --profile "ci-coverage" --all-features --all-targets --workspace
       - name: test and generate coverage
-        run: LD_LIBRARY_PATH=$(pwd)/lib LIBCLANG_PATH=$(pwd)/lib cargo llvm-cov --profile "ci-coverage" --all-features --all-targets --workspace --lcov --output-path lcov.info
+        run: cargo llvm-cov --profile "ci-coverage" --all-features --all-targets --workspace --lcov --output-path lcov.info
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
         with:
