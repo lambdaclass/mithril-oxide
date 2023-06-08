@@ -7,6 +7,7 @@ use syn::{
     Signature, Token, Visibility,
 };
 
+/// A custom module-like item.
 #[derive(Debug, Clone)]
 pub struct CxxForeignMod {
     pub vis: Visibility,
@@ -35,6 +36,7 @@ impl Parse for CxxForeignMod {
     }
 }
 
+/// All possible bindings.
 #[derive(Debug, Clone)]
 pub enum CxxForeignItem {
     IncludeAttr(String),
@@ -102,6 +104,7 @@ impl Parse for CxxForeignItem {
     }
 }
 
+/// A binding to an enum.
 #[derive(Debug, Clone)]
 pub struct CxxForeignEnum {
     pub attrs: Vec<CxxForeignAttr>,
@@ -126,6 +129,7 @@ impl Parse for CxxForeignEnum {
     }
 }
 
+/// A binding to a function, constructor, destructor or method (both normal and static).
 #[derive(Debug, Clone)]
 pub struct CxxForeignFn {
     pub attrs: Vec<CxxForeignAttr>,
@@ -145,6 +149,7 @@ impl Parse for CxxForeignFn {
     }
 }
 
+/// An impl block. Not a binding per se, but contains function bindings for a struct.
 #[derive(Debug, Clone)]
 pub struct CxxForeignImpl {
     pub attrs: Vec<CxxForeignAttr>,
@@ -173,6 +178,7 @@ impl Parse for CxxForeignImpl {
     }
 }
 
+/// A class or struct binding.
 #[derive(Debug, Clone)]
 pub struct CxxForeignStruct {
     pub attrs: Vec<CxxForeignAttr>,
@@ -209,6 +215,12 @@ impl Parse for CxxForeignStruct {
     }
 }
 
+/// An item attribute.
+///
+/// Possible kinds:
+///   - Pass-through: Attributes are forwarded to the generated binding.
+///   - `cxx_path`: Specifies the path in the C++ AST (used for namespaces, overloading...).
+///   - `kind`: Requests a specific struct binding type.
 #[derive(Debug, Clone)]
 pub enum CxxForeignAttr {
     PassThrough(Attribute),
@@ -265,6 +277,7 @@ impl CxxForeignAttr {
     }
 }
 
+/// Struct binding kinds. See `crate::codegen::generate_struct()` for more info.
 #[derive(Debug, Clone, Copy)]
 pub enum CxxBindingKind {
     OpaqueUnsized,
