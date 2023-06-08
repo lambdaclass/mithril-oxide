@@ -218,6 +218,7 @@ pub fn find_struct<'c>(translation_unit: &'c TranslationUnit, path: &str) -> Opt
             if path.peek().is_none() {
                 return match entity.get_kind() {
                     EntityKind::ClassDecl | EntityKind::StructDecl => {
+                        // structs should always have a definition.
                         result = Some(entity);
                         EntityVisitResult::Break
                     }
@@ -306,6 +307,13 @@ fn compare_types(lhs: &Type, rhs: &clang::Type, mappings: &HashMap<Ident, String
                     && compare_types(&ty.elem, &rhs.get_pointee_type().unwrap(), mappings)
             }
             _ => panic!(),
+        },
+        Type::Ptr(ty) => match rhs.get_kind() {
+            TypeKind::Pointer => {
+                ty.mutability.is_some() != rhs.is_const_qualified()
+                    && compare_types(&ty.elem, &rhs.get_pointee_type().unwrap(), mappings)
+            }
+            _x => false,
         },
         _ => todo!(),
     }
