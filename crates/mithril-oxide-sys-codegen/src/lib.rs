@@ -94,6 +94,16 @@ pub fn codegen(
     }
 
     // Process functions and methods using the precomputed mappings.
+    let auxlib_name = auxlib_path
+        .with_extension("")
+        .file_name()
+        .unwrap()
+        .to_string_lossy()
+        .into_owned()
+        .strip_prefix("lib")
+        .unwrap()
+        .to_string();
+
     let mut ffi_stream = out_stream;
     let mut out_stream = TokenStream::new();
     for item in &foreign_mod.items {
@@ -113,7 +123,7 @@ pub fn codegen(
                 );
 
                 let (out_chunk_decl, out_chunk_impl, aux_chunk) =
-                    codegen::generate_fn(req, entity, None)?;
+                    codegen::generate_fn(req, entity, None, &auxlib_name)?;
                 ffi_stream.append_all(out_chunk_decl);
                 out_stream.append_all(out_chunk_impl);
                 aux_source.write_all(&aux_chunk)?;
@@ -148,7 +158,7 @@ pub fn codegen(
                     .expect("Entity not found");
 
                     let (out_chunk_decl, out_chunk_impl, aux_chunk) =
-                        codegen::generate_fn(item, entity, Some(&struct_ty.ident))?;
+                        codegen::generate_fn(item, entity, Some(&struct_ty.ident), &auxlib_name)?;
                     ffi_stream.append_all(out_chunk_decl);
                     inner_out_stream.append_all(out_chunk_impl);
                     aux_source.write_all(&aux_chunk)?;

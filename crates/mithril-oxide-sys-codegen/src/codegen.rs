@@ -81,9 +81,10 @@ pub fn generate_fn(
     req: &CxxForeignFn,
     entity: Entity,
     self_ty: Option<&Ident>,
+    auxlib_name: &str,
 ) -> Result<(TokenStream, TokenStream, Vec<u8>), Box<dyn std::error::Error>> {
     let mut auxlib = Cursor::new(Vec::new());
-    let mangled_name = if entity.is_inline_function() {
+    let (mangled_name, link_attr) = if entity.is_inline_function() {
         let mangled_name = entity.get_mangled_name().unwrap();
 
         let has_self = req
@@ -154,9 +155,18 @@ pub fn generate_fn(
         writeln!(auxlib, "}}")?;
         writeln!(auxlib)?;
 
-        format_ident!("wrap_{}", mangled_name)
+        (
+            format_ident!("wrap_{}", mangled_name),
+            quote! {
+                #[link(name = #auxlib_name, kind = "static")]
+                #[link(name = "stdc++")]
+            },
+        )
     } else {
-        format_ident!("{}", entity.get_mangled_name().unwrap())
+        (
+            format_ident!("{}", entity.get_mangled_name().unwrap()),
+            TokenStream::new(),
+        )
     };
 
     // Mac OS nonsense.
@@ -221,6 +231,7 @@ pub fn generate_fn(
     let ident = &req.sig.ident;
 
     let decl_stream = quote! {
+        #link_attr
         extern #calling_convention {
             fn #mangled_name(#extern_arg_decls) #ret_ty;
         }
