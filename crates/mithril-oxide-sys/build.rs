@@ -11,7 +11,7 @@ fn main() {
     println!("cargo:rustc-link-search={}", var("OUT_DIR").unwrap());
     // linking to llvm here works if llvm-config --shared outputs shared, not static, because in static mlir likely includes llvm too.
 
-    let mut process = Command::new(dbg!(Path::new(mlir_env).join("bin/llvm-config")))
+    let mut process = Command::new(Path::new(mlir_env).join("bin/llvm-config"))
         .arg("--shared-mode")
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
