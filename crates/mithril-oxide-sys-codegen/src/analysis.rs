@@ -257,7 +257,10 @@ fn compare_types(lhs: &Type, rhs: &clang::Type, mappings: &HashMap<Ident, String
         Type::Path(ty) => {
             assert!(ty.qself.is_none());
 
-            let canonical_type = rhs.get_canonical_type();
+            let canonical_type = rhs
+                .get_elaborated_type()
+                .unwrap_or(*rhs)
+                .get_canonical_type();
             if ty.path.is_ident("Self") {
                 true
             } else if ty.path.is_ident("bool") {
@@ -307,10 +310,11 @@ fn compare_types(lhs: &Type, rhs: &clang::Type, mappings: &HashMap<Ident, String
         }
         Type::Reference(ty) => match rhs.get_kind() {
             TypeKind::LValueReference => {
-                ty.mutability.is_some() != rhs.is_const_qualified()
-                    && compare_types(&ty.elem, &rhs.get_pointee_type().unwrap(), mappings)
+                let pointee_type = rhs.get_pointee_type().unwrap();
+                ty.mutability.is_some() != pointee_type.is_const_qualified()
+                    && compare_types(&ty.elem, &pointee_type, mappings)
             }
-            _ => panic!(),
+            x => panic!("References of type {x:?} are not supported."),
         },
         Type::Ptr(ty) => match rhs.get_kind() {
             TypeKind::Pointer => {
@@ -318,7 +322,7 @@ fn compare_types(lhs: &Type, rhs: &clang::Type, mappings: &HashMap<Ident, String
                 ty.mutability.is_some() != pointee_type.is_const_qualified()
                     && compare_types(&ty.elem, &pointee_type, mappings)
             }
-            _x => false,
+            _ => false,
         },
         _ => todo!(),
     }
