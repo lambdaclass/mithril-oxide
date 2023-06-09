@@ -193,7 +193,19 @@ pub fn codegen(
                         &item.sig,
                         &mappings,
                     )
-                    .unwrap_or_else(|| panic!("Entity not found: {req:#?}"));
+                    .unwrap_or_else(|| {
+                        panic!(
+                            "Entity not found: {} (in {})",
+                            find_cxx_path(&item.attrs).map_or_else(
+                                || Cow::Owned(item.sig.ident.to_string()),
+                                Cow::Borrowed
+                            ),
+                            find_cxx_path(&req.attrs).map_or_else(
+                                || Cow::Owned(req.self_ty.get_ident().unwrap().to_string()),
+                                Cow::Borrowed
+                            )
+                        )
+                    });
 
                     let (out_chunk_decl, out_chunk_impl, aux_chunk) = codegen::generate_fn(
                         item,
