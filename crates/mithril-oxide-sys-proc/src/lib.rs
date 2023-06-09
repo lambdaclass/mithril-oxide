@@ -43,7 +43,7 @@ fn codegen_impl(attr: pm2::TokenStream, input: pm2::TokenStream) -> pm2::TokenSt
     };
 
     let mut process = Command::new(codegen_path)
-        .arg(format!("{}/libauxlib.a", var("OUT_DIR").unwrap()))
+        .arg(var("AUXLIB_PATH").unwrap())
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .stderr(Stdio::inherit())

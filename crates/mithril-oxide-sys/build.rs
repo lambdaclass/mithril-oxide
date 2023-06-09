@@ -9,8 +9,17 @@ fn main() {
     let mlir_env = env!("MLIR_SYS_160_PREFIX");
     println!("cargo:rustc-link-search={}/lib", mlir_env);
     println!("cargo:rustc-link-search={}", var("OUT_DIR").unwrap());
-    // linking to llvm here works if llvm-config --shared outputs shared, not static, because in static mlir likely includes llvm too.
 
+    // Forward a path to the auxiliary library, and link to it globally.
+    println!(
+        "cargo:rustc-env=AUXLIB_PATH={}/libauxlib.a",
+        var("OUT_DIR").unwrap()
+    );
+    println!("cargo:rustc-link-search={}", var("OUT_DIR").unwrap());
+    println!("cargo:rustc-link-lib=auxlib");
+    println!("cargo:rustc-link-lib=stdc++");
+
+    // linking to llvm here works if llvm-config --shared outputs shared, not static, because in static mlir likely includes llvm too.
     let mut process = Command::new(Path::new(mlir_env).join("bin/llvm-config"))
         .arg("--shared-mode")
         .stdin(Stdio::piped())

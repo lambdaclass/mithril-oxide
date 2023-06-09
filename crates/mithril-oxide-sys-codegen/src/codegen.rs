@@ -83,7 +83,7 @@ pub fn generate_fn(
     req: &CxxForeignFn,
     entity: Entity,
     self_ty: Option<(&Ident, &str)>,
-    auxlib_name: &str,
+    _auxlib_name: &str,
 ) -> Result<(TokenStream, TokenStream, Vec<u8>), Box<dyn std::error::Error>> {
     let mut auxlib = Cursor::new(Vec::new());
     let (mangled_name, link_attr) = if entity.is_inline_function() {
@@ -202,32 +202,20 @@ pub fn generate_fn(
             )?,
             _ => unreachable!(),
         }
-        // writeln!(
-        //     auxlib,
-        //     "    return {}({});",
-        //     match entity.get_kind() {
-        //         EntityKind::Constructor => ,
-        //         EntityKind::Destructor | EntityKind::Method =>
-        //             format!("{}::{}", self_ty.unwrap().1, entity.get_name().unwrap()),
-        //         EntityKind::FunctionDecl => entity.get_name().unwrap(),
-        //         _ => unreachable!(),
-        //     },
-        //     arg_names
-        // )?;
         writeln!(auxlib, "}}")?;
         writeln!(auxlib)?;
 
-        // Mac OS nonsense.
-        #[cfg(not(target_os = "macos"))]
-        let cpp_runtime = "stdc++";
-        #[cfg(target_os = "macos")]
-        let cpp_runtime = "c++";
+        // // Mac OS nonsense.
+        // #[cfg(not(target_os = "macos"))]
+        // let cpp_runtime = "stdc++";
+        // #[cfg(target_os = "macos")]
+        // let cpp_runtime = "c++";
 
         (
             format_ident!("wrap_{}", mangled_name),
             quote! {
-                #[link(name = #auxlib_name, kind = "static")]
-                #[link(name = #cpp_runtime)]
+                // #[link(name = #auxlib_name, kind = "static")]
+                // #[link(name = #cpp_runtime)]
             },
         )
     } else {
