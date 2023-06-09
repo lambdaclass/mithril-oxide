@@ -19,10 +19,12 @@ jobs:
       LLVM_CONFIG_PATH: /usr/lib/llvm-16/bin/llvm-config
     steps:
       - uses: actions/checkout@v3
-      - uses: dtolnay/rust-toolchain@nightly
-        with:
-          components: clippy
-      - uses: Swatinem/rust-cache@v2
+      - name: Setup rust env
+        uses: dtolnay/rust-toolchain@nightly
+      - name: Retreive cached dependecies
+        uses: Swatinem/rust-cache@v2
+      - name: Install cargo-llvm-cov
+        uses: taiki-e/install-action@cargo-llvm-cov
       - name: add llvm deb repository
         uses: myci-actions/add-deb-repo@10
         with:
