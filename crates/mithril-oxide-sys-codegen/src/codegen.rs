@@ -88,6 +88,8 @@ pub fn generate_enum(
 }
 
 /// Generate a free function, method, constructor or destructor (aka. anything callable).
+// TODO: Fix warning 'wrap__???' has C-linkage specified, but returns user-defined type '???' which
+//   is incompatible with C [-Wreturn-type-c-linkage]
 #[allow(clippy::too_many_lines)]
 pub fn generate_fn(
     req: &CxxForeignFn,
@@ -99,19 +101,27 @@ pub fn generate_fn(
     let mangled_name = if entity.is_inline_function() {
         let mangled_name = entity.get_mangled_name().unwrap();
 
-        let has_self = req
-            .sig
-            .inputs
-            .first()
-            .is_some_and(|x| matches!(x, FnArg::Receiver(_)));
+        let is_constructor = entity.get_kind() == EntityKind::Constructor;
+        let has_self = is_constructor
+            || req
+                .sig
+                .inputs
+                .first()
+                .is_some_and(|x| matches!(x, FnArg::Receiver(_)));
         let arg_decls = has_self
-            .then(|| format!("{} self", self_ty.unwrap().1))
+            .then(|| {
+                if is_constructor {
+                    format!("{} *self", self_ty.unwrap().1)
+                } else {
+                    format!("{} self", self_ty.unwrap().1)
+                }
+            })
             .into_iter()
             .chain(
                 req.sig
                     .inputs
                     .iter()
-                    .skip(usize::from(has_self))
+                    .skip(usize::from(!is_constructor && has_self))
                     .zip(entity.get_arguments().unwrap())
                     .map(|(l, r)| match l {
                         FnArg::Typed(x) => match x.pat.as_ref() {
@@ -136,7 +146,7 @@ pub fn generate_fn(
             .sig
             .inputs
             .iter()
-            .skip(usize::from(has_self))
+            .skip(usize::from(!is_constructor && has_self))
             .map(|ty| match ty {
                 FnArg::Typed(x) => match x.pat.as_ref() {
                     Pat::Ident(x) => x.ident.to_string(),
@@ -167,12 +177,7 @@ pub fn generate_fn(
             EntityKind::Constructor => {
                 writeln!(
                     auxlib,
-                    "    new({}) {}({});",
-                    if req.sig.inputs.len() == 1 {
-                        arg_names.as_str()
-                    } else {
-                        "self"
-                    },
+                    "    new(self) {}({});",
                     self_ty.unwrap().1,
                     args_without_self
                         .iter()
@@ -262,7 +267,7 @@ pub fn generate_fn(
             FnArg::Typed(arg) => match arg.pat.as_ref() {
                 Pat::Ident(x) => {
                     let ident = &x.ident;
-                    quote!(#ident)
+                    quote!(#ident,)
                 }
                 _ => todo!(),
             },

@@ -294,7 +294,7 @@ fn compare_types(lhs: &Type, rhs: &clang::Type, mappings: &HashMap<Ident, String
                     8
                 };
 
-                canonical_type.is_unsigned_integer()
+                canonical_type.is_signed_integer()
                     && canonical_type.get_sizeof().unwrap() == target_width
             } else if ty.path.is_ident("f32") {
                 canonical_type.get_kind() == TypeKind::Float
@@ -314,8 +314,9 @@ fn compare_types(lhs: &Type, rhs: &clang::Type, mappings: &HashMap<Ident, String
         },
         Type::Ptr(ty) => match rhs.get_kind() {
             TypeKind::Pointer => {
-                ty.mutability.is_some() != rhs.is_const_qualified()
-                    && compare_types(&ty.elem, &rhs.get_pointee_type().unwrap(), mappings)
+                let pointee_type = rhs.get_pointee_type().unwrap();
+                ty.mutability.is_some() != pointee_type.is_const_qualified()
+                    && compare_types(&ty.elem, &pointee_type, mappings)
             }
             _x => false,
         },

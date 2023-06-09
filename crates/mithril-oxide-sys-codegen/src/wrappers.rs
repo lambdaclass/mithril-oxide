@@ -83,6 +83,14 @@ pub fn build_auxiliary_library(
     assert_eq!(source_path.extension().and_then(OsStr::to_str), Some("cpp"));
     assert_eq!(target_path.extension().and_then(OsStr::to_str), Some("a"));
 
+    // Debugging instructions:
+    //   - Uncomment the line after this comment to display the generated C++.
+    //   - Replace `Stdio::null()` by `Stdio::inherit()` in the command below.
+    //   - Remember to leave as it is now just in case (the process's i/o is already used for
+    //     transferring data and clang may break stuff if not filtered out).
+    //
+    // eprintln!("{}", std::fs::read_to_string(source_path).unwrap());
+
     let mut process = Command::new(find_clang()?)
         .arg("-c")
         .arg("-std=c++17")
