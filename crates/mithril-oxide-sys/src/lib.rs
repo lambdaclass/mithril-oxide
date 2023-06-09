@@ -3,20 +3,45 @@
 
 use mithril_oxide_sys_proc::codegen;
 
-// Notes: if a method seems to not be found, check the mutability on the rust side matches constness on c++ side.
+// Note: If a method which is known to exist is not being found, ensure that its arguments have the
+//   same mutability specifier in both Rust and C++. In other words, arguments which are `*const _`
+//   or `&_` must be `const _ *` or `const _ &` respectively; whereas `*mut _` or `&mut _` must be
+//   `_ *` or `_ &` respectively.
 
 #[codegen]
 pub mod ffi {
+    include!("llvm/ADT/StringRef.h");
     include!("mlir/InitAllDialects.h");
-    include!("mlir/IR/MLIRContext.h");
-    include!("mlir/IR/Types.h");
+    include!("mlir/Interfaces/DataLayoutInterfaces.h");
+    include!("mlir/IR/Block.h");
     include!("mlir/IR/Builders.h");
     include!("mlir/IR/Location.h");
-    include!("mlir/IR/Block.h");
-    include!("mlir/IR/Region.h");
+    include!("mlir/IR/MLIRContext.h");
     include!("mlir/IR/Operation.h");
+    include!("mlir/IR/OperationSupport.h");
+    include!("mlir/IR/Region.h");
+    include!("mlir/IR/Types.h");
     include!("mlir/IR/Value.h");
-    include!("mlir/Interfaces/DataLayoutInterfaces.h");
+
+    // Manual wrappers (mostly for templated code).
+    include!("crates/mithril-oxide-sys/src/aux.hpp");
+
+    //
+    // LLVM Support Utilities.
+    //
+
+    /// A non-owning string reference (aka. Rust's `&str`).
+    #[codegen(cxx_path = "llvm::StringRef", kind = "opaque-sized")]
+    pub struct StringRef;
+
+    impl StringRef {
+        #[codegen(cxx_path = "StringRef")]
+        pub fn new(data: *const i8, length: u64) -> Self;
+    }
+
+    //
+    // MLIR Context.
+    //
 
     #[codegen(cxx_path = "mlir::MLIRContext::Threading")]
     pub enum Threading {
@@ -47,6 +72,36 @@ pub mod ffi {
     #[codegen(cxx_path = "mlir::registerAllDialects")]
     pub fn registerAllDialects(context: &mut MLIRContext);
 
+    //
+    // MLIR Locations.
+    //
+
+    /// A generic MLIR location.
+    ///
+    /// Its concrete counterparts are:
+    ///   - CallSiteLoc
+    ///   - FileLineColLoc
+    ///   - FusedLoc
+    ///   - NameLoc
+    ///   - OpaqueLoc
+    ///   - UnknownLoc
+    #[codegen(cxx_path = "mlir::Location", kind = "opaque-sized")]
+    pub struct Location;
+
+    impl Location {
+        pub fn dump(&self);
+    }
+
+    //
+    // MLIR Types.
+    //
+
+    /// A generic MLIR type.
+    ///
+    /// Its concrete counterparts include (but are not limited to):
+    ///   - FloatType
+    ///   - IndexType
+    ///   - IntegerType
     #[codegen(cxx_path = "mlir::Type", kind = "opaque-sized")]
     pub struct Type;
 
@@ -81,13 +136,11 @@ pub mod ffi {
         pub fn dump(&self);
     }
 
-    #[codegen(cxx_path = "mlir::Location", kind = "opaque-sized")]
-    pub struct Location;
+    //
+    // MLIR Attributes.
+    //
 
-    impl Location {
-        pub fn dump(&self);
-    }
-
+    /// A generic MLIR attribute.
     #[codegen(cxx_path = "mlir::Attribute", kind = "opaque-sized")]
     pub struct Attribute;
 
@@ -95,6 +148,11 @@ pub mod ffi {
         pub fn dump(&self);
     }
 
+    //
+    // MLIR Operations.
+    //
+
+    /// A generic MLIR operation.
     #[codegen(cxx_path = "mlir::Operation", kind = "opaque-sized")]
     pub struct Operation;
 
@@ -115,9 +173,37 @@ pub mod ffi {
         // todo: getresults returns opresult, which inherits value
     }
 
+    /// An operation builder.
+    #[codegen(cxx_path = "mlir::OperationState", kind = "opaque-sized")]
+    pub struct OperationState;
+
+    impl OperationState {
+        #[codegen(cxx_path = "OperationState")]
+        pub fn new(location: Location, name: StringRef) -> Self;
+
+        // pub fn addOperands(&mut self, newOperands: ValueRange);
+        // pub fn addTypes(&mut self, newTypes: TypeRange);
+        pub fn addAttribute(&mut self, name: StringRef, attr: Attribute);
+        pub fn addSuccessors(&mut self, successor: *mut Block);
+        pub fn addRegion(&mut self) -> *mut Region;
+    }
+
+    pub fn _OperationState_addOperands(state: &mut OperationState, data: *mut Value, length: u64);
+    pub fn _OperationState_addTypes(state: &mut OperationState, data: *mut Type, length: u64);
+
+    /// The builtin module operation.
     #[codegen(cxx_path = "mlir::ModuleOp", kind = "opaque-sized")]
     pub struct ModuleOp;
 
+    impl ModuleOp {
+        fn getBodyRegion(&mut self) -> &'static mut Region;
+    }
+
+    //
+    // Other MLIR stuff.
+    //
+
+    /// An MLIR block.
     #[codegen(cxx_path = "mlir::Block", kind = "opaque-sized")]
     pub struct Block;
 
@@ -125,6 +211,7 @@ pub mod ffi {
         pub fn dump(&mut self);
     }
 
+    /// An MLIR region.
     #[codegen(cxx_path = "mlir::Region", kind = "opaque-sized")]
     pub struct Region;
 
@@ -142,6 +229,7 @@ pub mod ffi {
         pub fn getContext(&mut self) -> *mut MLIRContext;
     }
 
+    /// An MLIR value.
     #[codegen(cxx_path = "mlir::Value", kind = "opaque-sized")]
     pub struct Value;
 
@@ -159,6 +247,11 @@ pub mod ffi {
         pub fn dump(&mut self);
     }
 
+    //
+    // MLIR Utilities.
+    //
+
+    /// An utility to obtain types, attributes...
     #[codegen(cxx_path = "mlir::Builder", kind = "opaque-sized")]
     pub struct Builder;
 
@@ -167,6 +260,21 @@ pub mod ffi {
         pub fn new(context: *mut MLIRContext) -> Self;
     }
 
+    #[codegen(cxx_path = "mlir::OpBuilder::Listener", kind = "opaque-sized")]
+    pub struct OpBuilderListener;
+
+    /// An utility to obtain operations...
+    #[codegen(cxx_path = "mlir::OpBuilder", kind = "opaque-sized")]
+    pub struct OpBuilder;
+
+    impl OpBuilder {
+        pub fn atBlockEnd(block: *mut Block, listener: *mut OpBuilderListener) -> Self;
+
+        pub fn insert(&mut self, op: *mut Operation) -> *mut Operation;
+        pub fn create(&mut self, state: &OperationState) -> *mut Operation;
+    }
+
+    /// An utility to obtain the size and alignment of MLIR types.
     #[codegen(cxx_path = "mlir::DataLayout", kind = "opaque-sized")]
     pub struct DataLayout;
 
