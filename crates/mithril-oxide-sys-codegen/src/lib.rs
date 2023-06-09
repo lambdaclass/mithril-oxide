@@ -157,7 +157,7 @@ pub fn codegen(
                         &item.sig,
                         &mappings,
                     )
-                    .unwrap_or_else(|| panic!("Entity not found: {:#?}", req));
+                    .unwrap_or_else(|| panic!("Entity not found: {req:#?}"));
 
                     let (out_chunk_decl, out_chunk_impl, aux_chunk) = codegen::generate_fn(
                         item,
