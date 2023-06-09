@@ -7,5 +7,5 @@ edition = "2021"
 proc-macro = true
 
 [dependencies]
-proc-macro2 = "1.0.58"
+proc-macro2 = "1.0.60"
 mithril-oxide-sys-codegen = { path = "../mithril-oxide-sys-codegen", artifact = "bin" }

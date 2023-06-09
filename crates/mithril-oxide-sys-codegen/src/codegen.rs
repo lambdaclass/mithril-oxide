@@ -92,11 +92,11 @@ pub fn generate_enum(
 pub fn generate_fn(
     req: &CxxForeignFn,
     entity: Entity,
-    self_ty: Option<&Ident>,
-    auxlib_name: &str,
+    self_ty: Option<(&Ident, &str)>,
+    _auxlib_name: &str,
 ) -> Result<(TokenStream, TokenStream, Vec<u8>), Box<dyn std::error::Error>> {
     let mut auxlib = Cursor::new(Vec::new());
-    let (mangled_name, link_attr) = if entity.is_inline_function() {
+    let mangled_name = if entity.is_inline_function() {
         let mangled_name = entity.get_mangled_name().unwrap();
 
         let has_self = req
@@ -105,7 +105,7 @@ pub fn generate_fn(
             .first()
             .is_some_and(|x| matches!(x, FnArg::Receiver(_)));
         let arg_decls = has_self
-            .then(|| "self".to_string())
+            .then(|| format!("{} self", self_ty.unwrap().1))
             .into_iter()
             .chain(
                 req.sig
@@ -132,59 +132,92 @@ pub fn generate_fn(
             )
             .intersperse_with(|| ", ".to_string())
             .collect::<String>();
+        let args_without_self = req
+            .sig
+            .inputs
+            .iter()
+            .skip(usize::from(has_self))
+            .map(|ty| match ty {
+                FnArg::Typed(x) => match x.pat.as_ref() {
+                    Pat::Ident(x) => x.ident.to_string(),
+                    _ => todo!(),
+                },
+                FnArg::Receiver(_) => unreachable!(),
+            })
+            .collect::<Vec<_>>();
         let arg_names = has_self
-            .then(|| "self".to_string())
+            .then_some("self")
             .into_iter()
-            .chain(
-                req.sig
-                    .inputs
-                    .iter()
-                    .skip(usize::from(has_self))
-                    .map(|ty| match ty {
-                        FnArg::Typed(x) => match x.pat.as_ref() {
-                            Pat::Ident(x) => x.ident.to_string(),
-                            _ => todo!(),
-                        },
-                        FnArg::Receiver(_) => unreachable!(),
-                    }),
-            )
-            .intersperse_with(|| ", ".to_string())
+            .chain(args_without_self.iter().map(String::as_str))
+            .intersperse(", ")
             .collect::<String>();
 
         writeln!(
             auxlib,
             "extern \"C\" {} wrap_{}({}) {{",
-            entity.get_result_type().unwrap().get_display_name(),
+            entity
+                .get_result_type()
+                .unwrap()
+                .get_canonical_type()
+                .get_display_name(),
             mangled_name,
             arg_decls
         )?;
-        writeln!(
-            auxlib,
-            "    return {}({});",
-            entity.get_name().unwrap(),
-            arg_names
-        )?;
+        match entity.get_kind() {
+            EntityKind::Constructor => {
+                writeln!(
+                    auxlib,
+                    "    new({}) {}({});",
+                    if req.sig.inputs.len() == 1 {
+                        arg_names.as_str()
+                    } else {
+                        "self"
+                    },
+                    self_ty.unwrap().1,
+                    args_without_self
+                        .iter()
+                        .map(String::as_str)
+                        .intersperse(", ")
+                        .collect::<String>()
+                )?;
+                writeln!(auxlib, "    return;")?;
+            }
+            EntityKind::Destructor | EntityKind::Method => {
+                if entity.is_static_method() {
+                    writeln!(
+                        auxlib,
+                        "    return {}::{}({});",
+                        self_ty.unwrap().1,
+                        entity.get_name().unwrap(),
+                        arg_names
+                    )?;
+                } else {
+                    writeln!(
+                        auxlib,
+                        "    return self.{}({});",
+                        entity.get_name().unwrap(),
+                        args_without_self
+                            .iter()
+                            .map(String::as_str)
+                            .intersperse(", ")
+                            .collect::<String>()
+                    )?;
+                }
+            }
+            EntityKind::FunctionDecl => writeln!(
+                auxlib,
+                "    return {}({});",
+                entity.get_name().unwrap(),
+                arg_names
+            )?,
+            _ => unreachable!(),
+        }
         writeln!(auxlib, "}}")?;
         writeln!(auxlib)?;
 
-        // Mac OS nonsense.
-        #[cfg(not(target_os = "macos"))]
-        let cpp_runtime = "stdc++";
-        #[cfg(target_os = "macos")]
-        let cpp_runtime = "c++";
-
-        (
-            format_ident!("wrap_{}", mangled_name),
-            quote! {
-                #[link(name = #auxlib_name, kind = "static")]
-                #[link(name = #cpp_runtime)]
-            },
-        )
+        format_ident!("wrap_{}", mangled_name)
     } else {
-        (
-            format_ident!("{}", entity.get_mangled_name().unwrap()),
-            TokenStream::new(),
-        )
+        format_ident!("{}", entity.get_mangled_name().unwrap())
     };
 
     // Mac OS nonsense.
@@ -200,7 +233,7 @@ pub fn generate_fn(
         .iter()
         .map(|arg| match arg {
             FnArg::Receiver(x) => {
-                let self_ty = self_ty.unwrap();
+                let self_ty = self_ty.unwrap().0;
                 match &x.mutability {
                     None => quote!(this: *const #self_ty,),
                     Some(_) => quote!(this: *mut #self_ty,),
@@ -236,7 +269,7 @@ pub fn generate_fn(
         })
         .collect::<TokenStream>();
     let ret_ty = if req.sig.output == syn::parse_quote!(-> Self) {
-        let x = self_ty.unwrap();
+        let x = self_ty.unwrap().0;
         Cow::Owned(syn::parse_quote!(-> #x))
     } else {
         Cow::Borrowed(&req.sig.output)
@@ -251,10 +284,9 @@ pub fn generate_fn(
 
     let (decl_stream, impl_stream) = match entity.get_kind() {
         EntityKind::Constructor => {
-            let self_ty = self_ty.unwrap();
+            let self_ty = self_ty.unwrap().0;
             (
                 quote! {
-                    #link_attr
                     extern #calling_convention {
                         fn #mangled_name(this: *mut #self_ty, #extern_arg_decls);
                     }
@@ -274,7 +306,6 @@ pub fn generate_fn(
 
             (
                 quote! {
-                    #link_attr
                     extern #calling_convention {
                         fn #mangled_name(#extern_arg_decls);
                     }
@@ -288,7 +319,6 @@ pub fn generate_fn(
         }
         _ => (
             quote! {
-                #link_attr
                 extern #calling_convention {
                     fn #mangled_name(#extern_arg_decls) #ret_ty;
                 }

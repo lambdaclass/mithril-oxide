@@ -194,7 +194,6 @@ pub fn find_fn<'c>(
 
         result
     }
-
     inner(
         translation_unit.get_entity(),
         path.split("::").peekable(),
@@ -312,6 +311,13 @@ fn compare_types(lhs: &Type, rhs: &clang::Type, mappings: &HashMap<Ident, String
                     && compare_types(&ty.elem, &rhs.get_pointee_type().unwrap(), mappings)
             }
             _ => panic!(),
+        },
+        Type::Ptr(ty) => match rhs.get_kind() {
+            TypeKind::Pointer => {
+                ty.mutability.is_some() != rhs.is_const_qualified()
+                    && compare_types(&ty.elem, &rhs.get_pointee_type().unwrap(), mappings)
+            }
+            _x => false,
         },
         _ => todo!(),
     }

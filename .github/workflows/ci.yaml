@@ -1,0 +1,107 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  merge_group:
+    types: [checks_requested]
+
+jobs:
+  check:
+    name: clippy
+    runs-on: ubuntu-latest
+    env:
+      CARGO_REGISTRIES_CRATES_IO_PROTOCOL: sparse
+      MLIR_SYS_160_PREFIX: /usr/lib/llvm-16/
+      RUST_LOG: debug
+      RUSTUP_TOOLCHAIN: nightly
+      LLVM_CONFIG_PATH: /usr/lib/llvm-16/bin/llvm-config
+      RUST_BACKTRACE: 1
+      RUSTFLAGS: "-Zproc-macro-backtrace"
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup rust env
+        uses: dtolnay/rust-toolchain@nightly
+        with:
+          components: clippy
+      - name: Retreive cached dependecies
+        uses: Swatinem/rust-cache@v2
+      - name: add llvm deb repository
+        uses: myci-actions/add-deb-repo@10
+        with:
+          repo: deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-16 main
+          repo-name: llvm-repo
+          keys-asc: https://apt.llvm.org/llvm-snapshot.gpg.key
+      - name: Install LLVM
+        run: sudo apt-get install libllvm-16-ocaml-dev libllvm16 llvm-16 llvm-16-dev llvm-16-doc llvm-16-examples llvm-16-runtime clang-16 clang-tools-16 clang-16-doc libclang-common-16-dev libclang-16-dev libclang1-16 lld-16 libpolly-16-dev libclang-rt-16-dev libc++-16-dev libc++abi-16-dev libmlir-16-dev mlir-16-tools
+      - name: Ubuntu libclang fix
+        run: mkdir lib/ && ln -s /usr/lib/llvm-16/lib/libclang.so.1 lib/libclang.so && export LD_LIBRARY_PATH=$(pwd)/lib && export LIBCLANG_PATH=$(pwd)/lib
+      - name: set LIBCLANG_PATH
+        run: echo "LD_LIBRARY_PATH=$(pwd)/lib:$MLIR_SYS_160_PREFIX/lib" >> $GITHUB_ENV
+      - name: set LD_LIBRARY_PATH
+        run: echo "LIBCLANG_PATH=$(pwd)/lib" >> $GITHUB_ENV
+      - name: build codegen
+        run: cargo build -p mithril-oxide-sys-codegen
+      - name: build
+        run: cargo build --all-features --all-targets --workspace
+      - name: Clippy
+        run: cargo clippy --all-features --workspace --all-targets -- -D warnings
+
+  fmt:
+    name: rustfmt
+    runs-on: ubuntu-latest
+    env:
+      RUSTUP_TOOLCHAIN: nightly
+    steps:
+      - uses: actions/checkout@v3
+      - uses: dtolnay/rust-toolchain@nightly
+        with:
+          components: rustfmt
+      - run: cargo fmt --all -- --check
+
+  coverage:
+    name: test and coverage
+    runs-on: ubuntu-latest
+    env:
+      CARGO_REGISTRIES_CRATES_IO_PROTOCOL: sparse
+      MLIR_SYS_160_PREFIX: /usr/lib/llvm-16/
+      RUST_LOG: debug
+      RUSTUP_TOOLCHAIN: nightly
+      LLVM_CONFIG_PATH: /usr/lib/llvm-16/bin/llvm-config
+      RUST_BACKTRACE: 1
+      RUSTFLAGS: "-Zproc-macro-backtrace"
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup rust env
+        uses: dtolnay/rust-toolchain@nightly
+      - name: Retreive cached dependecies
+        uses: Swatinem/rust-cache@v2
+      - name: Install cargo-llvm-cov
+        uses: taiki-e/install-action@cargo-llvm-cov
+      - name: add llvm deb repository
+        uses: myci-actions/add-deb-repo@10
+        with:
+          repo: deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-16 main
+          repo-name: llvm-repo
+          keys-asc: https://apt.llvm.org/llvm-snapshot.gpg.key
+      - name: Install LLVM
+        run: sudo apt-get install libllvm-16-ocaml-dev libllvm16 llvm-16 llvm-16-dev llvm-16-doc llvm-16-examples llvm-16-runtime clang-16 clang-tools-16 clang-16-doc libclang-common-16-dev libclang-16-dev libclang1-16 lld-16 libpolly-16-dev libclang-rt-16-dev libc++-16-dev libc++abi-16-dev libmlir-16-dev mlir-16-tools
+      - name: Ubuntu libclang fix
+        run: mkdir lib/ && ln -s /usr/lib/llvm-16/lib/libclang.so.1 lib/libclang.so && export LD_LIBRARY_PATH=$(pwd)/lib && export LIBCLANG_PATH=$(pwd)/lib
+      - name: set LIBCLANG_PATH
+        run: echo "LD_LIBRARY_PATH=$(pwd)/lib:$MLIR_SYS_160_PREFIX/lib" >> $GITHUB_ENV
+      - name: set LD_LIBRARY_PATH
+        run: echo "LIBCLANG_PATH=$(pwd)/lib" >> $GITHUB_ENV
+      - name: build codegen
+        run: cargo build -p mithril-oxide-sys-codegen
+      - name: build
+        run: cargo build --all-features --all-targets --workspace
+      - name: test and generate coverage
+        run: cargo llvm-cov --all-features --all-targets --workspace --lcov --output-path lcov.info
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          #token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
+          files: lcov.info
+          fail_ci_if_error: true
