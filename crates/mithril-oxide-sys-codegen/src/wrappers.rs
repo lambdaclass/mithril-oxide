@@ -1,5 +1,5 @@
 use std::{
-    env::var,
+    env::{current_dir, var},
     ffi::OsStr,
     io::{BufRead, Cursor},
     path::{Path, PathBuf},
@@ -71,6 +71,9 @@ pub fn extract_clang_include_paths(path: &Path) -> Result<Vec<String>, Box<dyn s
         include_paths.push(include_path.to_string());
         buffer.clear();
     }
+
+    // Append current directory (should be the workspace root).
+    include_paths.push(current_dir().unwrap().to_string_lossy().into_owned());
 
     Ok(include_paths)
 }
