@@ -86,7 +86,7 @@ pub fn generate_fn(
     _auxlib_name: &str,
 ) -> Result<(TokenStream, TokenStream, Vec<u8>), Box<dyn std::error::Error>> {
     let mut auxlib = Cursor::new(Vec::new());
-    let (mangled_name, link_attr) = if entity.is_inline_function() {
+    let mangled_name = if entity.is_inline_function() {
         let mangled_name = entity.get_mangled_name().unwrap();
 
         let has_self = req
@@ -205,24 +205,9 @@ pub fn generate_fn(
         writeln!(auxlib, "}}")?;
         writeln!(auxlib)?;
 
-        // // Mac OS nonsense.
-        // #[cfg(not(target_os = "macos"))]
-        // let cpp_runtime = "stdc++";
-        // #[cfg(target_os = "macos")]
-        // let cpp_runtime = "c++";
-
-        (
-            format_ident!("wrap_{}", mangled_name),
-            quote! {
-                // #[link(name = #auxlib_name, kind = "static")]
-                // #[link(name = #cpp_runtime)]
-            },
-        )
+        format_ident!("wrap_{}", mangled_name)
     } else {
-        (
-            format_ident!("{}", entity.get_mangled_name().unwrap()),
-            TokenStream::new(),
-        )
+        format_ident!("{}", entity.get_mangled_name().unwrap())
     };
 
     // Mac OS nonsense.
@@ -292,7 +277,6 @@ pub fn generate_fn(
             let self_ty = self_ty.unwrap().0;
             (
                 quote! {
-                    #link_attr
                     extern #calling_convention {
                         fn #mangled_name(this: *mut #self_ty, #extern_arg_decls);
                     }
@@ -312,7 +296,6 @@ pub fn generate_fn(
 
             (
                 quote! {
-                    #link_attr
                     extern #calling_convention {
                         fn #mangled_name(#extern_arg_decls);
                     }
@@ -326,7 +309,6 @@ pub fn generate_fn(
         }
         _ => (
             quote! {
-                #link_attr
                 extern #calling_convention {
                     fn #mangled_name(#extern_arg_decls) #ret_ty;
                 }

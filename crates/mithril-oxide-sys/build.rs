@@ -17,7 +17,12 @@ fn main() {
     );
     println!("cargo:rustc-link-search={}", var("OUT_DIR").unwrap());
     println!("cargo:rustc-link-lib=auxlib");
+
+    // Mac OS nonsense.
+    #[cfg(not(target_os = "macos"))]
     println!("cargo:rustc-link-lib=stdc++");
+    #[cfg(target_os = "macos")]
+    println!("cargo:rustc-link-lib=c++");
 
     // linking to llvm here works if llvm-config --shared outputs shared, not static, because in static mlir likely includes llvm too.
     let mut process = Command::new(Path::new(mlir_env).join("bin/llvm-config"))
