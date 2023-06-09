@@ -9,7 +9,7 @@ use std::{
     env::var,
     io::{Read, Write},
     process::{Command, Stdio},
-    str::FromStr,
+    str::FromStr, path::Path,
 };
 
 #[proc_macro_attribute]
@@ -42,6 +42,7 @@ fn codegen_impl(attr: pm2::TokenStream, input: pm2::TokenStream) -> pm2::TokenSt
         _ => panic!("Unsupported profile name."),
     };
 
+    assert!(Path::new(&codegen_path).exists(), "mithril-oxide-sys-codegen binary not found: {codegen_path}");
     let mut process = Command::new(codegen_path)
         .arg(var("AUXLIB_PATH").unwrap())
         .stdin(Stdio::piped())
