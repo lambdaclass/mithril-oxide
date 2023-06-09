@@ -1,7 +1,8 @@
 use std::{
     env::var,
+    io::Read,
     path::Path,
-    process::{Command, Stdio}, io::Read,
+    process::{Command, Stdio},
 };
 
 fn main() {
@@ -26,7 +27,7 @@ fn main() {
     match output {
         "static" => {}
         "shared" => println!("cargo:rustc-link-lib=LLVM"),
-        _ => panic!("unknown shared mode: {}", output)
+        _ => panic!("unknown shared mode: {}", output),
     }
     println!("cargo:rustc-link-lib=MLIR");
 }
