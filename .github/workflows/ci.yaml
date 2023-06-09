@@ -23,10 +23,10 @@ jobs:
       - uses: actions/checkout@v3
       - name: Setup rust env
         uses: dtolnay/rust-toolchain@nightly
+        with:
+          components: clippy
       - name: Retreive cached dependecies
         uses: Swatinem/rust-cache@v2
-      - name: Install cargo-llvm-cov
-        uses: taiki-e/install-action@cargo-llvm-cov
       - name: add llvm deb repository
         uses: myci-actions/add-deb-repo@10
         with:
@@ -93,6 +93,8 @@ jobs:
         run: echo "LD_LIBRARY_PATH=$(pwd)/lib:$MLIR_SYS_160_PREFIX/lib" >> $GITHUB_ENV
       - name: set LD_LIBRARY_PATH
         run: echo "LIBCLANG_PATH=$(pwd)/lib" >> $GITHUB_ENV
+      - name: build codegen
+        run: cargo build -p mithril-oxide-sys-codegen
       - name: build
         run: cargo build --all-features --all-targets --workspace
       - name: test and generate coverage

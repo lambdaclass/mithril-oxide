@@ -8,8 +8,9 @@ use proc_macro2 as pm2;
 use std::{
     env::var,
     io::{Read, Write},
+    path::Path,
     process::{Command, Stdio},
-    str::FromStr, path::Path,
+    str::FromStr,
 };
 
 #[proc_macro_attribute]
@@ -42,7 +43,10 @@ fn codegen_impl(attr: pm2::TokenStream, input: pm2::TokenStream) -> pm2::TokenSt
         _ => panic!("Unsupported profile name."),
     };
 
-    assert!(Path::new(&codegen_path).exists(), "mithril-oxide-sys-codegen binary not found: {codegen_path}");
+    assert!(
+        Path::new(&codegen_path).exists(),
+        "mithril-oxide-sys-codegen binary not found: {codegen_path}"
+    );
     let mut process = Command::new(codegen_path)
         .arg(var("AUXLIB_PATH").unwrap())
         .stdin(Stdio::piped())
