@@ -41,6 +41,8 @@ jobs:
         run: echo "LD_LIBRARY_PATH=$(pwd)/lib:$MLIR_SYS_160_PREFIX/lib" >> $GITHUB_ENV
       - name: set LD_LIBRARY_PATH
         run: echo "LIBCLANG_PATH=$(pwd)/lib" >> $GITHUB_ENV
+      - name: build codegen
+        run: cargo build -p mithril-oxide-sys-codegen
       - name: build
         run: cargo build --all-features --all-targets --workspace
       - name: Clippy
