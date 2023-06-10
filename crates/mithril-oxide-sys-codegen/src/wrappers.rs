@@ -1,5 +1,5 @@
 use std::{
-    env::{current_dir, var},
+    env::var,
     ffi::OsStr,
     io::{BufRead, Cursor},
     path::{Path, PathBuf},
@@ -22,7 +22,10 @@ fn find_clang() -> Result<PathBuf, Box<dyn std::error::Error>> {
 }
 
 /// Find the standard clang include paths, as well as those for LLVM and MLIR.
-pub fn extract_clang_include_paths(path: &Path) -> Result<Vec<String>, Box<dyn std::error::Error>> {
+pub fn extract_clang_include_paths<'a>(
+    path: &Path,
+    extra_paths: impl Iterator<Item = &'a str>,
+) -> Result<Vec<String>, Box<dyn std::error::Error>> {
     let process = Command::new(find_clang()?)
         .arg("-c")
         .arg("-v")
@@ -72,16 +75,17 @@ pub fn extract_clang_include_paths(path: &Path) -> Result<Vec<String>, Box<dyn s
         buffer.clear();
     }
 
-    // Append current directory (should be the workspace root).
-    include_paths.push(current_dir().unwrap().to_string_lossy().into_owned());
+    // Append extra paths.
+    include_paths.extend(extra_paths.map(str::to_string));
 
     Ok(include_paths)
 }
 
 /// Builds the auxiliary library into an archive file (a static library).
-pub fn build_auxiliary_library(
+pub fn build_auxiliary_library<'a>(
     target_path: &Path,
     source_path: &Path,
+    extra_paths: impl Iterator<Item = &'a str>,
 ) -> Result<(), Box<dyn std::error::Error>> {
     assert_eq!(source_path.extension().and_then(OsStr::to_str), Some("cpp"));
     assert_eq!(target_path.extension().and_then(OsStr::to_str), Some("a"));
@@ -95,11 +99,12 @@ pub fn build_auxiliary_library(
     // eprintln!("{}", std::fs::read_to_string(source_path).unwrap());
 
     let mut process = Command::new(find_clang()?)
+        .args(["-gdwarf-4", "-g"])
         .arg("-c")
         .arg("-std=c++17")
         .arg(source_path.to_string_lossy().as_ref())
         .args(
-            &extract_clang_include_paths(source_path)?
+            &extract_clang_include_paths(source_path, extra_paths)?
                 .into_iter()
                 .map(|x| format!("-I{x}"))
                 .collect::<Vec<_>>(),
@@ -137,7 +142,7 @@ mod test {
         let temp_cpp = temp_dir.path().join("source.cpp");
         fs::write(&temp_cpp, b"").unwrap();
 
-        let include_paths = extract_clang_include_paths(&temp_cpp).unwrap();
+        let include_paths = extract_clang_include_paths(&temp_cpp, [].into_iter()).unwrap();
         assert!(!include_paths.is_empty());
     }
 }

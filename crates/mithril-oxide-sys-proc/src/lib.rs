@@ -1,6 +1,7 @@
 #![deny(clippy::pedantic)]
 #![deny(warnings)]
 #![feature(proc_macro_diagnostic)]
+#![feature(proc_macro_span)]
 
 use pm2::TokenStream;
 use proc_macro as pm;
@@ -49,6 +50,15 @@ fn codegen_impl(attr: pm2::TokenStream, input: pm2::TokenStream) -> pm2::TokenSt
     );
     let mut process = Command::new(codegen_path)
         .arg(var("AUXLIB_PATH").unwrap())
+        .arg(
+            proc_macro::Span::call_site()
+                .source_file()
+                .path()
+                .parent()
+                .unwrap()
+                .to_string_lossy()
+                .as_ref(),
+        )
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .stderr(Stdio::inherit())

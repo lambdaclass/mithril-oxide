@@ -1,5 +1,6 @@
 use super::Attribute;
 use crate::context::Context;
+use mithril_oxide_sys as ffi;
 use std::{fmt, marker::PhantomData};
 
 #[derive(Debug)]
@@ -236,8 +237,9 @@ impl<'c> fmt::Display for StridedLayoutAttr<'c> {
     }
 }
 
-#[derive(Debug)]
+// #[derive(Debug)]
 pub struct StringAttr<'c> {
+    pub(crate) inner: ffi::StringAttr,
     phantom: PhantomData<&'c Context>,
 }
 
@@ -288,9 +290,19 @@ impl<'c> fmt::Display for UnitAttr<'c> {
     }
 }
 
-#[derive(Debug)]
+// #[derive(Debug)]
 pub struct UnknownLoc<'c> {
+    pub(crate) inner: ffi::UnknownLoc,
     phantom: PhantomData<&'c Context>,
+}
+
+impl<'c> UnknownLoc<'c> {
+    pub fn new(context: &'c Context) -> Self {
+        Self {
+            inner: unsafe { ffi::UnknownLoc::get(&mut *context.inner.borrow_mut() as _) },
+            phantom: PhantomData,
+        }
+    }
 }
 
 impl<'c> Attribute for UnknownLoc<'c> {}

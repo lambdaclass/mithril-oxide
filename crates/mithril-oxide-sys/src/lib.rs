@@ -15,6 +15,7 @@ pub mod ffi {
     include!("mlir/Interfaces/DataLayoutInterfaces.h");
     include!("mlir/IR/Block.h");
     include!("mlir/IR/Builders.h");
+    include!("mlir/IR/BuiltinAttributes.h");
     include!("mlir/IR/Location.h");
     include!("mlir/IR/MLIRContext.h");
     include!("mlir/IR/Operation.h");
@@ -24,7 +25,7 @@ pub mod ffi {
     include!("mlir/IR/Value.h");
 
     // Manual wrappers (mostly for templated code).
-    include!("crates/mithril-oxide-sys/src/aux.hpp");
+    include!("aux.hpp");
 
     //
     // LLVM Support Utilities.
@@ -92,6 +93,15 @@ pub mod ffi {
         pub fn dump(&self);
     }
 
+    #[codegen(cxx_path = "mlir::UnknownLoc", kind = "opaque-sized")]
+    pub struct UnknownLoc;
+
+    impl UnknownLoc {
+        pub fn get(context: *mut MLIRContext) -> Self;
+    }
+
+    pub fn _UnknownLoc_downgradeTo_Location(value: UnknownLoc) -> Location;
+
     //
     // MLIR Types.
     //
@@ -148,6 +158,12 @@ pub mod ffi {
         pub fn dump(&self);
     }
 
+    /// An MLIR string attribute.
+    #[codegen(cxx_path = "mlir::StringAttr", kind = "opaque-sized")]
+    pub struct StringAttr;
+
+    impl StringAttr {}
+
     //
     // MLIR Operations.
     //
@@ -196,8 +212,14 @@ pub mod ffi {
     pub struct ModuleOp;
 
     impl ModuleOp {
-        fn getBodyRegion(&mut self) -> &'static mut Region;
+        pub fn getBodyRegion(&mut self) -> &'static mut Region;
+
+        pub fn setSymNameAttr(&mut self, attr: StringAttr);
+        pub fn setSymVisibilityAttr(&mut self, attr: StringAttr);
     }
+
+    pub fn _ModuleOp_create(loc: Location, name: *const StringRef) -> ModuleOp;
+    pub fn _ModuleOp_downgradeTo_Operation(value: &mut ModuleOp) -> *mut Operation;
 
     //
     // Other MLIR stuff.

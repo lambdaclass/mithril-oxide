@@ -11,6 +11,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     stdin().read_to_string(&mut data)?;
 
     // Process code.
+    let mut extra_paths = vec![];
+    if let Some(extra_path) = args().nth(2) {
+        extra_paths.push(extra_path);
+    }
+
     let stream: TokenStream = data.parse()?;
     let stream = mithril_oxide_sys_codegen::codegen(
         Path::new(
@@ -19,6 +24,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .expect("Auxiliary library target path required."),
         ),
         stream,
+        extra_paths.iter().map(String::as_str),
     )?;
 
     // Write output code.

@@ -5,9 +5,10 @@ use syn::{FnArg, Ident, ReturnType, Signature, Type};
 // TODO: Filter out private and protected APIs (they shouldn't be available from Rust).
 
 /// Parse a C++ file into a clang translation unit.
-pub fn parse_cpp<'c>(
+pub fn parse_cpp<'a, 'c>(
     index: &'c Index,
     path: &Path,
+    extra_paths: impl Iterator<Item = &'a str>,
 ) -> Result<TranslationUnit<'c>, Box<dyn std::error::Error>> {
     let translation_unit = index
         .parser(path)
@@ -19,7 +20,7 @@ pub fn parse_cpp<'c>(
             args.push("-isysroot/".to_string());
 
             args.extend(
-                crate::wrappers::extract_clang_include_paths(path)?
+                crate::wrappers::extract_clang_include_paths(path, extra_paths)?
                     .into_iter()
                     .map(|x| format!("-I{x}")),
             );

@@ -32,9 +32,10 @@ mod wrappers;
 ///
 /// > TODO: Why?
 #[allow(clippy::too_many_lines)]
-pub fn codegen(
+pub fn codegen<'a>(
     auxlib_path: &Path,
     stream: TokenStream,
+    extra_paths: impl Clone + Iterator<Item = &'a str>,
 ) -> Result<TokenStream, Box<dyn std::error::Error>> {
     // Parse the custom `mod` item (see `parse` module).
     let foreign_mod: CxxForeignMod = syn::parse2(stream)?;
@@ -62,7 +63,7 @@ pub fn codegen(
         })?;
 
     // Parse the C++ source for analysis.
-    let translation_unit = analysis::parse_cpp(&index, &ast_source_path)?;
+    let translation_unit = analysis::parse_cpp(&index, &ast_source_path, extra_paths.clone())?;
 
     // Initialize the output streams for both the Rust (bindings) and C++ (aux library) along with
     // a flag on whether the later is necessary.
@@ -146,7 +147,13 @@ pub fn codegen(
                     &req.sig,
                     &mappings,
                 )
-                .expect("Entity not found");
+                .unwrap_or_else(|| {
+                    panic!(
+                        "Entity not found: {}",
+                        find_cxx_path(&req.attrs)
+                            .map_or_else(|| Cow::Owned(req.sig.ident.to_string()), Cow::Borrowed),
+                    );
+                });
 
                 // Free functions must not be methods.
                 assert_eq!(
@@ -233,7 +240,7 @@ pub fn codegen(
 
     // Build the auxiliary library if required.
     if aux_source_required {
-        wrappers::build_auxiliary_library(auxlib_path, &aux_source_path)?;
+        wrappers::build_auxiliary_library(auxlib_path, &aux_source_path, extra_paths)?;
     }
 
     // Revert the switching done earlier and merge both (extern decls & actual bindings) streams.
