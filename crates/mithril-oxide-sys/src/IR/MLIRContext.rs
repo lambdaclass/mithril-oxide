@@ -22,6 +22,7 @@ pub(crate) mod ffi {
 }
 
 impl ffi::MLIRContext {
+    #[must_use]
     pub fn new() -> UniquePtr<Self> {
         ffi::MLIRContext_new()
     }

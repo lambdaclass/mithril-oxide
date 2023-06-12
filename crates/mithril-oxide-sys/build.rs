@@ -1,3 +1,6 @@
+#![deny(clippy::pedantic)]
+#![deny(warnings)]
+
 use std::{
     collections::BTreeSet,
     env::var,
@@ -89,7 +92,7 @@ fn find_sources() -> Result<BTreeSet<PathBuf>, Box<dyn std::error::Error>> {
 }
 
 fn is_llvm_shared_mode() -> Result<bool, Box<dyn std::error::Error>> {
-    let mut output =
+    let output =
         Command::new(Path::new(var("MLIR_SYS_160_PREFIX")?.as_str()).join("bin/llvm-config"))
             .arg("--shared-mode")
             .stdin(Stdio::null())
