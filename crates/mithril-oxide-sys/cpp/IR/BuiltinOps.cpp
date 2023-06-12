@@ -5,12 +5,11 @@
 #include <mlir/IR/BuiltinAttributes.h>
 #include <mlir/IR/BuiltinOps.h>
 #include <mlir/IR/Location.h>
-#include <rust/cxx.h>
 
 
 namespace mithril_oxide_sys {
 
-std::unique_ptr<ModuleOp> ModuleOp_create(const Location &loc, const rust::Str *name)
+std::unique_ptr<ModuleOp> ModuleOp_create(const Location &loc)
 {
     return std::make_unique<ModuleOp>(ModuleOp::create(loc));
 }

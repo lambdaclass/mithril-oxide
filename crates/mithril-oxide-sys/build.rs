@@ -1,5 +1,6 @@
 use std::{
     collections::BTreeSet,
+    env::var,
     ffi::OsStr,
     path::{Path, PathBuf},
 };
@@ -28,7 +29,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     cxx_build::bridges(&src_sources)
         .files(&cpp_sources)
         .flag("-std=c++17")
-        .flag("-I/usr/lib/llvm-16/include")
+        .flag(&format!("-I{}/include", var("MLIR_SYS_160_PREFIX")?))
         .flag("-Wno-comment")
         .flag("-Wno-unused-parameter")
         .compile("mlir-sys");
