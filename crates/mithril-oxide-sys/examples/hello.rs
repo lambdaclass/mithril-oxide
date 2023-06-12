@@ -2,8 +2,9 @@ use cxx::UniquePtr;
 use mithril_oxide_sys::{
     InitAllDialects::registerAllDialects,
     IR::{
+        BuiltinOps::ModuleOp,
         Location::{Location, UnknownLoc},
-        MLIRContext::MLIRContext, BuiltinOps::ModuleOp,
+        MLIRContext::MLIRContext,
     },
 };
 

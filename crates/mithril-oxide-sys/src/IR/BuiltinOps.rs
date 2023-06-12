@@ -18,7 +18,7 @@ pub(crate) mod ffi {
     unsafe extern "C++" {
         include!("mithril-oxide-sys/cpp/IR/BuiltinOps.hpp");
 
-        unsafe fn ModuleOp_create(context: &Location, name: *const &str) -> UniquePtr<ModuleOp>;
+        fn ModuleOp_create(context: &Location) -> UniquePtr<ModuleOp>;
         fn ModuleOp_setSymNameAttr(op: Pin<&mut ModuleOp>, value: &StringAttr);
         fn ModuleOp_setSymVisibilityAttr(op: Pin<&mut ModuleOp>, value: &StringAttr);
     }
@@ -26,7 +26,7 @@ pub(crate) mod ffi {
 
 impl ffi::ModuleOp {
     pub fn new(context: &Location) -> UniquePtr<Self> {
-        unsafe { ffi::ModuleOp_create(context, null()) }
+        ffi::ModuleOp_create(context)
     }
 
     pub fn setSymNameAttr(self: Pin<&mut Self>, value: StringAttr) {
