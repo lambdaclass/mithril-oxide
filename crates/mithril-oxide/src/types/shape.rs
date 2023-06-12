@@ -7,7 +7,7 @@ pub struct ShapeType<'c> {
     phantom: PhantomData<&'c Context>,
 }
 
-impl<'c> Type for ShapeType<'c> {
+impl<'c> Type<'c> for ShapeType<'c> {
     fn size(&self) -> usize {
         todo!()
     }
@@ -21,6 +21,12 @@ impl<'c> Type for ShapeType<'c> {
     }
 
     fn preferred_alignment(&self) -> usize {
+        todo!()
+    }
+}
+
+impl<'c> Clone for ShapeType<'c> {
+    fn clone(&self) -> Self {
         todo!()
     }
 }
@@ -36,7 +42,7 @@ pub struct SizeType<'c> {
     phantom: PhantomData<&'c Context>,
 }
 
-impl<'c> Type for SizeType<'c> {
+impl<'c> Type<'c> for SizeType<'c> {
     fn size(&self) -> usize {
         todo!()
     }
@@ -50,6 +56,12 @@ impl<'c> Type for SizeType<'c> {
     }
 
     fn preferred_alignment(&self) -> usize {
+        todo!()
+    }
+}
+
+impl<'c> Clone for SizeType<'c> {
+    fn clone(&self) -> Self {
         todo!()
     }
 }
@@ -65,7 +77,7 @@ pub struct ValueShapeType<'c> {
     phantom: PhantomData<&'c Context>,
 }
 
-impl<'c> Type for ValueShapeType<'c> {
+impl<'c> Type<'c> for ValueShapeType<'c> {
     fn size(&self) -> usize {
         todo!()
     }
@@ -79,6 +91,12 @@ impl<'c> Type for ValueShapeType<'c> {
     }
 
     fn preferred_alignment(&self) -> usize {
+        todo!()
+    }
+}
+
+impl<'c> Clone for ValueShapeType<'c> {
+    fn clone(&self) -> Self {
         todo!()
     }
 }
@@ -94,7 +112,7 @@ pub struct WitnessType<'c> {
     phantom: PhantomData<&'c Context>,
 }
 
-impl<'c> Type for WitnessType<'c> {
+impl<'c> Type<'c> for WitnessType<'c> {
     fn size(&self) -> usize {
         todo!()
     }
@@ -108,6 +126,12 @@ impl<'c> Type for WitnessType<'c> {
     }
 
     fn preferred_alignment(&self) -> usize {
+        todo!()
+    }
+}
+
+impl<'c> Clone for WitnessType<'c> {
+    fn clone(&self) -> Self {
         todo!()
     }
 }

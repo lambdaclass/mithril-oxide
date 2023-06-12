@@ -7,7 +7,7 @@ pub struct AnyOpType<'c> {
     phantom: PhantomData<&'c Context>,
 }
 
-impl<'c> Type for AnyOpType<'c> {
+impl<'c> Type<'c> for AnyOpType<'c> {
     fn size(&self) -> usize {
         todo!()
     }
@@ -21,6 +21,12 @@ impl<'c> Type for AnyOpType<'c> {
     }
 
     fn preferred_alignment(&self) -> usize {
+        todo!()
+    }
+}
+
+impl<'c> Clone for AnyOpType<'c> {
+    fn clone(&self) -> Self {
         todo!()
     }
 }
@@ -36,7 +42,7 @@ pub struct AnyValueType<'c> {
     phantom: PhantomData<&'c Context>,
 }
 
-impl<'c> Type for AnyValueType<'c> {
+impl<'c> Type<'c> for AnyValueType<'c> {
     fn size(&self) -> usize {
         todo!()
     }
@@ -50,6 +56,12 @@ impl<'c> Type for AnyValueType<'c> {
     }
 
     fn preferred_alignment(&self) -> usize {
+        todo!()
+    }
+}
+
+impl<'c> Clone for AnyValueType<'c> {
+    fn clone(&self) -> Self {
         todo!()
     }
 }
@@ -65,7 +77,7 @@ pub struct OperationType<'c> {
     phantom: PhantomData<&'c Context>,
 }
 
-impl<'c> Type for OperationType<'c> {
+impl<'c> Type<'c> for OperationType<'c> {
     fn size(&self) -> usize {
         todo!()
     }
@@ -79,6 +91,12 @@ impl<'c> Type for OperationType<'c> {
     }
 
     fn preferred_alignment(&self) -> usize {
+        todo!()
+    }
+}
+
+impl<'c> Clone for OperationType<'c> {
+    fn clone(&self) -> Self {
         todo!()
     }
 }
@@ -94,7 +112,7 @@ pub struct ParamType<'c> {
     phantom: PhantomData<&'c Context>,
 }
 
-impl<'c> Type for ParamType<'c> {
+impl<'c> Type<'c> for ParamType<'c> {
     fn size(&self) -> usize {
         todo!()
     }
@@ -108,6 +126,12 @@ impl<'c> Type for ParamType<'c> {
     }
 
     fn preferred_alignment(&self) -> usize {
+        todo!()
+    }
+}
+
+impl<'c> Clone for ParamType<'c> {
+    fn clone(&self) -> Self {
         todo!()
     }
 }

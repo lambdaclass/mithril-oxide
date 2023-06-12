@@ -7,7 +7,7 @@ pub struct CoroHandleType<'c> {
     phantom: PhantomData<&'c Context>,
 }
 
-impl<'c> Type for CoroHandleType<'c> {
+impl<'c> Type<'c> for CoroHandleType<'c> {
     fn size(&self) -> usize {
         todo!()
     }
@@ -21,6 +21,12 @@ impl<'c> Type for CoroHandleType<'c> {
     }
 
     fn preferred_alignment(&self) -> usize {
+        todo!()
+    }
+}
+
+impl<'c> Clone for CoroHandleType<'c> {
+    fn clone(&self) -> Self {
         todo!()
     }
 }
@@ -36,7 +42,7 @@ pub struct CoroIdType<'c> {
     phantom: PhantomData<&'c Context>,
 }
 
-impl<'c> Type for CoroIdType<'c> {
+impl<'c> Type<'c> for CoroIdType<'c> {
     fn size(&self) -> usize {
         todo!()
     }
@@ -50,6 +56,12 @@ impl<'c> Type for CoroIdType<'c> {
     }
 
     fn preferred_alignment(&self) -> usize {
+        todo!()
+    }
+}
+
+impl<'c> Clone for CoroIdType<'c> {
+    fn clone(&self) -> Self {
         todo!()
     }
 }
@@ -65,7 +77,7 @@ pub struct CoroStateType<'c> {
     phantom: PhantomData<&'c Context>,
 }
 
-impl<'c> Type for CoroStateType<'c> {
+impl<'c> Type<'c> for CoroStateType<'c> {
     fn size(&self) -> usize {
         todo!()
     }
@@ -79,6 +91,12 @@ impl<'c> Type for CoroStateType<'c> {
     }
 
     fn preferred_alignment(&self) -> usize {
+        todo!()
+    }
+}
+
+impl<'c> Clone for CoroStateType<'c> {
+    fn clone(&self) -> Self {
         todo!()
     }
 }
@@ -94,7 +112,7 @@ pub struct GroupType<'c> {
     phantom: PhantomData<&'c Context>,
 }
 
-impl<'c> Type for GroupType<'c> {
+impl<'c> Type<'c> for GroupType<'c> {
     fn size(&self) -> usize {
         todo!()
     }
@@ -108,6 +126,12 @@ impl<'c> Type for GroupType<'c> {
     }
 
     fn preferred_alignment(&self) -> usize {
+        todo!()
+    }
+}
+
+impl<'c> Clone for GroupType<'c> {
+    fn clone(&self) -> Self {
         todo!()
     }
 }
@@ -123,7 +147,7 @@ pub struct TokenType<'c> {
     phantom: PhantomData<&'c Context>,
 }
 
-impl<'c> Type for TokenType<'c> {
+impl<'c> Type<'c> for TokenType<'c> {
     fn size(&self) -> usize {
         todo!()
     }
@@ -137,6 +161,12 @@ impl<'c> Type for TokenType<'c> {
     }
 
     fn preferred_alignment(&self) -> usize {
+        todo!()
+    }
+}
+
+impl<'c> Clone for TokenType<'c> {
+    fn clone(&self) -> Self {
         todo!()
     }
 }
@@ -152,7 +182,7 @@ pub struct ValueType<'c> {
     phantom: PhantomData<&'c Context>,
 }
 
-impl<'c> Type for ValueType<'c> {
+impl<'c> Type<'c> for ValueType<'c> {
     fn size(&self) -> usize {
         todo!()
     }
@@ -166,6 +196,12 @@ impl<'c> Type for ValueType<'c> {
     }
 
     fn preferred_alignment(&self) -> usize {
+        todo!()
+    }
+}
+
+impl<'c> Clone for ValueType<'c> {
+    fn clone(&self) -> Self {
         todo!()
     }
 }

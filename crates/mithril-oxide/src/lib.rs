@@ -1,9 +1,10 @@
 #![allow(dead_code)]
 #![allow(unused)]
 
-pub use self::{context::Context, location::Location};
+pub use self::{block::Block, context::Context, location::Location, region::Region};
 
 pub mod attributes;
+mod block;
 mod context;
 pub mod location;
 pub mod operations;
@@ -15,7 +16,7 @@ pub mod util;
 // TODO: What are attribute constraints? Do we need them?
 
 pub mod prelude {
-    pub use crate::Context;
+    pub use crate::{Block, Context, Region};
 
     pub use crate::attributes as attrs;
     pub use crate::location as loc;

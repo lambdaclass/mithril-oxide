@@ -2,12 +2,12 @@ pub use crate::attributes::builtin::{
     CallSiteLoc, FileLineColLoc, FusedLoc, NameLoc, OpaqueLoc, UnknownLoc,
 };
 use crate::Context;
-use mithril_oxide_sys as ffi;
+use mithril_oxide_cxx as ffi;
 use std::marker::PhantomData;
 
 /// A generic location.
 pub struct Location<'c> {
-    pub(crate) inner: ffi::Location,
+    pub(crate) inner: ffi::UniquePtr<ffi::IR::Location::Location>,
     phantom: PhantomData<&'c Context>,
 }
 
@@ -44,7 +44,7 @@ impl<'c> From<OpaqueLoc<'c>> for Location<'c> {
 impl<'c> From<UnknownLoc<'c>> for Location<'c> {
     fn from(value: UnknownLoc<'c>) -> Self {
         Self {
-            inner: unsafe { ffi::_UnknownLoc_downgradeTo_Location(value.inner) },
+            inner: (&*value.inner).into(),
             phantom: PhantomData,
         }
     }
