@@ -94,5 +94,5 @@ impl fmt::Debug for ffi::Type {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    // use super::*;
 }
