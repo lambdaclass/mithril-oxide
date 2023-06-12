@@ -1,7 +1,7 @@
 pub use self::ffi::StringAttr;
 use crate::IR::MLIRContext::MLIRContext;
 use cxx::UniquePtr;
-use std::{fmt, pin::Pin, ptr::null};
+use std::{fmt, pin::Pin};
 
 #[cxx::bridge]
 pub(crate) mod ffi {
@@ -22,6 +22,7 @@ pub(crate) mod ffi {
 }
 
 impl ffi::StringAttr {
+    #[must_use]
     pub fn new(context: Pin<&mut MLIRContext>, value: &str) -> UniquePtr<Self> {
         ffi::StringAttr_get(context, value)
     }

@@ -37,6 +37,7 @@ impl fmt::Debug for ffi::Location {
 }
 
 impl ffi::UnknownLoc {
+    #[must_use]
     pub fn get(context: Pin<&mut MLIRContext>) -> UniquePtr<Self> {
         ffi::UnknownLoc_get(context)
     }

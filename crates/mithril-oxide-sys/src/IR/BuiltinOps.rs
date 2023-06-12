@@ -1,7 +1,7 @@
 pub use self::ffi::ModuleOp;
 use crate::IR::{BuiltinAttributes::StringAttr, Location::Location};
 use cxx::UniquePtr;
-use std::{fmt, pin::Pin, ptr::null};
+use std::{fmt, pin::Pin};
 
 #[cxx::bridge]
 pub(crate) mod ffi {
@@ -25,16 +25,17 @@ pub(crate) mod ffi {
 }
 
 impl ffi::ModuleOp {
+    #[must_use]
     pub fn new(context: &Location) -> UniquePtr<Self> {
         ffi::ModuleOp_create(context)
     }
 
-    pub fn setSymNameAttr(self: Pin<&mut Self>, value: StringAttr) {
-        ffi::ModuleOp_setSymNameAttr(self, &value);
+    pub fn setSymNameAttr(self: Pin<&mut Self>, value: &StringAttr) {
+        ffi::ModuleOp_setSymNameAttr(self, value);
     }
 
-    pub fn setSymVisibilityAttr(self: Pin<&mut Self>, value: StringAttr) {
-        ffi::ModuleOp_setSymVisibilityAttr(self, &value);
+    pub fn setSymVisibilityAttr(self: Pin<&mut Self>, value: &StringAttr) {
+        ffi::ModuleOp_setSymVisibilityAttr(self, value);
     }
 }
 
