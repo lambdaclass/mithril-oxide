@@ -1,10 +1,10 @@
 # Mithril Oxide
 
+_~Mithril~ MLIR is hard to rust but we did it anyway._
+
 Rust bindings to MLIR via the C++ API.
 
-
 ## Project structure
-
   - `mithril-oxide`: Our Rusty bindings.
   - `mithril-oxide-sys`: Raw unsafe bindings to the C++ API.
   - `mithril-oxide-sys-codegen`: Automated binding generation (actual type checking and code
