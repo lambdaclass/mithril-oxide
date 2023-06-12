@@ -3,6 +3,7 @@ use std::{
     env::var,
     ffi::OsStr,
     path::{Path, PathBuf},
+    process::{Command, Stdio},
 };
 
 /// C++ source code prefix.
@@ -45,7 +46,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         "cargo:rustc-link-search={}/lib",
         var("MLIR_SYS_160_PREFIX")?
     );
-    println!("cargo:rustc-link-lib=LLVM");
+    if is_llvm_shared_mode()? {
+        println!("cargo:rustc-link-lib=LLVM");
+    }
     println!("cargo:rustc-link-lib=MLIR");
 
     Ok(())
@@ -83,4 +86,21 @@ fn find_sources() -> Result<BTreeSet<PathBuf>, Box<dyn std::error::Error>> {
     walk_dir(&mut state, CPP_PREFIX)?;
 
     Ok(state)
+}
+
+fn is_llvm_shared_mode() -> Result<bool, Box<dyn std::error::Error>> {
+    let mut output =
+        Command::new(Path::new(var("MLIR_SYS_160_PREFIX")?.as_str()).join("bin/llvm-config"))
+            .arg("--shared-mode")
+            .stdin(Stdio::null())
+            .stdout(Stdio::piped())
+            .stderr(Stdio::inherit())
+            .spawn()?
+            .wait_with_output()?;
+
+    Ok(match std::str::from_utf8(&output.stdout)?.trim() {
+        "static" => false,
+        "shared" => true,
+        x => panic!("Invalid LLVM build mode: expected 'static' or 'shared' but instead got {x}"),
+    })
 }
