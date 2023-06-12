@@ -33,3 +33,15 @@ impl fmt::Debug for ffi::MLIRContext {
         f.debug_struct("MLIRContext").finish_non_exhaustive()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::InitAllDialects::registerAllDialects;
+
+    #[test]
+    fn context_new() {
+        let mut context = MLIRContext::new();
+        registerAllDialects(context.pin_mut());
+    }
+}
