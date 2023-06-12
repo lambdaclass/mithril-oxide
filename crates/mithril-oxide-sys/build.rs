@@ -1,47 +1,82 @@
 use std::{
-    env::var,
-    io::Read,
-    path::Path,
-    process::{Command, Stdio},
+    collections::BTreeSet,
+    ffi::OsStr,
+    path::{Path, PathBuf},
 };
 
-fn main() {
-    let mlir_env = env!("MLIR_SYS_160_PREFIX");
-    println!("cargo:rustc-link-search={}/lib", mlir_env);
-    println!("cargo:rustc-link-search={}", var("OUT_DIR").unwrap());
+/// C++ source code prefix.
+const CPP_PREFIX: &str = "cpp";
+/// Rust source code prefix.
+const SRC_PREFIX: &str = "src";
 
-    // Forward a path to the auxiliary library, and link to it globally.
-    println!(
-        "cargo:rustc-env=AUXLIB_PATH={}/libauxlib.a",
-        var("OUT_DIR").unwrap()
-    );
-    println!("cargo:rustc-link-search={}", var("OUT_DIR").unwrap());
-    println!("cargo:rustc-link-lib=auxlib");
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let (cpp_sources, src_sources) = {
+        let all_sources = find_sources()?;
 
-    // Mac OS nonsense.
-    #[cfg(not(target_os = "macos"))]
-    println!("cargo:rustc-link-lib=stdc++");
-    #[cfg(target_os = "macos")]
-    println!("cargo:rustc-link-lib=c++");
+        (
+            all_sources
+                .iter()
+                .map(|path| Path::new(CPP_PREFIX).join(path).with_extension("cpp"))
+                .collect::<Vec<_>>(),
+            all_sources
+                .iter()
+                .map(|path| Path::new(SRC_PREFIX).join(path).with_extension("rs"))
+                .collect::<Vec<_>>(),
+        )
+    };
 
-    // linking to llvm here works if llvm-config --shared outputs shared, not static, because in static mlir likely includes llvm too.
-    let mut process = Command::new(Path::new(mlir_env).join("bin/llvm-config"))
-        .arg("--shared-mode")
-        .stdin(Stdio::piped())
-        .stdout(Stdio::piped())
-        .stderr(Stdio::inherit())
-        .spawn()
-        .unwrap();
-    process.wait().unwrap();
+    cxx_build::bridges(&src_sources)
+        .files(&cpp_sources)
+        .flag("-std=c++17")
+        .flag("-I/usr/lib/llvm-16/include")
+        .flag("-Wno-comment")
+        .flag("-Wno-unused-parameter")
+        .compile("mlir-sys");
 
-    let mut output = String::new();
-    process.stdout.unwrap().read_to_string(&mut output).unwrap();
-    let output = output.trim();
-
-    match output {
-        "static" => {}
-        "shared" => println!("cargo:rustc-link-lib=LLVM"),
-        _ => panic!("unknown shared mode: {}", output),
+    // Build script re-run conditions.
+    println!("cargo:rerun-if-changed={CPP_PREFIX}");
+    for src_path in &src_sources {
+        println!("cargo:rerun-if-changed={}", src_path.to_str().unwrap());
     }
+
+    // Linker flags.
+    println!("cargo:rustc-link-search=/usr/lib/llvm-16/lib");
+    println!("cargo:rustc-link-lib=LLVM");
     println!("cargo:rustc-link-lib=MLIR");
+
+    Ok(())
+}
+
+/// Scan the C++ sources folder recursively for sources
+fn find_sources() -> Result<BTreeSet<PathBuf>, Box<dyn std::error::Error>> {
+    fn walk_dir(
+        state: &mut BTreeSet<PathBuf>,
+        path: impl AsRef<Path>,
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        for dir_entry in path.as_ref().read_dir()? {
+            let dir_entry = dir_entry?;
+
+            let path = dir_entry.path();
+            let kind = dir_entry.file_type()?;
+
+            if kind.is_dir() {
+                walk_dir(state, path)?;
+            } else {
+                // Skip non-C++ files.
+                if path.extension().and_then(OsStr::to_str) != Some("cpp") {
+                    continue;
+                }
+
+                // Insert the path without neither the C++ path prefix nor the C++ extension.
+                state.insert(path.strip_prefix(CPP_PREFIX)?.with_extension(""));
+            }
+        }
+
+        Ok(())
+    }
+
+    let mut state = BTreeSet::new();
+    walk_dir(&mut state, CPP_PREFIX)?;
+
+    Ok(state)
 }
