@@ -5,7 +5,8 @@ members = [
     "crates/mithril-oxide-sys",
 ]
 
-[profile.ci-coverage]
-inherits = "dev"
+[profile.dev.package.cxx]
 opt-level = 3
-debug = true
+
+[profile.dev.package.cxx-build]
+opt-level = 3
