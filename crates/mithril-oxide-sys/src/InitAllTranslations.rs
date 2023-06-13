@@ -1,10 +1,6 @@
 pub use self::ffi::{
-    registerAllTranslations,
-    registerFromLLVMIRTranslation,
-    registerFromSPIRVTranslation,
-    registerToCppTranslation,
-    registerToLLVMIRTranslation,
-    registerToSPIRVTranslation,
+    registerAllTranslations, registerFromLLVMIRTranslation, registerFromSPIRVTranslation,
+    registerToCppTranslation, registerToLLVMIRTranslation, registerToSPIRVTranslation,
 };
 
 #[cxx::bridge]
