@@ -7,7 +7,7 @@ pub struct TokenType<'c> {
     phantom: PhantomData<&'c Context>,
 }
 
-impl<'c> Type for TokenType<'c> {
+impl<'c> Type<'c> for TokenType<'c> {
     fn size(&self) -> usize {
         todo!()
     }
@@ -21,6 +21,12 @@ impl<'c> Type for TokenType<'c> {
     }
 
     fn preferred_alignment(&self) -> usize {
+        todo!()
+    }
+}
+
+impl<'c> Clone for TokenType<'c> {
+    fn clone(&self) -> Self {
         todo!()
     }
 }

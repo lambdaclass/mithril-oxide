@@ -7,7 +7,7 @@ pub struct StorageSpecifierType<'c> {
     phantom: PhantomData<&'c Context>,
 }
 
-impl<'c> Type for StorageSpecifierType<'c> {
+impl<'c> Type<'c> for StorageSpecifierType<'c> {
     fn size(&self) -> usize {
         todo!()
     }
@@ -21,6 +21,12 @@ impl<'c> Type for StorageSpecifierType<'c> {
     }
 
     fn preferred_alignment(&self) -> usize {
+        todo!()
+    }
+}
+
+impl<'c> Clone for StorageSpecifierType<'c> {
+    fn clone(&self) -> Self {
         todo!()
     }
 }

@@ -7,7 +7,7 @@ pub struct AttributeType<'c> {
     phantom: PhantomData<&'c Context>,
 }
 
-impl<'c> Type for AttributeType<'c> {
+impl<'c> Type<'c> for AttributeType<'c> {
     fn size(&self) -> usize {
         todo!()
     }
@@ -21,6 +21,12 @@ impl<'c> Type for AttributeType<'c> {
     }
 
     fn preferred_alignment(&self) -> usize {
+        todo!()
+    }
+}
+
+impl<'c> Clone for AttributeType<'c> {
+    fn clone(&self) -> Self {
         todo!()
     }
 }
@@ -36,7 +42,7 @@ pub struct OperationType<'c> {
     phantom: PhantomData<&'c Context>,
 }
 
-impl<'c> Type for OperationType<'c> {
+impl<'c> Type<'c> for OperationType<'c> {
     fn size(&self) -> usize {
         todo!()
     }
@@ -50,6 +56,12 @@ impl<'c> Type for OperationType<'c> {
     }
 
     fn preferred_alignment(&self) -> usize {
+        todo!()
+    }
+}
+
+impl<'c> Clone for OperationType<'c> {
+    fn clone(&self) -> Self {
         todo!()
     }
 }
@@ -65,7 +77,7 @@ pub struct RangeType<'c> {
     phantom: PhantomData<&'c Context>,
 }
 
-impl<'c> Type for RangeType<'c> {
+impl<'c> Type<'c> for RangeType<'c> {
     fn size(&self) -> usize {
         todo!()
     }
@@ -79,6 +91,12 @@ impl<'c> Type for RangeType<'c> {
     }
 
     fn preferred_alignment(&self) -> usize {
+        todo!()
+    }
+}
+
+impl<'c> Clone for RangeType<'c> {
+    fn clone(&self) -> Self {
         todo!()
     }
 }
@@ -94,7 +112,7 @@ pub struct TypeType<'c> {
     phantom: PhantomData<&'c Context>,
 }
 
-impl<'c> Type for TypeType<'c> {
+impl<'c> Type<'c> for TypeType<'c> {
     fn size(&self) -> usize {
         todo!()
     }
@@ -108,6 +126,12 @@ impl<'c> Type for TypeType<'c> {
     }
 
     fn preferred_alignment(&self) -> usize {
+        todo!()
+    }
+}
+
+impl<'c> Clone for TypeType<'c> {
+    fn clone(&self) -> Self {
         todo!()
     }
 }
@@ -123,7 +147,7 @@ pub struct ValueType<'c> {
     phantom: PhantomData<&'c Context>,
 }
 
-impl<'c> Type for ValueType<'c> {
+impl<'c> Type<'c> for ValueType<'c> {
     fn size(&self) -> usize {
         todo!()
     }
@@ -137,6 +161,12 @@ impl<'c> Type for ValueType<'c> {
     }
 
     fn preferred_alignment(&self) -> usize {
+        todo!()
+    }
+}
+
+impl<'c> Clone for ValueType<'c> {
+    fn clone(&self) -> Self {
         todo!()
     }
 }

@@ -7,7 +7,7 @@ pub struct OpaqueType<'c> {
     phantom: PhantomData<&'c Context>,
 }
 
-impl<'c> Type for OpaqueType<'c> {
+impl<'c> Type<'c> for OpaqueType<'c> {
     fn size(&self) -> usize {
         todo!()
     }
@@ -21,6 +21,12 @@ impl<'c> Type for OpaqueType<'c> {
     }
 
     fn preferred_alignment(&self) -> usize {
+        todo!()
+    }
+}
+
+impl<'c> Clone for OpaqueType<'c> {
+    fn clone(&self) -> Self {
         todo!()
     }
 }
@@ -36,7 +42,7 @@ pub struct PointerType<'c> {
     phantom: PhantomData<&'c Context>,
 }
 
-impl<'c> Type for PointerType<'c> {
+impl<'c> Type<'c> for PointerType<'c> {
     fn size(&self) -> usize {
         todo!()
     }
@@ -50,6 +56,12 @@ impl<'c> Type for PointerType<'c> {
     }
 
     fn preferred_alignment(&self) -> usize {
+        todo!()
+    }
+}
+
+impl<'c> Clone for PointerType<'c> {
+    fn clone(&self) -> Self {
         todo!()
     }
 }

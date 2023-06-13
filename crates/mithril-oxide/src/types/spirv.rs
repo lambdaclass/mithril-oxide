@@ -7,7 +7,7 @@ pub struct ArrayType<'c> {
     phantom: PhantomData<&'c Context>,
 }
 
-impl<'c> Type for ArrayType<'c> {
+impl<'c> Type<'c> for ArrayType<'c> {
     fn size(&self) -> usize {
         todo!()
     }
@@ -21,6 +21,12 @@ impl<'c> Type for ArrayType<'c> {
     }
 
     fn preferred_alignment(&self) -> usize {
+        todo!()
+    }
+}
+
+impl<'c> Clone for ArrayType<'c> {
+    fn clone(&self) -> Self {
         todo!()
     }
 }
@@ -36,7 +42,7 @@ pub struct ImageType<'c> {
     phantom: PhantomData<&'c Context>,
 }
 
-impl<'c> Type for ImageType<'c> {
+impl<'c> Type<'c> for ImageType<'c> {
     fn size(&self) -> usize {
         todo!()
     }
@@ -50,6 +56,12 @@ impl<'c> Type for ImageType<'c> {
     }
 
     fn preferred_alignment(&self) -> usize {
+        todo!()
+    }
+}
+
+impl<'c> Clone for ImageType<'c> {
+    fn clone(&self) -> Self {
         todo!()
     }
 }
@@ -65,7 +77,7 @@ pub struct PointerType<'c> {
     phantom: PhantomData<&'c Context>,
 }
 
-impl<'c> Type for PointerType<'c> {
+impl<'c> Type<'c> for PointerType<'c> {
     fn size(&self) -> usize {
         todo!()
     }
@@ -79,6 +91,12 @@ impl<'c> Type for PointerType<'c> {
     }
 
     fn preferred_alignment(&self) -> usize {
+        todo!()
+    }
+}
+
+impl<'c> Clone for PointerType<'c> {
+    fn clone(&self) -> Self {
         todo!()
     }
 }
@@ -94,7 +112,7 @@ pub struct RuntimeArrayType<'c> {
     phantom: PhantomData<&'c Context>,
 }
 
-impl<'c> Type for RuntimeArrayType<'c> {
+impl<'c> Type<'c> for RuntimeArrayType<'c> {
     fn size(&self) -> usize {
         todo!()
     }
@@ -108,6 +126,12 @@ impl<'c> Type for RuntimeArrayType<'c> {
     }
 
     fn preferred_alignment(&self) -> usize {
+        todo!()
+    }
+}
+
+impl<'c> Clone for RuntimeArrayType<'c> {
+    fn clone(&self) -> Self {
         todo!()
     }
 }
@@ -123,7 +147,7 @@ pub struct SampledImageType<'c> {
     phantom: PhantomData<&'c Context>,
 }
 
-impl<'c> Type for SampledImageType<'c> {
+impl<'c> Type<'c> for SampledImageType<'c> {
     fn size(&self) -> usize {
         todo!()
     }
@@ -137,6 +161,12 @@ impl<'c> Type for SampledImageType<'c> {
     }
 
     fn preferred_alignment(&self) -> usize {
+        todo!()
+    }
+}
+
+impl<'c> Clone for SampledImageType<'c> {
+    fn clone(&self) -> Self {
         todo!()
     }
 }
@@ -152,7 +182,7 @@ pub struct StructType<'c> {
     phantom: PhantomData<&'c Context>,
 }
 
-impl<'c> Type for StructType<'c> {
+impl<'c> Type<'c> for StructType<'c> {
     fn size(&self) -> usize {
         todo!()
     }
@@ -166,6 +196,12 @@ impl<'c> Type for StructType<'c> {
     }
 
     fn preferred_alignment(&self) -> usize {
+        todo!()
+    }
+}
+
+impl<'c> Clone for StructType<'c> {
+    fn clone(&self) -> Self {
         todo!()
     }
 }

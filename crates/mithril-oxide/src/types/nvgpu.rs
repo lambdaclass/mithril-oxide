@@ -7,7 +7,7 @@ pub struct DeviceAsyncTokenType<'c> {
     phantom: PhantomData<&'c Context>,
 }
 
-impl<'c> Type for DeviceAsyncTokenType<'c> {
+impl<'c> Type<'c> for DeviceAsyncTokenType<'c> {
     fn size(&self) -> usize {
         todo!()
     }
@@ -21,6 +21,12 @@ impl<'c> Type for DeviceAsyncTokenType<'c> {
     }
 
     fn preferred_alignment(&self) -> usize {
+        todo!()
+    }
+}
+
+impl<'c> Clone for DeviceAsyncTokenType<'c> {
+    fn clone(&self) -> Self {
         todo!()
     }
 }

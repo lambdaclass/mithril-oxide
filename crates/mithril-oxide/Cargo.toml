@@ -4,4 +4,5 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-mithril-oxide-sys = { path = "../mithril-oxide-sys"}
+mithril-oxide-sys = { path = "../mithril-oxide-sys" }
+typed-builder = "0.14.0"

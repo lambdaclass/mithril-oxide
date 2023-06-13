@@ -1,27 +1,30 @@
-use std::cell::RefCell;
-
-use mithril_oxide_sys::{UniquePtr, IR::MLIRContext::MLIRContext};
+use mithril_oxide_sys as ffi;
+use std::{cell::RefCell, mem::MaybeUninit};
 
 /// The MLIR context.
 #[derive(Debug)]
 pub struct Context {
-    pub(crate) inner: RefCell<UniquePtr<MLIRContext>>,
+    pub(crate) inner: RefCell<ffi::UniquePtr<ffi::IR::MLIRContext::MLIRContext>>,
 }
 
 impl Context {
-    /// Create a new context.
-    pub fn new(threaded: bool) -> Self {
-        let mut inner = MLIRContext::new();
-        inner.pin_mut().enableMultithreading(threaded);
-
+    pub fn new() -> Self {
         Self {
-            inner: RefCell::new(inner),
+            inner: RefCell::new(ffi::IR::MLIRContext::MLIRContext::new()),
+        }
+    }
+
+    pub fn register_all_dialects(&mut self) {
+        unsafe {
+            ffi::InitAllDialects::registerAllDialects(self.inner.get_mut().pin_mut());
         }
     }
 
     /// Loads all available dialects.
     pub fn load_all_available_dialects(&mut self) {
-        self.inner.borrow_mut().pin_mut().loadAllAvailableDialects();
+        unsafe {
+            self.inner.get_mut().pin_mut().loadAllAvailableDialects();
+        }
     }
 
     /// Return whether unregistered dialects are allowed.
@@ -57,7 +60,7 @@ impl Context {
 impl Default for Context {
     /// Create the context with default parameters. Threading = on.
     fn default() -> Self {
-        Self::new(true)
+        Self::new()
     }
 }
 
@@ -67,7 +70,7 @@ mod tests {
 
     #[test]
     fn new() {
-        let context = Context::new(true);
+        let context = Context::new();
         assert!(!context.inner.borrow().is_null());
         assert!(context.is_multithreading_enabled());
     }

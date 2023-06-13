@@ -1,32 +1,51 @@
-use std::{cell::RefCell, fmt::Display, marker::PhantomData};
-
-use mithril_oxide_sys::{UniquePtr, IR};
-
+pub use crate::attributes::builtin::{
+    CallSiteLoc, FileLineColLoc, FusedLoc, NameLoc, OpaqueLoc, UnknownLoc,
+};
 use crate::Context;
+use mithril_oxide_sys as ffi;
+use std::marker::PhantomData;
 
-pub struct Location<'ctx> {
-    inner: RefCell<UniquePtr<IR::Location::Location>>,
-    _ctx: PhantomData<&'ctx Context>,
+/// A generic location.
+pub struct Location<'c> {
+    pub(crate) inner: ffi::UniquePtr<ffi::IR::Location::Location>,
+    phantom: PhantomData<&'c Context>,
 }
 
-impl<'ctx> Location<'ctx> {
-    pub fn unknown(ctx: &'ctx mut Context) -> Location<'ctx> {
-        let loc = IR::Location::UnknownLoc::get(ctx.inner.borrow_mut().pin_mut());
-        Self {
-            inner: RefCell::new(loc.as_ref().unwrap().into()),
-            _ctx: PhantomData,
-        }
+impl<'c> From<CallSiteLoc<'c>> for Location<'c> {
+    fn from(value: CallSiteLoc<'c>) -> Self {
+        todo!()
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+impl<'c> From<FileLineColLoc<'c>> for Location<'c> {
+    fn from(value: FileLineColLoc<'c>) -> Self {
+        todo!()
+    }
+}
 
-    #[test]
-    fn unknown() {
-        let mut context = Context::new(true);
-        let loc = Location::unknown(&mut context);
-        assert!(!loc.inner.borrow().is_null());
+impl<'c> From<FusedLoc<'c>> for Location<'c> {
+    fn from(value: FusedLoc<'c>) -> Self {
+        todo!()
+    }
+}
+
+impl<'c> From<NameLoc<'c>> for Location<'c> {
+    fn from(value: NameLoc<'c>) -> Self {
+        todo!()
+    }
+}
+
+impl<'c> From<OpaqueLoc<'c>> for Location<'c> {
+    fn from(value: OpaqueLoc<'c>) -> Self {
+        todo!()
+    }
+}
+
+impl<'c> From<UnknownLoc<'c>> for Location<'c> {
+    fn from(value: UnknownLoc<'c>) -> Self {
+        Self {
+            inner: (&*value.inner).into(),
+            phantom: PhantomData,
+        }
     }
 }

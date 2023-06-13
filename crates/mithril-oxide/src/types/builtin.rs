@@ -7,7 +7,7 @@ pub struct BFloat16Type<'c> {
     phantom: PhantomData<&'c Context>,
 }
 
-impl<'c> Type for BFloat16Type<'c> {
+impl<'c> Type<'c> for BFloat16Type<'c> {
     fn size(&self) -> usize {
         todo!()
     }
@@ -21,6 +21,12 @@ impl<'c> Type for BFloat16Type<'c> {
     }
 
     fn preferred_alignment(&self) -> usize {
+        todo!()
+    }
+}
+
+impl<'c> Clone for BFloat16Type<'c> {
+    fn clone(&self) -> Self {
         todo!()
     }
 }
@@ -36,7 +42,7 @@ pub struct ComplexType<'c> {
     phantom: PhantomData<&'c Context>,
 }
 
-impl<'c> Type for ComplexType<'c> {
+impl<'c> Type<'c> for ComplexType<'c> {
     fn size(&self) -> usize {
         todo!()
     }
@@ -50,6 +56,12 @@ impl<'c> Type for ComplexType<'c> {
     }
 
     fn preferred_alignment(&self) -> usize {
+        todo!()
+    }
+}
+
+impl<'c> Clone for ComplexType<'c> {
+    fn clone(&self) -> Self {
         todo!()
     }
 }
@@ -65,7 +77,7 @@ pub struct Float8E4M3B11FNUZType<'c> {
     phantom: PhantomData<&'c Context>,
 }
 
-impl<'c> Type for Float8E4M3B11FNUZType<'c> {
+impl<'c> Type<'c> for Float8E4M3B11FNUZType<'c> {
     fn size(&self) -> usize {
         todo!()
     }
@@ -79,6 +91,12 @@ impl<'c> Type for Float8E4M3B11FNUZType<'c> {
     }
 
     fn preferred_alignment(&self) -> usize {
+        todo!()
+    }
+}
+
+impl<'c> Clone for Float8E4M3B11FNUZType<'c> {
+    fn clone(&self) -> Self {
         todo!()
     }
 }
@@ -94,7 +112,7 @@ pub struct Float8E4M3FNType<'c> {
     phantom: PhantomData<&'c Context>,
 }
 
-impl<'c> Type for Float8E4M3FNType<'c> {
+impl<'c> Type<'c> for Float8E4M3FNType<'c> {
     fn size(&self) -> usize {
         todo!()
     }
@@ -108,6 +126,12 @@ impl<'c> Type for Float8E4M3FNType<'c> {
     }
 
     fn preferred_alignment(&self) -> usize {
+        todo!()
+    }
+}
+
+impl<'c> Clone for Float8E4M3FNType<'c> {
+    fn clone(&self) -> Self {
         todo!()
     }
 }
@@ -123,7 +147,7 @@ pub struct Float8E4M3FNUZType<'c> {
     phantom: PhantomData<&'c Context>,
 }
 
-impl<'c> Type for Float8E4M3FNUZType<'c> {
+impl<'c> Type<'c> for Float8E4M3FNUZType<'c> {
     fn size(&self) -> usize {
         todo!()
     }
@@ -137,6 +161,12 @@ impl<'c> Type for Float8E4M3FNUZType<'c> {
     }
 
     fn preferred_alignment(&self) -> usize {
+        todo!()
+    }
+}
+
+impl<'c> Clone for Float8E4M3FNUZType<'c> {
+    fn clone(&self) -> Self {
         todo!()
     }
 }
@@ -152,7 +182,7 @@ pub struct Float8E5M2Type<'c> {
     phantom: PhantomData<&'c Context>,
 }
 
-impl<'c> Type for Float8E5M2Type<'c> {
+impl<'c> Type<'c> for Float8E5M2Type<'c> {
     fn size(&self) -> usize {
         todo!()
     }
@@ -166,6 +196,12 @@ impl<'c> Type for Float8E5M2Type<'c> {
     }
 
     fn preferred_alignment(&self) -> usize {
+        todo!()
+    }
+}
+
+impl<'c> Clone for Float8E5M2Type<'c> {
+    fn clone(&self) -> Self {
         todo!()
     }
 }
@@ -181,7 +217,7 @@ pub struct Float8E5M2FNUZType<'c> {
     phantom: PhantomData<&'c Context>,
 }
 
-impl<'c> Type for Float8E5M2FNUZType<'c> {
+impl<'c> Type<'c> for Float8E5M2FNUZType<'c> {
     fn size(&self) -> usize {
         todo!()
     }
@@ -195,6 +231,12 @@ impl<'c> Type for Float8E5M2FNUZType<'c> {
     }
 
     fn preferred_alignment(&self) -> usize {
+        todo!()
+    }
+}
+
+impl<'c> Clone for Float8E5M2FNUZType<'c> {
+    fn clone(&self) -> Self {
         todo!()
     }
 }
@@ -210,7 +252,7 @@ pub struct Float16Type<'c> {
     phantom: PhantomData<&'c Context>,
 }
 
-impl<'c> Type for Float16Type<'c> {
+impl<'c> Type<'c> for Float16Type<'c> {
     fn size(&self) -> usize {
         todo!()
     }
@@ -224,6 +266,12 @@ impl<'c> Type for Float16Type<'c> {
     }
 
     fn preferred_alignment(&self) -> usize {
+        todo!()
+    }
+}
+
+impl<'c> Clone for Float16Type<'c> {
+    fn clone(&self) -> Self {
         todo!()
     }
 }
@@ -239,7 +287,7 @@ pub struct Float32Type<'c> {
     phantom: PhantomData<&'c Context>,
 }
 
-impl<'c> Type for Float32Type<'c> {
+impl<'c> Type<'c> for Float32Type<'c> {
     fn size(&self) -> usize {
         todo!()
     }
@@ -253,6 +301,12 @@ impl<'c> Type for Float32Type<'c> {
     }
 
     fn preferred_alignment(&self) -> usize {
+        todo!()
+    }
+}
+
+impl<'c> Clone for Float32Type<'c> {
+    fn clone(&self) -> Self {
         todo!()
     }
 }
@@ -268,7 +322,7 @@ pub struct Float64Type<'c> {
     phantom: PhantomData<&'c Context>,
 }
 
-impl<'c> Type for Float64Type<'c> {
+impl<'c> Type<'c> for Float64Type<'c> {
     fn size(&self) -> usize {
         todo!()
     }
@@ -282,6 +336,12 @@ impl<'c> Type for Float64Type<'c> {
     }
 
     fn preferred_alignment(&self) -> usize {
+        todo!()
+    }
+}
+
+impl<'c> Clone for Float64Type<'c> {
+    fn clone(&self) -> Self {
         todo!()
     }
 }
@@ -297,7 +357,7 @@ pub struct Float80Type<'c> {
     phantom: PhantomData<&'c Context>,
 }
 
-impl<'c> Type for Float80Type<'c> {
+impl<'c> Type<'c> for Float80Type<'c> {
     fn size(&self) -> usize {
         todo!()
     }
@@ -311,6 +371,12 @@ impl<'c> Type for Float80Type<'c> {
     }
 
     fn preferred_alignment(&self) -> usize {
+        todo!()
+    }
+}
+
+impl<'c> Clone for Float80Type<'c> {
+    fn clone(&self) -> Self {
         todo!()
     }
 }
@@ -326,7 +392,7 @@ pub struct Float128Type<'c> {
     phantom: PhantomData<&'c Context>,
 }
 
-impl<'c> Type for Float128Type<'c> {
+impl<'c> Type<'c> for Float128Type<'c> {
     fn size(&self) -> usize {
         todo!()
     }
@@ -340,6 +406,12 @@ impl<'c> Type for Float128Type<'c> {
     }
 
     fn preferred_alignment(&self) -> usize {
+        todo!()
+    }
+}
+
+impl<'c> Clone for Float128Type<'c> {
+    fn clone(&self) -> Self {
         todo!()
     }
 }
@@ -355,7 +427,7 @@ pub struct FunctionType<'c> {
     phantom: PhantomData<&'c Context>,
 }
 
-impl<'c> Type for FunctionType<'c> {
+impl<'c> Type<'c> for FunctionType<'c> {
     fn size(&self) -> usize {
         todo!()
     }
@@ -369,6 +441,12 @@ impl<'c> Type for FunctionType<'c> {
     }
 
     fn preferred_alignment(&self) -> usize {
+        todo!()
+    }
+}
+
+impl<'c> Clone for FunctionType<'c> {
+    fn clone(&self) -> Self {
         todo!()
     }
 }
@@ -384,7 +462,7 @@ pub struct IndexType<'c> {
     phantom: PhantomData<&'c Context>,
 }
 
-impl<'c> Type for IndexType<'c> {
+impl<'c> Type<'c> for IndexType<'c> {
     fn size(&self) -> usize {
         todo!()
     }
@@ -398,6 +476,12 @@ impl<'c> Type for IndexType<'c> {
     }
 
     fn preferred_alignment(&self) -> usize {
+        todo!()
+    }
+}
+
+impl<'c> Clone for IndexType<'c> {
+    fn clone(&self) -> Self {
         todo!()
     }
 }
@@ -413,7 +497,7 @@ pub struct IntegerType<'c> {
     phantom: PhantomData<&'c Context>,
 }
 
-impl<'c> Type for IntegerType<'c> {
+impl<'c> Type<'c> for IntegerType<'c> {
     fn size(&self) -> usize {
         todo!()
     }
@@ -427,6 +511,12 @@ impl<'c> Type for IntegerType<'c> {
     }
 
     fn preferred_alignment(&self) -> usize {
+        todo!()
+    }
+}
+
+impl<'c> Clone for IntegerType<'c> {
+    fn clone(&self) -> Self {
         todo!()
     }
 }
@@ -442,7 +532,7 @@ pub struct MemRefType<'c> {
     phantom: PhantomData<&'c Context>,
 }
 
-impl<'c> Type for MemRefType<'c> {
+impl<'c> Type<'c> for MemRefType<'c> {
     fn size(&self) -> usize {
         todo!()
     }
@@ -456,6 +546,12 @@ impl<'c> Type for MemRefType<'c> {
     }
 
     fn preferred_alignment(&self) -> usize {
+        todo!()
+    }
+}
+
+impl<'c> Clone for MemRefType<'c> {
+    fn clone(&self) -> Self {
         todo!()
     }
 }
@@ -471,7 +567,7 @@ pub struct NoneType<'c> {
     phantom: PhantomData<&'c Context>,
 }
 
-impl<'c> Type for NoneType<'c> {
+impl<'c> Type<'c> for NoneType<'c> {
     fn size(&self) -> usize {
         todo!()
     }
@@ -485,6 +581,12 @@ impl<'c> Type for NoneType<'c> {
     }
 
     fn preferred_alignment(&self) -> usize {
+        todo!()
+    }
+}
+
+impl<'c> Clone for NoneType<'c> {
+    fn clone(&self) -> Self {
         todo!()
     }
 }
@@ -500,7 +602,7 @@ pub struct OpaqueType<'c> {
     phantom: PhantomData<&'c Context>,
 }
 
-impl<'c> Type for OpaqueType<'c> {
+impl<'c> Type<'c> for OpaqueType<'c> {
     fn size(&self) -> usize {
         todo!()
     }
@@ -514,6 +616,12 @@ impl<'c> Type for OpaqueType<'c> {
     }
 
     fn preferred_alignment(&self) -> usize {
+        todo!()
+    }
+}
+
+impl<'c> Clone for OpaqueType<'c> {
+    fn clone(&self) -> Self {
         todo!()
     }
 }
@@ -529,7 +637,7 @@ pub struct RankedTensorType<'c> {
     phantom: PhantomData<&'c Context>,
 }
 
-impl<'c> Type for RankedTensorType<'c> {
+impl<'c> Type<'c> for RankedTensorType<'c> {
     fn size(&self) -> usize {
         todo!()
     }
@@ -543,6 +651,12 @@ impl<'c> Type for RankedTensorType<'c> {
     }
 
     fn preferred_alignment(&self) -> usize {
+        todo!()
+    }
+}
+
+impl<'c> Clone for RankedTensorType<'c> {
+    fn clone(&self) -> Self {
         todo!()
     }
 }
@@ -558,7 +672,7 @@ pub struct TupleType<'c> {
     phantom: PhantomData<&'c Context>,
 }
 
-impl<'c> Type for TupleType<'c> {
+impl<'c> Type<'c> for TupleType<'c> {
     fn size(&self) -> usize {
         todo!()
     }
@@ -572,6 +686,12 @@ impl<'c> Type for TupleType<'c> {
     }
 
     fn preferred_alignment(&self) -> usize {
+        todo!()
+    }
+}
+
+impl<'c> Clone for TupleType<'c> {
+    fn clone(&self) -> Self {
         todo!()
     }
 }
@@ -587,7 +707,7 @@ pub struct UnrankedMemRefType<'c> {
     phantom: PhantomData<&'c Context>,
 }
 
-impl<'c> Type for UnrankedMemRefType<'c> {
+impl<'c> Type<'c> for UnrankedMemRefType<'c> {
     fn size(&self) -> usize {
         todo!()
     }
@@ -601,6 +721,12 @@ impl<'c> Type for UnrankedMemRefType<'c> {
     }
 
     fn preferred_alignment(&self) -> usize {
+        todo!()
+    }
+}
+
+impl<'c> Clone for UnrankedMemRefType<'c> {
+    fn clone(&self) -> Self {
         todo!()
     }
 }
@@ -616,7 +742,7 @@ pub struct UnrankedTensorType<'c> {
     phantom: PhantomData<&'c Context>,
 }
 
-impl<'c> Type for UnrankedTensorType<'c> {
+impl<'c> Type<'c> for UnrankedTensorType<'c> {
     fn size(&self) -> usize {
         todo!()
     }
@@ -630,6 +756,12 @@ impl<'c> Type for UnrankedTensorType<'c> {
     }
 
     fn preferred_alignment(&self) -> usize {
+        todo!()
+    }
+}
+
+impl<'c> Clone for UnrankedTensorType<'c> {
+    fn clone(&self) -> Self {
         todo!()
     }
 }
@@ -645,7 +777,7 @@ pub struct VectorType<'c> {
     phantom: PhantomData<&'c Context>,
 }
 
-impl<'c> Type for VectorType<'c> {
+impl<'c> Type<'c> for VectorType<'c> {
     fn size(&self) -> usize {
         todo!()
     }
@@ -659,6 +791,12 @@ impl<'c> Type for VectorType<'c> {
     }
 
     fn preferred_alignment(&self) -> usize {
+        todo!()
+    }
+}
+
+impl<'c> Clone for VectorType<'c> {
+    fn clone(&self) -> Self {
         todo!()
     }
 }

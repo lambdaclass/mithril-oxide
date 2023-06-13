@@ -7,7 +7,7 @@ pub struct DataBoundsType<'c> {
     phantom: PhantomData<&'c Context>,
 }
 
-impl<'c> Type for DataBoundsType<'c> {
+impl<'c> Type<'c> for DataBoundsType<'c> {
     fn size(&self) -> usize {
         todo!()
     }
@@ -21,6 +21,12 @@ impl<'c> Type for DataBoundsType<'c> {
     }
 
     fn preferred_alignment(&self) -> usize {
+        todo!()
+    }
+}
+
+impl<'c> Clone for DataBoundsType<'c> {
+    fn clone(&self) -> Self {
         todo!()
     }
 }

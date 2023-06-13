@@ -4,6 +4,8 @@
 
 #include <mlir/IR/BuiltinAttributes.h>
 #include <mlir/IR/MLIRContext.h>
+#include <mlir/Support/LLVM.h>
+#include <rust/cxx.h>
 
 
 namespace mithril_oxide_sys {

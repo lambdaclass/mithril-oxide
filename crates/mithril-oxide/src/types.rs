@@ -13,9 +13,9 @@ pub mod sparse_tensor;
 pub mod spirv;
 pub mod transform;
 
-pub trait Type
+pub trait Type<'c>
 where
-    Self: Display,
+    Self: Clone + Display,
 {
     fn size(&self) -> usize;
     fn size_in_bits(&self) -> usize;

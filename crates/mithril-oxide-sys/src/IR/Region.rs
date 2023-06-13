@@ -13,7 +13,6 @@ pub(crate) mod ffi {
     #[namespace = "mithril_oxide_sys"]
     unsafe extern "C++" {
         include!("mithril-oxide-sys/cpp/IR/Region.hpp");
-
     }
 }
 
