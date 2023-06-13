@@ -1,10 +1,9 @@
 use cxx::UniquePtr;
 pub use ffi::{
     AffineExpr, BaseMemRefType, FloatType, IndexType, IntegerType, MemRefType, RankedTensorType,
-    TensorType, VectorType,
+    TensorType, VectorType, FunctionType
 };
 
-pub use self::ffi::FunctionType;
 use self::ffi::MLIRContext;
 use std::{fmt, pin::Pin};
 
@@ -72,4 +71,20 @@ impl ffi::IntegerType {
     ) -> UniquePtr<Self> {
         ffi::IntegerType_get(ctx, width, has_sign, is_signed)
     }
+}
+impl From<&ffi::IntegerType> for UniquePtr<crate::IR::Value::ffi::Type> {
+    fn from(val: &ffi::IntegerType) -> Self {
+        crate::IR::Types::ffi::IntegerType_to_Type(val)
+    }
+}
+
+
+macro_rules! impl_type_conversion {
+    ($ident:ident) => {
+        impl From<&ffi::$ident> for UniquePtr<crate::IR::Value::ffi::Type> {
+            fn from(val: &ffi::$ident) -> Self {
+                concat_idents!(crate::IR::Types::ffi::$ident, _to_Type(val))
+            }
+        }
+    };
 }
