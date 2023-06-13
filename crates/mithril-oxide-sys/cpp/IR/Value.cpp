@@ -1,4 +1,5 @@
 #include "Value.hpp"
+
 #include <memory>
 
 namespace mithril_oxide_sys
