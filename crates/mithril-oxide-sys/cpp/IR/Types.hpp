@@ -1,10 +1,10 @@
 #pragma once
 
-#include <mlir/IR/Region.h>
+#include <mlir/IR/Types.h>
 
 
 namespace mithril_oxide_sys {
 
-using mlir::Region;
+using mlir::Type;
 
 } // namespace mithril_oxide_sys

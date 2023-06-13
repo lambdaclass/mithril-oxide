@@ -11,6 +11,14 @@ pub(crate) mod ffi {
         type MLIRContext;
 
         pub fn loadAllAvailableDialects(self: Pin<&mut MLIRContext>);
+
+        #[must_use]
+        pub fn allowsUnregisteredDialects(self: Pin<&mut MLIRContext>) -> bool;
+        pub fn allowUnregisteredDialects(self: Pin<&mut MLIRContext>, allow: bool);
+
+        pub fn enableMultithreading(self: Pin<&mut MLIRContext>, enable: bool);
+        #[must_use]
+        pub fn isMultithreadingEnabled(self: Pin<&mut MLIRContext>) -> bool;
     }
 
     #[namespace = "mithril_oxide_sys"]
@@ -31,5 +39,17 @@ impl ffi::MLIRContext {
 impl fmt::Debug for ffi::MLIRContext {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.debug_struct("MLIRContext").finish_non_exhaustive()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::InitAllDialects::registerAllDialects;
+
+    #[test]
+    fn context_new() {
+        let mut context = MLIRContext::new();
+        registerAllDialects(context.pin_mut());
     }
 }

@@ -1,4 +1,9 @@
-use std::fmt::Display;
+use std::{
+    fmt::Display,
+    pin::{pin, Pin},
+};
+
+use mithril_oxide_sys::{UniquePtr, IR};
 
 pub mod acc;
 pub mod affine;
@@ -38,8 +43,20 @@ pub mod transform;
 pub mod vector;
 pub mod x86vector;
 
-pub trait Operation
+pub(crate) mod operation_impl {
+    use super::*;
+
+    pub trait OperationInner {
+        fn get_inner(&self) -> &IR::Operation::Operation;
+        fn get_inner_mut(&self) -> Pin<&mut IR::Operation::Operation>;
+    }
+}
+
+pub trait Operation: operation_impl::OperationInner
 where
     Self: Display,
 {
+    fn get_name(&self) -> &str {
+        self.get_inner_mut().get_name()
+    }
 }
