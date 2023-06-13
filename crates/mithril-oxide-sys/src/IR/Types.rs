@@ -8,6 +8,7 @@ pub(crate) mod ffi {
         include!("mithril-oxide-sys/cpp/IR/Types.hpp");
 
         type Type;
+        type Value = crate::IR::Value::Value;
 
         #[must_use]
         pub fn isIndex(self: &Type) -> bool;
@@ -83,6 +84,9 @@ pub(crate) mod ffi {
     #[namespace = "mithril_oxide_sys"]
     unsafe extern "C++" {
         include!("mithril-oxide-sys/cpp/IR/Types.hpp");
+
+        // Value related
+        pub fn Value_getType(value: &Value) -> UniquePtr<Type>;
     }
 }
 

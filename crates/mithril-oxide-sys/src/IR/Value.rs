@@ -1,7 +1,10 @@
 use cxx::UniquePtr;
 
+use self::ffi::Type;
 pub use self::ffi::Value;
 use std::fmt;
+
+use super::Types::ffi::Value_getType;
 
 #[cxx::bridge]
 pub(crate) mod ffi {
@@ -11,6 +14,8 @@ pub(crate) mod ffi {
 
         type Value;
         type BlockArgument = crate::IR::Block::BlockArgument;
+        type Type = crate::IR::Types::Type;
+
     }
 
     #[namespace = "mithril_oxide_sys"]
@@ -21,7 +26,11 @@ pub(crate) mod ffi {
     }
 }
 
-impl ffi::Value {}
+impl ffi::Value {
+    pub fn get_type(&self) -> UniquePtr<Type> {
+        Value_getType(self)
+    }
+}
 
 impl fmt::Debug for ffi::Value {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
