@@ -1,7 +1,8 @@
 #include "DialectRegistry.hpp"
 
-#include <mlir/IR/DialectRegistry.h>
 #include <memory>
+
+#include <mlir/IR/DialectRegistry.h>
 
 
 namespace mithril_oxide_sys {
