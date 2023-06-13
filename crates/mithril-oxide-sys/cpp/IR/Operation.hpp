@@ -4,7 +4,6 @@
 
 #include <mlir/IR/Operation.h>
 #include <mlir/IR/OperationSupport.h>
-#include <mlir/Dialect/SCF/IR/SCF.h>
 
 #include <rust/cxx.h>
 
