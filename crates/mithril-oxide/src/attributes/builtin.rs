@@ -239,7 +239,7 @@ impl<'c> fmt::Display for StridedLayoutAttr<'c> {
 
 // #[derive(Debug)]
 pub struct StringAttr<'c> {
-    pub(crate) inner: ffi::IR::BuiltinAttributes::StringAttr,
+    pub(crate) inner: ffi::UniquePtr<ffi::IR::BuiltinAttributes::StringAttr>,
     phantom: PhantomData<&'c Context>,
 }
 
