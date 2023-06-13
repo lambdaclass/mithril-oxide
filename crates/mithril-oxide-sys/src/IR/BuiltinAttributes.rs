@@ -1,4 +1,4 @@
-pub use self::ffi::StringAttr;
+pub use self::ffi::{DictionaryAttr, StringAttr};
 use crate::IR::MLIRContext::MLIRContext;
 use cxx::UniquePtr;
 use std::{fmt, pin::Pin};
@@ -9,6 +9,7 @@ pub(crate) mod ffi {
     unsafe extern "C++" {
         include!("mithril-oxide-sys/cpp/IR/BuiltinAttributes.hpp");
 
+        type DictionaryAttr;
         type MLIRContext = crate::IR::MLIRContext::MLIRContext;
         type StringAttr;
     }
