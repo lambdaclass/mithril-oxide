@@ -43,9 +43,3 @@ where
     Self: Display,
 {
 }
-
-#[macro_export(local_inner_macros)]
-macro_rules! impl_op {
-    () => {
-    };
-}
