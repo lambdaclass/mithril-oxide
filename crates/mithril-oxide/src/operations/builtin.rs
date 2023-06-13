@@ -2,9 +2,9 @@ use crate::{
     attributes::{builtin::StringAttr, LocationAttr},
     location::Location,
     util::{IntoWithContext, NotSet},
-    Context,
+    Context, Region,
 };
-use mithril_oxide_cxx as ffi;
+use mithril_oxide_sys as ffi;
 use std::{marker::PhantomData, ptr::null};
 
 // TODO: Operation `builtin.module`.
@@ -23,6 +23,10 @@ impl<'c> ModuleOp<'c> {
             sym_name: None,
             sym_visibility: None,
         }
+    }
+
+    pub fn body_mut(&mut self) -> &mut Region {
+        Region::from_ffi(self.inner.pin_mut().getBodyRegion())
     }
 }
 

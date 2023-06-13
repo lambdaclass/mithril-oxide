@@ -1,7 +1,7 @@
 pub use self::ffi::StringAttr;
 use crate::IR::MLIRContext::MLIRContext;
 use cxx::UniquePtr;
-use std::{fmt, pin::Pin, ptr::null};
+use std::{fmt, pin::Pin};
 
 #[cxx::bridge]
 pub(crate) mod ffi {
@@ -17,20 +17,13 @@ pub(crate) mod ffi {
     unsafe extern "C++" {
         include!("mithril-oxide-sys/cpp/IR/BuiltinAttributes.hpp");
 
-        unsafe fn StringAttr_get(
-            context: Pin<&mut MLIRContext>,
-            value: *const &str,
-        ) -> UniquePtr<StringAttr>;
+        fn StringAttr_get(context: Pin<&mut MLIRContext>, value: &str) -> UniquePtr<StringAttr>;
     }
 }
 
 impl ffi::StringAttr {
-    pub fn empty(context: Pin<&mut MLIRContext>) -> UniquePtr<Self> {
-        unsafe { ffi::StringAttr_get(context, null()) }
-    }
-
-    pub fn with_value(context: Pin<&mut MLIRContext>, value: &str) -> UniquePtr<Self> {
-        unsafe { ffi::StringAttr_get(context, &value as *const &str) }
+    pub fn new(context: Pin<&mut MLIRContext>, value: &str) -> UniquePtr<Self> {
+        ffi::StringAttr_get(context, value)
     }
 }
 

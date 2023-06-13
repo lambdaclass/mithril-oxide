@@ -1,4 +1,4 @@
-use mithril_oxide_cxx as ffi;
+use mithril_oxide_sys as ffi;
 use std::{cell::RefCell, mem::MaybeUninit};
 
 // #[derive(Debug)]

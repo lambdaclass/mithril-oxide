@@ -2,7 +2,7 @@ pub use crate::attributes::builtin::{
     CallSiteLoc, FileLineColLoc, FusedLoc, NameLoc, OpaqueLoc, UnknownLoc,
 };
 use crate::Context;
-use mithril_oxide_cxx as ffi;
+use mithril_oxide_sys as ffi;
 use std::marker::PhantomData;
 
 /// A generic location.

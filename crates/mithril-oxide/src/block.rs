@@ -6,10 +6,6 @@ pub struct Block<'c> {
 }
 
 impl<'c> Block<'c> {
-    pub fn new() -> Self {
-        todo!()
-    }
-
     pub fn add_argument(&mut self, location: impl LocationAttr<'c>, r#type: impl Type<'c>) {
         todo!()
     }

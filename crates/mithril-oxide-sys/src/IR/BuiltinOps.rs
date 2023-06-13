@@ -1,7 +1,7 @@
 pub use self::ffi::ModuleOp;
 use crate::IR::{BuiltinAttributes::StringAttr, Location::Location};
 use cxx::UniquePtr;
-use std::{fmt, pin::Pin, ptr::null};
+use std::{fmt, pin::Pin};
 
 #[cxx::bridge]
 pub(crate) mod ffi {
@@ -11,14 +11,17 @@ pub(crate) mod ffi {
 
         type Location = crate::IR::Location::Location;
         type ModuleOp;
+        type Region = crate::IR::Region::Region;
         type StringAttr = crate::IR::BuiltinAttributes::StringAttr;
+
+        fn getBodyRegion(self: Pin<&mut ModuleOp>) -> Pin<&mut Region>;
     }
 
     #[namespace = "mithril_oxide_sys"]
     unsafe extern "C++" {
         include!("mithril-oxide-sys/cpp/IR/BuiltinOps.hpp");
 
-        unsafe fn ModuleOp_create(context: &Location, name: *const &str) -> UniquePtr<ModuleOp>;
+        fn ModuleOp_create(context: &Location) -> UniquePtr<ModuleOp>;
         fn ModuleOp_setSymNameAttr(op: Pin<&mut ModuleOp>, value: &StringAttr);
         fn ModuleOp_setSymVisibilityAttr(op: Pin<&mut ModuleOp>, value: &StringAttr);
     }
@@ -26,7 +29,7 @@ pub(crate) mod ffi {
 
 impl ffi::ModuleOp {
     pub fn new(context: &Location) -> UniquePtr<Self> {
-        unsafe { ffi::ModuleOp_create(context, null()) }
+        ffi::ModuleOp_create(context)
     }
 
     pub fn setSymNameAttr(self: Pin<&mut Self>, value: StringAttr) {

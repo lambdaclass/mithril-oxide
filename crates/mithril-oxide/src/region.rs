@@ -1,9 +1,16 @@
-use mithril_oxide_cxx as ffi;
+use crate::Context;
+use mithril_oxide_sys as ffi;
+use std::{marker::PhantomData, pin::Pin};
 
-pub struct Region {}
+#[repr(transparent)]
+pub struct Region<'c> {
+    inner: *mut ffi::IR::Region::Region,
+    phantom: PhantomData<&'c Context>,
+}
 
-impl Region {
-    pub fn new() -> Self {
-        ffi::IR::Region
+impl<'c> Region<'c> {
+    pub(crate) fn from_ffi(inner: Pin<&mut ffi::IR::Region::Region>) -> &mut Self {
+        // This is guaranteed to be safe by `#[repr(transparent)]`.
+        unsafe { std::mem::transmute(inner) }
     }
 }

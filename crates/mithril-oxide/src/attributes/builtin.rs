@@ -1,6 +1,6 @@
 use super::Attribute;
 use crate::context::Context;
-use mithril_oxide_cxx as ffi;
+use mithril_oxide_sys as ffi;
 use std::{fmt, marker::PhantomData};
 
 #[derive(Debug)]
