@@ -13,9 +13,9 @@ pub(crate) mod ffi {
         type Block;
         type BlockArgument;
 
+        type Type = crate::IR::Types::Type;
         type Region = crate::IR::Region::Region;
         type Operation = crate::IR::Operation::Operation;
-        type Type = crate::IR::Types::Type;
         type Location = crate::IR::Location::Location;
 
         #[must_use]
@@ -43,6 +43,7 @@ impl ffi::Block {
         Block_addArgument(self, r#type, loc);
     }
 
+    #[must_use]
     pub fn get_argument(self: Pin<&mut Self>, i: u32) -> UniquePtr<BlockArgument> {
         Block_getArgument(self, i)
     }
@@ -51,6 +52,12 @@ impl ffi::Block {
 impl fmt::Debug for ffi::Block {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.debug_struct("Block").finish_non_exhaustive()
+    }
+}
+
+impl fmt::Debug for ffi::BlockArgument {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.debug_struct("BlockArgument").finish_non_exhaustive()
     }
 }
 

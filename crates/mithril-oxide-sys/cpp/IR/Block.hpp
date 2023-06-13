@@ -14,6 +14,7 @@ using mlir::Block;
 using mlir::Type;
 using mlir::Location;
 using mlir::BlockArgument;
+using mlir::Value;
 
 
 void Block_addArgument(Block &block, const Type& type, const Location& loc);
