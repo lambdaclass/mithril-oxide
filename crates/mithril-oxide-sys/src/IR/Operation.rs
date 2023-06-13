@@ -4,11 +4,18 @@ use std::{fmt, pin::Pin};
 
 #[cxx::bridge]
 pub(crate) mod ffi {
+
     #[namespace = "mlir"]
     unsafe extern "C++" {
         include!("mithril-oxide-sys/cpp/IR/Operation.hpp");
 
         type Operation;
+        type Block = crate::IR::Block::Block;
+        type Region = crate::IR::Region::Region;
+
+        pub fn getBlock(self: Pin<&mut Operation>) -> *mut Block;
+        pub fn getParentRegion(self: Pin<&mut Operation>) -> *mut Region;
+        pub fn getParentOp(self: Pin<&mut Operation>) -> *mut Operation;
     }
 
     #[namespace = "mithril_oxide_sys"]

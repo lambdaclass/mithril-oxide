@@ -12,6 +12,10 @@ pub(crate) mod ffi {
         type Location = crate::IR::Location::Location;
         type ModuleOp;
         type StringAttr = crate::IR::BuiltinAttributes::StringAttr;
+        type Region = crate::IR::Region::Region;
+
+        #[must_use]
+        fn getBodyRegion(self: Pin<&mut ModuleOp>) -> Pin<&mut Region>;
     }
 
     #[namespace = "mithril_oxide_sys"]
