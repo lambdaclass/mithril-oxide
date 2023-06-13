@@ -11,6 +11,14 @@ pub(crate) mod ffi {
         type MLIRContext;
 
         pub fn loadAllAvailableDialects(self: Pin<&mut MLIRContext>);
+
+        #[must_use]
+        pub fn allowsUnregisteredDialects(self: Pin<&mut MLIRContext>) -> bool;
+        pub fn allowUnregisteredDialects(self: Pin<&mut MLIRContext>, allow: bool);
+
+        pub fn enableMultithreading(self: Pin<&mut MLIRContext>, enable: bool);
+        #[must_use]
+        pub fn isMultithreadingEnabled(self: Pin<&mut MLIRContext>) -> bool;
     }
 
     #[namespace = "mithril_oxide_sys"]
