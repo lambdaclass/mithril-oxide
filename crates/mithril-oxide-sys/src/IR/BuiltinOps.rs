@@ -34,12 +34,12 @@ impl ffi::ModuleOp {
         ffi::ModuleOp_create(context)
     }
 
-    pub fn setSymNameAttr(self: Pin<&mut Self>, value: StringAttr) {
-        ffi::ModuleOp_setSymNameAttr(self, &value);
+    pub fn setSymNameAttr(self: Pin<&mut Self>, value: &StringAttr) {
+        ffi::ModuleOp_setSymNameAttr(self, value);
     }
 
-    pub fn setSymVisibilityAttr(self: Pin<&mut Self>, value: StringAttr) {
-        ffi::ModuleOp_setSymVisibilityAttr(self, &value);
+    pub fn setSymVisibilityAttr(self: Pin<&mut Self>, value: &StringAttr) {
+        ffi::ModuleOp_setSymVisibilityAttr(self, value);
     }
 }
 

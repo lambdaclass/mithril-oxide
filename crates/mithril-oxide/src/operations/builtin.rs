@@ -82,7 +82,7 @@ impl<'c, OpLocation, SymName, SymVisibility>
         if let Some(sym_name) = self.sym_name {
             let sym_name = sym_name.into_with_context(self.context);
             unsafe {
-                ffi_module.pin_mut().setSymNameAttr(sym_name.inner);
+                ffi_module.pin_mut().setSymNameAttr(&sym_name.inner);
             }
         }
         if let Some(sym_visibility) = self.sym_visibility {
@@ -90,7 +90,7 @@ impl<'c, OpLocation, SymName, SymVisibility>
             unsafe {
                 ffi_module
                     .pin_mut()
-                    .setSymVisibilityAttr(sym_visibility.inner);
+                    .setSymVisibilityAttr(&sym_visibility.inner);
             }
         }
 
