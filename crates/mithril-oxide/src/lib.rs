@@ -5,6 +5,7 @@ pub use self::context::Context;
 
 pub mod attributes;
 mod context;
+pub mod location;
 pub mod operations;
 pub mod types;
 
@@ -15,6 +16,7 @@ pub mod prelude {
     pub use crate::Context;
 
     pub use crate::attributes as attrs;
+    pub use crate::location::Location;
     pub use crate::operations as ops;
     pub use crate::types;
 }

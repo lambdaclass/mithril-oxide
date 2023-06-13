@@ -5,7 +5,7 @@ use mithril_oxide_sys::{UniquePtr, IR::MLIRContext::MLIRContext};
 /// The MLIR context.
 #[derive(Debug)]
 pub struct Context {
-    inner: RefCell<UniquePtr<MLIRContext>>,
+    pub(crate) inner: RefCell<UniquePtr<MLIRContext>>,
 }
 
 impl Context {
@@ -68,6 +68,7 @@ mod tests {
     #[test]
     fn new() {
         let context = Context::new(true);
+        assert!(!context.inner.borrow().is_null());
         assert!(context.is_multithreading_enabled());
     }
 }
