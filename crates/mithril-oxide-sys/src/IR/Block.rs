@@ -17,10 +17,14 @@ pub(crate) mod ffi {
         type Type = crate::IR::Types::Type;
         type Location = crate::IR::Location::Location;
 
+        #[must_use]
         pub fn getParent(self: &Block) -> *mut Region;
+        #[must_use]
         pub fn getParentOp(self: Pin<&mut Block>) -> *mut Operation;
+        #[must_use]
         pub fn isEntryBlock(self: Pin<&mut Block>) -> bool;
         pub fn erase(self: Pin<&mut Block>);
+        #[must_use]
         pub fn getNumArguments(self: Pin<&mut Block>) -> u32;
     }
 

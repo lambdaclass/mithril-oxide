@@ -13,8 +13,11 @@ pub(crate) mod ffi {
         type Block = crate::IR::Block::Block;
         type Region = crate::IR::Region::Region;
 
+        #[must_use]
         pub fn getBlock(self: Pin<&mut Operation>) -> *mut Block;
+        #[must_use]
         pub fn getParentRegion(self: Pin<&mut Operation>) -> *mut Region;
+        #[must_use]
         pub fn getParentOp(self: Pin<&mut Operation>) -> *mut Operation;
     }
 
@@ -22,6 +25,7 @@ pub(crate) mod ffi {
     unsafe extern "C++" {
         include!("mithril-oxide-sys/cpp/IR/Operation.hpp");
 
+        #[must_use]
         pub fn Operation_getName(op: Pin<&mut Operation>) -> &str;
     }
 }
