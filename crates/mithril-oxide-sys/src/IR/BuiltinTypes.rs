@@ -1,11 +1,20 @@
+use cxx::UniquePtr;
+pub use ffi::{
+    AffineExpr, BaseMemRefType, FloatType, IndexType, IntegerType, MemRefType, RankedTensorType,
+    TensorType, VectorType,
+};
+
 pub use self::ffi::FunctionType;
-use std::fmt;
+use self::ffi::MLIRContext;
+use std::{fmt, pin::Pin};
 
 #[cxx::bridge]
 pub(crate) mod ffi {
     #[namespace = "mlir"]
     unsafe extern "C++" {
         include!("mithril-oxide-sys/cpp/IR/BuiltinTypes.hpp");
+
+        type MLIRContext = crate::IR::MLIRContext::MLIRContext;
 
         type FunctionType;
         type IntegerType;
@@ -16,6 +25,19 @@ pub(crate) mod ffi {
         type RankedTensorType;
         type VectorType;
         type AffineExpr;
+        type IndexType;
+    }
+
+    #[namespace = "mithril_oxide_sys"]
+    unsafe extern "C++" {
+        include!("mithril-oxide-sys/cpp/IR/BuiltinTypes.hpp");
+
+        fn IntegerType_get(
+            context: Pin<&mut MLIRContext>,
+            width: u32,
+            has_sign: bool,
+            is_signed: bool,
+        ) -> UniquePtr<IntegerType>;
     }
 }
 
@@ -38,3 +60,16 @@ impl_type_debug!(MemRefType);
 impl_type_debug!(RankedTensorType);
 impl_type_debug!(VectorType);
 impl_type_debug!(AffineExpr);
+impl_type_debug!(IndexType);
+
+impl ffi::IntegerType {
+    #[must_use]
+    pub fn new(
+        ctx: Pin<&mut MLIRContext>,
+        width: u32,
+        has_sign: bool,
+        is_signed: bool,
+    ) -> UniquePtr<Self> {
+        ffi::IntegerType_get(ctx, width, has_sign, is_signed)
+    }
+}
