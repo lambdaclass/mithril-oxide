@@ -28,6 +28,7 @@ pub(crate) mod ffi {
 }
 
 impl ffi::ModuleOp {
+    #[must_use]
     pub fn new(context: &Location) -> UniquePtr<Self> {
         ffi::ModuleOp_create(context)
     }

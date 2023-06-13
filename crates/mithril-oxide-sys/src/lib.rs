@@ -1,4 +1,6 @@
 #![allow(non_snake_case)]
+#![deny(clippy::pedantic)]
+#![deny(warnings)]
 
 pub use cxx::UniquePtr;
 

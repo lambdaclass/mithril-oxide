@@ -22,6 +22,7 @@ pub(crate) mod ffi {
 }
 
 impl ffi::StringAttr {
+    #[must_use]
     pub fn new(context: Pin<&mut MLIRContext>, value: &str) -> UniquePtr<Self> {
         ffi::StringAttr_get(context, value)
     }

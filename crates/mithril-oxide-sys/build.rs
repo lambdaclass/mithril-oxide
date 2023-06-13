@@ -1,7 +1,12 @@
+#![deny(clippy::pedantic)]
+#![deny(warnings)]
+
 use std::{
     collections::BTreeSet,
+    env::var,
     ffi::OsStr,
     path::{Path, PathBuf},
+    process::{Command, Stdio},
 };
 
 /// C++ source code prefix.
@@ -28,7 +33,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     cxx_build::bridges(&src_sources)
         .files(&cpp_sources)
         .flag("-std=c++17")
-        .flag("-I/usr/lib/llvm-16/include")
+        .flag(&format!("-I{}/include", var("MLIR_SYS_160_PREFIX")?))
         .flag("-Wno-comment")
         .flag("-Wno-unused-parameter")
         .compile("mlir-sys");
@@ -37,6 +42,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("cargo:rerun-if-changed={CPP_PREFIX}");
     for src_path in &src_sources {
         println!("cargo:rerun-if-changed={}", src_path.to_str().unwrap());
+    }
+
+    // Linker flags.
+    println!(
+        "cargo:rustc-link-search={}/lib",
+        var("MLIR_SYS_160_PREFIX")?
+    );
+    if is_llvm_shared_mode()? {
+        println!("cargo:rustc-link-lib=LLVM");
     }
 
     // Linker flags.
@@ -79,4 +93,21 @@ fn find_sources() -> Result<BTreeSet<PathBuf>, Box<dyn std::error::Error>> {
     walk_dir(&mut state, CPP_PREFIX)?;
 
     Ok(state)
+}
+
+fn is_llvm_shared_mode() -> Result<bool, Box<dyn std::error::Error>> {
+    let output =
+        Command::new(Path::new(var("MLIR_SYS_160_PREFIX")?.as_str()).join("bin/llvm-config"))
+            .arg("--shared-mode")
+            .stdin(Stdio::null())
+            .stdout(Stdio::piped())
+            .stderr(Stdio::inherit())
+            .spawn()?
+            .wait_with_output()?;
+
+    Ok(match std::str::from_utf8(&output.stdout)?.trim() {
+        "static" => false,
+        "shared" => true,
+        x => panic!("Invalid LLVM build mode: expected 'static' or 'shared' but instead got {x}"),
+    })
 }
