@@ -10,6 +10,16 @@ pub(crate) mod ffi {
         type Type;
         type Value = crate::IR::Value::Value;
 
+        type FunctionType = crate::IR::BuiltinTypes::FunctionType;
+        type IntegerType = crate::IR::BuiltinTypes::IntegerType;
+        type FloatType = crate::IR::BuiltinTypes::FloatType;
+        type TensorType = crate::IR::BuiltinTypes::TensorType;
+        type BaseMemRefType = crate::IR::BuiltinTypes::BaseMemRefType;
+        type MemRefType = crate::IR::BuiltinTypes::MemRefType;
+        type RankedTensorType = crate::IR::BuiltinTypes::RankedTensorType;
+        type VectorType = crate::IR::BuiltinTypes::VectorType;
+        type IndexType = crate::IR::BuiltinTypes::IndexType;
+
         #[must_use]
         pub fn isIndex(self: &Type) -> bool;
         #[must_use]
@@ -86,7 +96,17 @@ pub(crate) mod ffi {
         include!("mithril-oxide-sys/cpp/IR/Types.hpp");
 
         // Value related
-        pub fn Value_getType(value: &Value) -> UniquePtr<Type>;
+        fn Value_getType(value: &Value) -> UniquePtr<Type>;
+
+        fn FunctionType_to_Type(value: &FunctionType) -> UniquePtr<Type>;
+        fn IntegerType_to_Type(value: &IntegerType) -> UniquePtr<Type>;
+        fn FloatType_to_Type(value: &FloatType) -> UniquePtr<Type>;
+        fn TensorType_to_Type(value: &TensorType) -> UniquePtr<Type>;
+        fn BaseMemRefType_to_Type(value: &BaseMemRefType) -> UniquePtr<Type>;
+        fn MemRefType_to_Type(value: &MemRefType) -> UniquePtr<Type>;
+        fn RankedTensorType_to_Type(value: &RankedTensorType) -> UniquePtr<Type>;
+        fn VectorType_to_Type(value: &VectorType) -> UniquePtr<Type>;
+        fn IndexType_to_Type(value: &IndexType) -> UniquePtr<Type>;
     }
 }
 
