@@ -70,7 +70,7 @@ mod tests {
 
     #[test]
     fn new() {
-        let context = Context::new(true);
+        let context = Context::new();
         assert!(!context.inner.borrow().is_null());
         assert!(context.is_multithreading_enabled());
     }
