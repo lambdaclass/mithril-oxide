@@ -1,9 +1,11 @@
-pub use self::ffi::registerAllTranslations;
-pub use self::ffi::registerFromLLVMIRTranslation;
-pub use self::ffi::registerFromSPIRVTranslation;
-pub use self::ffi::registerToCppTranslation;
-pub use self::ffi::registerToLLVMIRTranslation;
-pub use self::ffi::registerToSPIRVTranslation;
+pub use self::ffi::{
+    registerAllTranslations,
+    registerFromLLVMIRTranslation,
+    registerFromSPIRVTranslation,
+    registerToCppTranslation,
+    registerToLLVMIRTranslation,
+    registerToSPIRVTranslation,
+};
 
 #[cxx::bridge]
 pub(crate) mod ffi {
