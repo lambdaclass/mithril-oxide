@@ -1,5 +1,6 @@
-pub use self::ffi::Block;
-use self::ffi::{Block_addArgument, Location, Type};
+pub use self::ffi::{Block, BlockArgument};
+use self::ffi::{Block_addArgument, Block_getArgument, Location, Type};
+use cxx::UniquePtr;
 use std::fmt;
 use std::pin::Pin;
 
@@ -10,7 +11,7 @@ pub(crate) mod ffi {
         include!("mithril-oxide-sys/cpp/IR/Block.hpp");
 
         type Block;
-        // type BlockArgument;
+        type BlockArgument;
 
         type Region = crate::IR::Region::Region;
         type Operation = crate::IR::Operation::Operation;
@@ -33,12 +34,17 @@ pub(crate) mod ffi {
         include!("mithril-oxide-sys/cpp/IR/Block.hpp");
 
         fn Block_addArgument(block: Pin<&mut Block>, ttype: &Type, loc: &Location);
+        fn Block_getArgument(block: Pin<&mut Block>, i: u32) -> UniquePtr<BlockArgument>;
     }
 }
 
 impl ffi::Block {
     pub fn add_argument(self: Pin<&mut Self>, r#type: &Type, loc: &Location) {
         Block_addArgument(self, r#type, loc);
+    }
+
+    pub fn get_argument(self: Pin<&mut Self>, i: u32) -> UniquePtr<BlockArgument> {
+        Block_getArgument(self, i)
     }
 }
 
