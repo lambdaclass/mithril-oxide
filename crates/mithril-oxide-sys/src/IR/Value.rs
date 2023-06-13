@@ -8,6 +8,7 @@ use super::Types::ffi::Value_getType;
 
 #[cxx::bridge]
 pub(crate) mod ffi {
+
     #[namespace = "mlir"]
     unsafe extern "C++" {
         include!("mithril-oxide-sys/cpp/IR/Value.hpp");
@@ -16,6 +17,7 @@ pub(crate) mod ffi {
         type BlockArgument = crate::IR::Block::BlockArgument;
         type Type = crate::IR::Types::Type;
 
+        pub fn dump(self: Pin<&mut Value>);
     }
 
     #[namespace = "mithril_oxide_sys"]
@@ -27,6 +29,7 @@ pub(crate) mod ffi {
 }
 
 impl ffi::Value {
+    #[must_use]
     pub fn get_type(&self) -> UniquePtr<Type> {
         Value_getType(self)
     }

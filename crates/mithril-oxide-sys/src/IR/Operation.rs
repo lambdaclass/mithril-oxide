@@ -19,6 +19,8 @@ pub(crate) mod ffi {
         pub fn getParentRegion(self: Pin<&mut Operation>) -> *mut Region;
         #[must_use]
         pub fn getParentOp(self: Pin<&mut Operation>) -> *mut Operation;
+
+        pub fn dump(self: Pin<&mut Operation>);
     }
 
     #[namespace = "mithril_oxide_sys"]

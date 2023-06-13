@@ -27,6 +27,8 @@ pub(crate) mod ffi {
         pub fn erase(self: Pin<&mut Block>);
         #[must_use]
         pub fn getNumArguments(self: Pin<&mut Block>) -> u32;
+
+        pub fn dump(self: Pin<&mut Block>);
     }
 
     #[namespace = "mithril_oxide_sys"]
