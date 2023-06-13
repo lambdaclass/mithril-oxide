@@ -1,5 +1,5 @@
 pub use self::ffi::Operation;
-use self::ffi::Operation_getName;
+use self::ffi::{Operation_getName, Operation_print};
 use std::{fmt, pin::Pin};
 
 #[cxx::bridge]
@@ -28,7 +28,10 @@ pub(crate) mod ffi {
         include!("mithril-oxide-sys/cpp/IR/Operation.hpp");
 
         #[must_use]
-        pub fn Operation_getName(op: Pin<&mut Operation>) -> &str;
+        fn Operation_print(op: Pin<&mut Operation>) -> String;
+
+        #[must_use]
+        fn Operation_getName(op: Pin<&mut Operation>) -> &str;
     }
 }
 
@@ -36,6 +39,11 @@ impl ffi::Operation {
     #[must_use]
     pub fn get_name(self: Pin<&mut Self>) -> &str {
         Operation_getName(self)
+    }
+
+    #[must_use]
+    pub fn print(self: Pin<&mut Self>) -> String {
+        Operation_print(self)
     }
 }
 
