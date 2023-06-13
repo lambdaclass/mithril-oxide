@@ -1,8 +1,8 @@
 use cxx::UniquePtr;
 
-use self::ffi::Type;
 pub use self::ffi::Value;
-use std::fmt;
+use self::ffi::{Type, Value_print};
+use std::{fmt, pin::Pin};
 
 use super::Types::ffi::Value_getType;
 
@@ -25,6 +25,9 @@ pub(crate) mod ffi {
         include!("mithril-oxide-sys/cpp/IR/Value.hpp");
 
         fn BlockArgument_toValue(block: &BlockArgument) -> UniquePtr<Value>;
+
+        #[must_use]
+        fn Value_print(op: Pin<&mut Value>) -> String;
     }
 }
 
@@ -32,6 +35,11 @@ impl ffi::Value {
     #[must_use]
     pub fn get_type(&self) -> UniquePtr<Type> {
         Value_getType(self)
+    }
+
+    #[must_use]
+    pub fn print(self: Pin<&mut Self>) -> String {
+        Value_print(self)
     }
 }
 
