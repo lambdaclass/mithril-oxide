@@ -9,6 +9,7 @@
 
 namespace mithril_oxide_sys {
 
+using mlir::DictionaryAttr;
 using mlir::MLIRContext;
 using mlir::StringAttr;
 

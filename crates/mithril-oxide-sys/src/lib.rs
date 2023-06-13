@@ -5,6 +5,7 @@
 
 pub use cxx::UniquePtr;
 
+pub mod Dialect;
 pub mod IR;
 pub mod InitAllDialects;
 pub mod InitAllTranslations;
