@@ -9,7 +9,7 @@ fn main() {
         .location(loc::UnknownLoc::new(&context))
         .build(&context);
 
-    let mut body = module.body_mut().emplace_block();
+    let body = module.body_mut().emplace_block();
     let func_op = body.push(
         ops::func::FuncOp::builder()
             .location(loc::UnknownLoc::new(&context))
