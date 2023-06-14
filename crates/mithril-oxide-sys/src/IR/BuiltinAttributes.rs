@@ -2,6 +2,7 @@ pub use self::ffi::{DictionaryAttr, StringAttr};
 use crate::IR::MLIRContext::MLIRContext;
 use cxx::UniquePtr;
 use std::{fmt, pin::Pin};
+use self::ffi::*;
 
 #[cxx::bridge]
 pub(crate) mod ffi {
@@ -52,3 +53,23 @@ impl fmt::Debug for ffi::StringAttr {
         f.debug_struct("StringAttr").finish_non_exhaustive()
     }
 }
+
+macro_rules! impl_attribute_conversion {
+    ($type_name:ident, $func_name:ident) => {
+        impl From<&crate::IR::BuiltinAttributes::$type_name> for UniquePtr<crate::IR::Attributes::Attribute> {
+            fn from(val: &crate::IR::BuiltinAttributes::$type_name) -> Self {
+                crate::IR::BuiltinAttributes::$func_name(val)
+            }
+        }
+    };
+}
+
+impl_attribute_conversion!(StringAttr, StringAttr_to_Attribute);
+impl_attribute_conversion!(FloatAttr, FloatAttr_to_Attribute);
+impl_attribute_conversion!(IntegerAttr, IntegerAttr_to_Attribute);
+impl_attribute_conversion!(DenseElementsAttr, DenseElementsAttr_to_Attribute);
+impl_attribute_conversion!(DenseIntElementsAttr, DenseIntElementsAttr_to_Attribute);
+impl_attribute_conversion!(DenseFPElementsAttr, DenseFPElementsAttr_to_Attribute);
+impl_attribute_conversion!(BoolAttr, BoolAttr_to_Attribute);
+impl_attribute_conversion!(FlatSymbolRefAttr, FlatSymbolRefAttr_to_Attribute);
+impl_attribute_conversion!(DictionaryAttr, DictionaryAttr_to_Attribute);
