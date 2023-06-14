@@ -1,3 +1,5 @@
+#![allow(warnings)]
+
 use mithril_oxide::prelude::*;
 
 fn main() {
