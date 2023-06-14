@@ -12,6 +12,13 @@ namespace mithril_oxide_sys {
 using mlir::DictionaryAttr;
 using mlir::MLIRContext;
 using mlir::StringAttr;
+using mlir::FloatAttr;
+using mlir::IntegerAttr;
+using mlir::DenseElementsAttr;
+using mlir::DenseIntElementsAttr;
+using mlir::DenseFPElementsAttr;
+using mlir::BoolAttr;
+using mlir::FlatSymbolRefAttr;
 
 
 std::unique_ptr<StringAttr> StringAttr_get(MLIRContext &context, rust::Str value);
