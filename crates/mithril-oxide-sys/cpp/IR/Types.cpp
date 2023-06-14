@@ -23,5 +23,6 @@ MITHRIL_CAST_TO_TYPE_IMPL(MemRefType);
 MITHRIL_CAST_TO_TYPE_IMPL(RankedTensorType);
 MITHRIL_CAST_TO_TYPE_IMPL(TensorType);
 MITHRIL_CAST_TO_TYPE_IMPL(VectorType);
+MITHRIL_CAST_TO_TYPE_IMPL(ShapedType);
 
 } // namespace mithril_oxide_sys

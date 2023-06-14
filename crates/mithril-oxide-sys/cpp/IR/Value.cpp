@@ -3,10 +3,16 @@
 #include <memory>
 
 #include <llvm/Support/raw_ostream.h>
+#include <mlir/IR/Value.h>
 
 namespace mithril_oxide_sys {
 
 std::unique_ptr<Value> BlockArgument_toValue(const BlockArgument& arg)
+{
+    return std::make_unique<Value>(arg);
+}
+
+std::unique_ptr<Value> OpResult_toValue(const OpResult& arg)
 {
     return std::make_unique<Value>(arg);
 }
