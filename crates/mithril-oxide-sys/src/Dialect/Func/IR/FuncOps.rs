@@ -8,6 +8,7 @@ use std::fmt;
 
 #[cxx::bridge]
 pub(crate) mod ffi {
+
     #[namespace = "mlir"]
     unsafe extern "C++" {
         include!("mithril-oxide-sys/cpp/Dialect/Func/IR/FuncOps.hpp");
@@ -18,6 +19,9 @@ pub(crate) mod ffi {
         type FunctionType = crate::IR::BuiltinTypes::FunctionType;
         type Location = crate::IR::Location::Location;
         type NamedAttribute = crate::IR::Attributes::NamedAttribute;
+        type Operation = crate::IR::Operation::Operation;
+
+        pub fn getOperation(self: Pin<&mut FuncOp>) -> *mut Operation;
     }
 
     #[namespace = "mithril_oxide_sys"]

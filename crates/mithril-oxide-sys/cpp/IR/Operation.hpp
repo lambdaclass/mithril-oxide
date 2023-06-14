@@ -1,5 +1,6 @@
 #pragma once
 
+#include "mlir/Dialect/Func/IR/FuncOps.h"
 #include <memory>
 
 #include <mlir/IR/Operation.h>

@@ -1,5 +1,7 @@
 #include "Operation.hpp"
+#include "mlir/IR/BuiltinAttributes.h"
 
+#include <memory>
 #include <mlir/IR/Operation.h>
 #include <rust/cxx.h>
 
