@@ -1,7 +1,7 @@
 use cxx::UniquePtr;
 pub use ffi::{
-    AffineExpr, BaseMemRefType, FloatType, IndexType, IntegerType, MemRefType, RankedTensorType,
-    TensorType, VectorType, FunctionType
+    AffineExpr, BaseMemRefType, FloatType, FunctionType, IndexType, IntegerType, MemRefType,
+    RankedTensorType, TensorType, VectorType,
 };
 
 use self::ffi::MLIRContext;
@@ -72,19 +72,23 @@ impl ffi::IntegerType {
         ffi::IntegerType_get(ctx, width, has_sign, is_signed)
     }
 }
-impl From<&ffi::IntegerType> for UniquePtr<crate::IR::Value::ffi::Type> {
-    fn from(val: &ffi::IntegerType) -> Self {
-        crate::IR::Types::ffi::IntegerType_to_Type(val)
-    }
-}
-
 
 macro_rules! impl_type_conversion {
-    ($ident:ident) => {
-        impl From<&ffi::$ident> for UniquePtr<crate::IR::Value::ffi::Type> {
-            fn from(val: &ffi::$ident) -> Self {
-                concat_idents!(crate::IR::Types::ffi::$ident, _to_Type(val))
+    ($type_name:ident, $func_name:ident) => {
+        impl From<&ffi::$type_name> for UniquePtr<crate::IR::Value::ffi::Type> {
+            fn from(val: &ffi::$type_name) -> Self {
+                crate::IR::Types::ffi::$func_name(val)
             }
         }
     };
 }
+
+impl_type_conversion!(FunctionType, FunctionType_to_Type);
+impl_type_conversion!(IntegerType, IntegerType_to_Type);
+impl_type_conversion!(FloatType, FloatType_to_Type);
+impl_type_conversion!(TensorType, TensorType_to_Type);
+impl_type_conversion!(BaseMemRefType, BaseMemRefType_to_Type);
+impl_type_conversion!(MemRefType, MemRefType_to_Type);
+impl_type_conversion!(RankedTensorType, RankedTensorType_to_Type);
+impl_type_conversion!(VectorType, VectorType_to_Type);
+impl_type_conversion!(IndexType, IndexType_to_Type);
