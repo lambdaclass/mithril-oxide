@@ -15,6 +15,7 @@ pub(crate) mod ffi {
 
         type Value;
         type BlockArgument = crate::IR::Block::BlockArgument;
+        type OpResult = crate::IR::Operation::OpResult;
         type Type = crate::IR::Types::Type;
 
         pub fn dump(self: Pin<&mut Value>);
@@ -25,6 +26,7 @@ pub(crate) mod ffi {
         include!("mithril-oxide-sys/cpp/IR/Value.hpp");
 
         fn BlockArgument_toValue(block: &BlockArgument) -> UniquePtr<Value>;
+        fn OpResult_to_Value(block: &OpResult) -> UniquePtr<Value>;
 
         #[must_use]
         fn Value_print(op: Pin<&mut Value>) -> String;
@@ -52,6 +54,12 @@ impl fmt::Debug for ffi::Value {
 impl From<&ffi::BlockArgument> for UniquePtr<ffi::Value> {
     fn from(val: &ffi::BlockArgument) -> Self {
         ffi::BlockArgument_toValue(val)
+    }
+}
+
+impl From<&ffi::OpResult> for UniquePtr<ffi::Value> {
+    fn from(val: &ffi::OpResult) -> Self {
+        ffi::OpResult_to_Value(val)
     }
 }
 

@@ -21,6 +21,7 @@ pub(crate) mod ffi {
         type NamedAttribute = crate::IR::Attributes::NamedAttribute;
         type Operation = crate::IR::Operation::Operation;
 
+        #[must_use]
         pub fn getOperation(self: Pin<&mut FuncOp>) -> *mut Operation;
     }
 
