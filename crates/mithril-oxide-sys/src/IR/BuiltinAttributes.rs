@@ -1,7 +1,11 @@
-use self::ffi::*;
 pub use self::ffi::{
     BoolAttr, DenseElementsAttr, DenseFPElementsAttr, DenseIntElementsAttr, DictionaryAttr,
     FlatSymbolRefAttr, FloatAttr, IntegerAttr, StringAttr,
+};
+use self::ffi::{
+    BoolAttr_to_Attribute, DenseElementsAttr_to_Attribute, DenseFPElementsAttr_to_Attribute,
+    DenseIntElementsAttr_to_Attribute, DictionaryAttr_to_Attribute, FlatSymbolRefAttr_to_Attribute,
+    FloatAttr_to_Attribute, IntegerAttr_to_Attribute, NamedAttribute, StringAttr_to_Attribute,
 };
 use crate::IR::MLIRContext::MLIRContext;
 use cxx::UniquePtr;
