@@ -1,11 +1,12 @@
+use super::Operation;
 use crate::{
     attributes::{builtin::StringAttr, LocationAttr},
     location::Location,
-    util::{IntoWithContext, NotSet},
+    util::{FromWithContext, NotSet},
     Context, Region,
 };
 use mithril_oxide_sys as ffi;
-use std::{marker::PhantomData, ptr::null};
+use std::{fmt, marker::PhantomData, ptr::null};
 
 // TODO: Operation `builtin.module`.
 pub struct ModuleOp<'c> {
@@ -14,11 +15,9 @@ pub struct ModuleOp<'c> {
 }
 
 impl<'c> ModuleOp<'c> {
-    pub fn builder(
-        context: &'c Context,
-    ) -> ModuleOpBuilder<NotSet, StringAttr<'_>, StringAttr<'_>> {
+    pub fn builder() -> ModuleOpBuilder<'c, NotSet, StringAttr<'c>, StringAttr<'c>> {
         ModuleOpBuilder {
-            context,
+            phantom: PhantomData,
             location: NotSet,
             sym_name: None,
             sym_visibility: None,
@@ -30,9 +29,25 @@ impl<'c> ModuleOp<'c> {
     }
 }
 
+impl<'c> Operation for ModuleOp<'c> {
+    fn num_results(&self) -> usize {
+        todo!()
+    }
+
+    fn result(&self, index: usize) -> super::OperationResult {
+        todo!()
+    }
+}
+
+impl<'c> fmt::Display for ModuleOp<'c> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        todo!()
+    }
+}
+
 #[doc(hidden)]
 pub struct ModuleOpBuilder<'c, OpLocation, SymName, SymVisibility> {
-    context: &'c Context,
+    phantom: PhantomData<&'c Context>,
     location: OpLocation,
 
     sym_name: Option<SymName>,
@@ -44,7 +59,7 @@ impl<'c, OpLocation, SymName, SymVisibility>
 {
     pub fn location<T>(self, value: T) -> ModuleOpBuilder<'c, T, SymName, SymVisibility> {
         ModuleOpBuilder {
-            context: self.context,
+            phantom: self.phantom,
             location: value,
             sym_name: self.sym_name,
             sym_visibility: self.sym_visibility,
@@ -53,7 +68,7 @@ impl<'c, OpLocation, SymName, SymVisibility>
 
     pub fn sym_name<T>(self, value: T) -> ModuleOpBuilder<'c, OpLocation, T, SymVisibility> {
         ModuleOpBuilder {
-            context: self.context,
+            phantom: self.phantom,
             location: self.location,
             sym_name: Some(value),
             sym_visibility: self.sym_visibility,
@@ -62,31 +77,33 @@ impl<'c, OpLocation, SymName, SymVisibility>
 
     pub fn sym_visibility<T>(self, value: T) -> ModuleOpBuilder<'c, OpLocation, SymName, T> {
         ModuleOpBuilder {
-            context: self.context,
+            phantom: self.phantom,
             location: self.location,
             sym_name: self.sym_name,
             sym_visibility: Some(value),
         }
     }
 
-    pub fn build(self) -> ModuleOp<'c>
+    /// `ModuleOp` is a special top-level operation, therefore it has a public `build()` method.
+    /// Normal operations would pass the builder to `Block::push()`.
+    pub fn build(self, context: &'c Context) -> ModuleOp<'c>
     where
         OpLocation: LocationAttr<'c>,
-        SymName: IntoWithContext<StringAttr<'c>>,
-        SymVisibility: IntoWithContext<StringAttr<'c>>,
+        StringAttr<'c>: FromWithContext<SymName>,
+        StringAttr<'c>: FromWithContext<SymVisibility>,
     {
         let location: self::Location<'c> = self.location.into();
 
         let mut ffi_module = ffi::IR::BuiltinOps::ModuleOp::new(&location.inner);
 
         if let Some(sym_name) = self.sym_name {
-            let sym_name = sym_name.into_with_context(self.context);
+            let sym_name = StringAttr::from_with_context(sym_name, context);
             unsafe {
                 ffi_module.pin_mut().setSymNameAttr(&sym_name.inner);
             }
         }
         if let Some(sym_visibility) = self.sym_visibility {
-            let sym_visibility = sym_visibility.into_with_context(self.context);
+            let sym_visibility = StringAttr::from_with_context(sym_visibility, context);
             unsafe {
                 ffi_module
                     .pin_mut()

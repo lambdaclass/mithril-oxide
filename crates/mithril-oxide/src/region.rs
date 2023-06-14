@@ -1,4 +1,4 @@
-use crate::Context;
+use crate::{Context, Block};
 use mithril_oxide_sys as ffi;
 use std::{marker::PhantomData, pin::Pin};
 
@@ -12,5 +12,9 @@ impl<'c> Region<'c> {
     pub(crate) fn from_ffi(inner: Pin<&mut ffi::IR::Region::Region>) -> &mut Self {
         // This is guaranteed to be safe by `#[repr(transparent)]`.
         unsafe { std::mem::transmute(inner) }
+    }
+
+    pub fn emplace_block(&mut self) -> &mut Block {
+        todo!()
     }
 }
