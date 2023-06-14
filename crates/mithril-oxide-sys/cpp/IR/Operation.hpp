@@ -2,11 +2,9 @@
 
 #include <memory>
 
-#include <mlir/Dialect/Func/IR/FuncOps.h>
 #include <mlir/IR/Operation.h>
 #include <mlir/IR/Value.h>
 #include <rust/cxx.h>
-#include <string>
 
 
 namespace mithril_oxide_sys {

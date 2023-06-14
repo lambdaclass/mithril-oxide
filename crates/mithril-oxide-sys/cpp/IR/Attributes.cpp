@@ -1,12 +1,15 @@
 #include "Attributes.hpp"
 
+#include <memory>
+#include <string>
+
 #include <llvm/Support/raw_ostream.h>
 #include <mlir/IR/Attributes.h>
+#include <mlir/IR/BuiltinAttributes.h>
+#include <rust/cxx.h>
 
-#include <memory>
 
-namespace mithril_oxide_sys
-{
+namespace mithril_oxide_sys {
 
 rust::String Attribute_print(const Attribute &op)
 {
@@ -32,4 +35,4 @@ std::unique_ptr<Attribute> NamedAttribute_getValue(const NamedAttribute &attr)
     return std::make_unique<Attribute>(attr.getValue());
 }
 
-}
+} // namespace mithril_oxide_sys

@@ -1,9 +1,12 @@
 #include "Value.hpp"
 
 #include <memory>
+#include <string>
 
 #include <llvm/Support/raw_ostream.h>
 #include <mlir/IR/Value.h>
+#include <rust/cxx.h>
+
 
 namespace mithril_oxide_sys {
 
