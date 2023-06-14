@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Location.hpp"
+
 #include <memory>
 
 #include <mlir/IR/Block.h>
@@ -11,9 +12,9 @@
 namespace mithril_oxide_sys {
 
 using mlir::Block;
-using mlir::Type;
-using mlir::Location;
 using mlir::BlockArgument;
+using mlir::Location;
+using mlir::Type;
 using mlir::Value;
 
 

@@ -1,10 +1,10 @@
 #include "Value.hpp"
 
-#include <llvm/Support/raw_ostream.h>
 #include <memory>
 
-namespace mithril_oxide_sys
-{
+#include <llvm/Support/raw_ostream.h>
+
+namespace mithril_oxide_sys {
 
 std::unique_ptr<Value> BlockArgument_toValue(const BlockArgument& arg)
 {

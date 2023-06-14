@@ -2,6 +2,7 @@
 
 #include <memory>
 
+#include <mlir/IR/Block.h>
 #include <mlir/IR/Value.h>
 #include <rust/cxx.h>
 
@@ -10,6 +11,7 @@ namespace mithril_oxide_sys {
 
 using mlir::Value;
 using mlir::BlockArgument;
+
 
 std::unique_ptr<Value> BlockArgument_toValue(const BlockArgument& arg);
 
