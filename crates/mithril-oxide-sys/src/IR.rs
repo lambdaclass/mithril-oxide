@@ -1,9 +1,12 @@
+pub mod Attributes;
 pub mod Block;
 pub mod BuiltinAttributes;
 pub mod BuiltinOps;
+pub mod BuiltinTypes;
 pub mod DialectRegistry;
 pub mod Location;
 pub mod MLIRContext;
 pub mod Operation;
 pub mod Region;
 pub mod Types;
+pub mod Value;

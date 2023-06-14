@@ -1,5 +1,6 @@
-pub use self::ffi::Block;
-use self::ffi::{Block_addArgument, Location, Type};
+pub use self::ffi::{Block, BlockArgument};
+use self::ffi::{Block_addArgument, Block_getArgument, Location, Type};
+use cxx::UniquePtr;
 use std::fmt;
 use std::pin::Pin;
 
@@ -10,11 +11,11 @@ pub(crate) mod ffi {
         include!("mithril-oxide-sys/cpp/IR/Block.hpp");
 
         type Block;
-        // type BlockArgument;
+        type BlockArgument;
 
+        type Type = crate::IR::Types::Type;
         type Region = crate::IR::Region::Region;
         type Operation = crate::IR::Operation::Operation;
-        type Type = crate::IR::Types::Type;
         type Location = crate::IR::Location::Location;
 
         #[must_use]
@@ -26,6 +27,8 @@ pub(crate) mod ffi {
         pub fn erase(self: Pin<&mut Block>);
         #[must_use]
         pub fn getNumArguments(self: Pin<&mut Block>) -> u32;
+
+        pub fn dump(self: Pin<&mut Block>);
     }
 
     #[namespace = "mithril_oxide_sys"]
@@ -33,6 +36,7 @@ pub(crate) mod ffi {
         include!("mithril-oxide-sys/cpp/IR/Block.hpp");
 
         fn Block_addArgument(block: Pin<&mut Block>, ttype: &Type, loc: &Location);
+        fn Block_getArgument(block: Pin<&mut Block>, i: u32) -> UniquePtr<BlockArgument>;
     }
 }
 
@@ -40,11 +44,22 @@ impl ffi::Block {
     pub fn add_argument(self: Pin<&mut Self>, r#type: &Type, loc: &Location) {
         Block_addArgument(self, r#type, loc);
     }
+
+    #[must_use]
+    pub fn get_argument(self: Pin<&mut Self>, i: u32) -> UniquePtr<BlockArgument> {
+        Block_getArgument(self, i)
+    }
 }
 
 impl fmt::Debug for ffi::Block {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.debug_struct("Block").finish_non_exhaustive()
+    }
+}
+
+impl fmt::Debug for ffi::BlockArgument {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.debug_struct("BlockArgument").finish_non_exhaustive()
     }
 }
 
