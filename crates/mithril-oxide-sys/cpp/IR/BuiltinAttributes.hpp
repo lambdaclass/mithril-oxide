@@ -21,7 +21,6 @@ using mlir::DictionaryAttr;
 using mlir::FlatSymbolRefAttr;
 using mlir::FloatAttr;
 using mlir::IntegerAttr;
-using mlir::Location;
 using mlir::MLIRContext;
 using mlir::NamedAttribute;
 using mlir::ShapedType;
@@ -37,7 +36,12 @@ std::unique_ptr<DenseElementsAttr> DenseElementsAttr_get(
     rust::Slice<const Attribute *const> values
 );
 
-// static DenseElementsAttr get(ShapedType type, ArrayRef<Attribute> values);
+std::unique_ptr<DictionaryAttr> DictionaryAttr_get(
+    MLIRContext &context,
+    rust::Slice<const NamedAttribute *const> values
+);
+
+// static DictionaryAttr get(::mlir::MLIRContext *context, ArrayRef<NamedAttribute> value = std::nullopt);
 
 #define MITHRIL_CAST_TO_ATTR(FROM_TYPE) std::unique_ptr<Attribute> FROM_TYPE ## _to_Attribute(const FROM_TYPE &x)
 

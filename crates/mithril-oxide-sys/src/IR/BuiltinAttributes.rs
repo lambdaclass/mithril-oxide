@@ -15,18 +15,19 @@ pub(crate) mod ffi {
     unsafe extern "C++" {
         include!("mithril-oxide-sys/cpp/IR/BuiltinAttributes.hpp");
 
-        type DictionaryAttr;
-        type MLIRContext = crate::IR::MLIRContext::MLIRContext;
         type Attribute = crate::IR::Attributes::Attribute;
-        type ShapedType = crate::IR::BuiltinTypes::ShapedType;
-        type StringAttr;
+        type NamedAttribute = crate::IR::Attributes::NamedAttribute;
+        type BoolAttr;
+        type DenseElementsAttr;
+        type DenseFPElementsAttr;
+        type DenseIntElementsAttr;
+        type DictionaryAttr;
+        type FlatSymbolRefAttr;
         type FloatAttr;
         type IntegerAttr;
-        type DenseElementsAttr;
-        type DenseIntElementsAttr;
-        type DenseFPElementsAttr;
-        type BoolAttr;
-        type FlatSymbolRefAttr;
+        type MLIRContext = crate::IR::MLIRContext::MLIRContext;
+        type ShapedType = crate::IR::BuiltinTypes::ShapedType;
+        type StringAttr;
     }
 
     #[namespace = "mithril_oxide_sys"]
@@ -40,6 +41,10 @@ pub(crate) mod ffi {
             shaped_type: &ShapedType,
             values: &[*const Attribute],
         ) -> UniquePtr<DenseElementsAttr>;
+        fn DictionaryAttr_get(
+            context: Pin<&mut MLIRContext>,
+            values: &[*const NamedAttribute],
+        ) -> UniquePtr<DictionaryAttr>;
 
         pub fn StringAttr_to_Attribute(attr: &StringAttr) -> UniquePtr<Attribute>;
         pub fn FloatAttr_to_Attribute(attr: &FloatAttr) -> UniquePtr<Attribute>;
@@ -88,6 +93,20 @@ impl ffi::DenseElementsAttr {
             .map(|x| x as *const _)
             .collect::<Vec<_>>();
         ffi::DenseElementsAttr_get(shaped_type, &values_vec)
+    }
+}
+
+impl ffi::DictionaryAttr {
+    #[must_use]
+    pub fn new<'a>(
+        context: Pin<&mut MLIRContext>,
+        values: impl IntoIterator<Item = &'a NamedAttribute>,
+    ) -> UniquePtr<Self> {
+        let values_vec = values
+            .into_iter()
+            .map(|x| x as *const _)
+            .collect::<Vec<_>>();
+        ffi::DictionaryAttr_get(context, &values_vec)
     }
 }
 

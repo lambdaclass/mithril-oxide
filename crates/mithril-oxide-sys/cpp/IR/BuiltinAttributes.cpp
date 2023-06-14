@@ -44,6 +44,19 @@ std::unique_ptr<DenseElementsAttr> DenseElementsAttr_get(
     return std::make_unique<DenseElementsAttr>(DenseElementsAttr::get(type, values_vec));
 }
 
+std::unique_ptr<DictionaryAttr> DictionaryAttr_get(
+    MLIRContext &context,
+    rust::Slice<const NamedAttribute *const> values
+)
+{
+    std::vector<NamedAttribute> values_vec;
+
+    for (const auto &value : values)
+        values_vec.push_back(*value);
+
+    return std::make_unique<DictionaryAttr>(DictionaryAttr::get(&context, values_vec));
+}
+
 #define MITHRIL_CAST_TO_ATTR_IMPL(FROM_TYPE) std::unique_ptr<Attribute> FROM_TYPE ## _to_Attribute(const FROM_TYPE &x) \
     { \
          return std::make_unique<Attribute>(x); \
