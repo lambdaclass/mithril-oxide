@@ -1,6 +1,10 @@
 #include "Operation.hpp"
 
+#include <memory>
+
+#include <mlir/IR/BuiltinAttributes.h>
 #include <mlir/IR/Operation.h>
+#include <mlir/IR/Value.h>
 #include <rust/cxx.h>
 
 
@@ -18,6 +22,11 @@ rust::String Operation_print(Operation &op)
     llvm::raw_string_ostream ss(s);
     op.print(ss);
     return rust::String::lossy(s);
+}
+
+std::unique_ptr<OpResult> Operation_getResult(Operation &op, unsigned idx)
+{
+    return std::make_unique<OpResult>(op.getResult(idx));
 }
 
 } // namespace mithril_oxide_sys

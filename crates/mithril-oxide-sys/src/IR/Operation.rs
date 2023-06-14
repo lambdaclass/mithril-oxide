@@ -1,5 +1,7 @@
-pub use self::ffi::Operation;
-use self::ffi::{Operation_getName, Operation_print};
+use cxx::UniquePtr;
+
+pub use self::ffi::{OpResult, Operation};
+use self::ffi::{Operation_getName, Operation_getResult, Operation_print};
 use std::{fmt, pin::Pin};
 
 #[cxx::bridge]
@@ -10,6 +12,7 @@ pub(crate) mod ffi {
         include!("mithril-oxide-sys/cpp/IR/Operation.hpp");
 
         type Operation;
+        type OpResult;
         type Block = crate::IR::Block::Block;
         type Region = crate::IR::Region::Region;
 
@@ -19,6 +22,8 @@ pub(crate) mod ffi {
         pub fn getParentRegion(self: Pin<&mut Operation>) -> *mut Region;
         #[must_use]
         pub fn getParentOp(self: Pin<&mut Operation>) -> *mut Operation;
+        #[must_use]
+        pub fn getNumResults(self: Pin<&mut Operation>) -> u32;
 
         pub fn dump(self: Pin<&mut Operation>);
     }
@@ -32,6 +37,8 @@ pub(crate) mod ffi {
 
         #[must_use]
         fn Operation_getName(op: Pin<&mut Operation>) -> &str;
+
+        fn Operation_getResult(op: Pin<&mut Operation>, idx: u32) -> UniquePtr<OpResult>;
     }
 }
 
@@ -44,6 +51,11 @@ impl ffi::Operation {
     #[must_use]
     pub fn print(self: Pin<&mut Self>) -> String {
         Operation_print(self)
+    }
+
+    #[must_use]
+    pub fn getResult(self: Pin<&mut Self>, idx: u32) -> UniquePtr<OpResult> {
+        Operation_getResult(self, idx)
     }
 }
 
