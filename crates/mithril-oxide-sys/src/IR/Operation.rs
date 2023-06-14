@@ -54,7 +54,7 @@ impl ffi::Operation {
     }
 
     #[must_use]
-    pub fn get_result(self: Pin<&mut Self>, idx: u32) -> UniquePtr<OpResult> {
+    pub fn getResult(self: Pin<&mut Self>, idx: u32) -> UniquePtr<OpResult> {
         Operation_getResult(self, idx)
     }
 }
