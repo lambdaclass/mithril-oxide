@@ -1,8 +1,8 @@
+use self::ffi::*;
 pub use self::ffi::{DictionaryAttr, StringAttr};
 use crate::IR::MLIRContext::MLIRContext;
 use cxx::UniquePtr;
 use std::{fmt, pin::Pin};
-use self::ffi::*;
 
 #[cxx::bridge]
 pub(crate) mod ffi {
@@ -33,8 +33,11 @@ pub(crate) mod ffi {
         pub fn FloatAttr_to_Attribute(attr: &FloatAttr) -> UniquePtr<Attribute>;
         pub fn IntegerAttr_to_Attribute(attr: &IntegerAttr) -> UniquePtr<Attribute>;
         pub fn DenseElementsAttr_to_Attribute(attr: &DenseElementsAttr) -> UniquePtr<Attribute>;
-        pub fn DenseIntElementsAttr_to_Attribute(attr: &DenseIntElementsAttr) -> UniquePtr<Attribute>;
-        pub fn DenseFPElementsAttr_to_Attribute(attr: &DenseFPElementsAttr) -> UniquePtr<Attribute>;
+        pub fn DenseIntElementsAttr_to_Attribute(
+            attr: &DenseIntElementsAttr,
+        ) -> UniquePtr<Attribute>;
+        pub fn DenseFPElementsAttr_to_Attribute(attr: &DenseFPElementsAttr)
+            -> UniquePtr<Attribute>;
         pub fn BoolAttr_to_Attribute(attr: &BoolAttr) -> UniquePtr<Attribute>;
         pub fn FlatSymbolRefAttr_to_Attribute(attr: &FlatSymbolRefAttr) -> UniquePtr<Attribute>;
         pub fn DictionaryAttr_to_Attribute(attr: &DictionaryAttr) -> UniquePtr<Attribute>;
@@ -56,7 +59,9 @@ impl fmt::Debug for ffi::StringAttr {
 
 macro_rules! impl_attribute_conversion {
     ($type_name:ident, $func_name:ident) => {
-        impl From<&crate::IR::BuiltinAttributes::$type_name> for UniquePtr<crate::IR::Attributes::Attribute> {
+        impl From<&crate::IR::BuiltinAttributes::$type_name>
+            for UniquePtr<crate::IR::Attributes::Attribute>
+        {
             fn from(val: &crate::IR::BuiltinAttributes::$type_name) -> Self {
                 crate::IR::BuiltinAttributes::$func_name(val)
             }
@@ -73,3 +78,16 @@ impl_attribute_conversion!(DenseFPElementsAttr, DenseFPElementsAttr_to_Attribute
 impl_attribute_conversion!(BoolAttr, BoolAttr_to_Attribute);
 impl_attribute_conversion!(FlatSymbolRefAttr, FlatSymbolRefAttr_to_Attribute);
 impl_attribute_conversion!(DictionaryAttr, DictionaryAttr_to_Attribute);
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn string_attr_new() {
+        let mut context = MLIRContext::new();
+        let string_attr = StringAttr::new(context.pin_mut(), "hello_world");
+        let attr: UniquePtr<Attribute> = (&*string_attr).into();
+        assert_eq!("\"hello_world\"", attr.print().as_str());
+    }
+}
