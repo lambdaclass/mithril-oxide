@@ -99,6 +99,7 @@ pub(crate) mod ffi {
         // Value related
         pub fn Value_getType(value: &Value) -> UniquePtr<Type>;
 
+        // Conversions
         pub fn FunctionType_to_Type(value: &FunctionType) -> UniquePtr<Type>;
         pub fn IntegerType_to_Type(value: &IntegerType) -> UniquePtr<Type>;
         pub fn FloatType_to_Type(value: &FloatType) -> UniquePtr<Type>;

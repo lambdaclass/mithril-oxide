@@ -4,7 +4,7 @@ pub use ffi::{
     RankedTensorType, ShapedType, TensorType, VectorType,
 };
 
-use self::ffi::MLIRContext;
+use self::ffi::{MLIRContext, Type};
 use std::{fmt, pin::Pin};
 
 #[cxx::bridge]
@@ -14,6 +14,7 @@ pub(crate) mod ffi {
         include!("mithril-oxide-sys/cpp/IR/BuiltinTypes.hpp");
 
         type MLIRContext = crate::IR::MLIRContext::MLIRContext;
+        type Type = crate::IR::Types::Type;
 
         type ShapedType;
         type FunctionType;
@@ -32,17 +33,25 @@ pub(crate) mod ffi {
     unsafe extern "C++" {
         include!("mithril-oxide-sys/cpp/IR/BuiltinTypes.hpp");
 
+        // Conversions
         pub fn VectorType_to_ShapedType(value: &VectorType) -> UniquePtr<ShapedType>;
         pub fn MemRefType_to_ShapedType(value: &MemRefType) -> UniquePtr<ShapedType>;
         pub fn TensorType_to_ShapedType(value: &TensorType) -> UniquePtr<ShapedType>;
         pub fn RankedTensorType_to_ShapedType(value: &RankedTensorType) -> UniquePtr<ShapedType>;
 
+        // Constructors
         fn IntegerType_get(
             context: Pin<&mut MLIRContext>,
             width: u32,
             has_sign: bool,
             is_signed: bool,
         ) -> UniquePtr<IntegerType>;
+
+        fn FunctionType_get(
+            context: Pin<&mut MLIRContext>,
+            inputs: &[*const Type],
+            results: &[*const Type],
+        ) -> UniquePtr<FunctionType>;
     }
 }
 
@@ -77,6 +86,25 @@ impl ffi::IntegerType {
         is_signed: bool,
     ) -> UniquePtr<Self> {
         ffi::IntegerType_get(ctx, width, has_sign, is_signed)
+    }
+}
+
+impl ffi::FunctionType {
+    #[must_use]
+    pub fn new(
+        ctx: Pin<&mut MLIRContext>,
+        inputs: impl IntoIterator<Item = &'a Type>,
+        results: impl IntoIterator<Item = &'a Type>,
+    ) -> UniquePtr<Self> {
+        let inputs_vec = inputs
+            .into_iter()
+            .map(|x| x as *const _)
+            .collect::<Vec<_>>();
+        let results_vec = results
+            .into_iter()
+            .map(|x| x as *const _)
+            .collect::<Vec<_>>();
+        ffi::FunctionType_get(ctx, &inputs_vec, &results_vec)
     }
 }
 
