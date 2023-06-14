@@ -1,8 +1,13 @@
 use self::ffi::*;
-pub use self::ffi::{DictionaryAttr, StringAttr};
+pub use self::ffi::{
+    BoolAttr, DenseElementsAttr, DenseFPElementsAttr, DenseIntElementsAttr, DictionaryAttr,
+    FlatSymbolRefAttr, FloatAttr, IntegerAttr, StringAttr,
+};
 use crate::IR::MLIRContext::MLIRContext;
 use cxx::UniquePtr;
 use std::{fmt, pin::Pin};
+
+use super::{Attributes::Attribute, BuiltinTypes::ShapedType};
 
 #[cxx::bridge]
 pub(crate) mod ffi {
@@ -13,6 +18,7 @@ pub(crate) mod ffi {
         type DictionaryAttr;
         type MLIRContext = crate::IR::MLIRContext::MLIRContext;
         type Attribute = crate::IR::Attributes::Attribute;
+        type ShapedType = crate::IR::BuiltinTypes::ShapedType;
         type StringAttr;
         type FloatAttr;
         type IntegerAttr;
@@ -28,6 +34,10 @@ pub(crate) mod ffi {
         include!("mithril-oxide-sys/cpp/IR/BuiltinAttributes.hpp");
 
         fn StringAttr_get(context: Pin<&mut MLIRContext>, value: &str) -> UniquePtr<StringAttr>;
+        fn DenseElementsAttr_get(
+            shaped_type: &ShapedType,
+            values: &[*const Attribute],
+        ) -> UniquePtr<DenseElementsAttr>;
 
         pub fn StringAttr_to_Attribute(attr: &StringAttr) -> UniquePtr<Attribute>;
         pub fn FloatAttr_to_Attribute(attr: &FloatAttr) -> UniquePtr<Attribute>;
@@ -48,6 +58,20 @@ impl ffi::StringAttr {
     #[must_use]
     pub fn new(context: Pin<&mut MLIRContext>, value: &str) -> UniquePtr<Self> {
         ffi::StringAttr_get(context, value)
+    }
+}
+
+impl ffi::DenseElementsAttr {
+    #[must_use]
+    pub fn new<'a>(
+        shaped_type: &ShapedType,
+        values: impl IntoIterator<Item = &'a Attribute>,
+    ) -> UniquePtr<Self> {
+        let values_vec = values
+            .into_iter()
+            .map(|x| x as *const _)
+            .collect::<Vec<_>>();
+        ffi::DenseElementsAttr_get(shaped_type, &values_vec)
     }
 }
 

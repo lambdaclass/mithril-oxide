@@ -1,7 +1,7 @@
 use cxx::UniquePtr;
 pub use ffi::{
     AffineExpr, BaseMemRefType, FloatType, FunctionType, IndexType, IntegerType, MemRefType,
-    RankedTensorType, TensorType, VectorType,
+    RankedTensorType, ShapedType, TensorType, VectorType,
 };
 
 use self::ffi::MLIRContext;
@@ -15,6 +15,7 @@ pub(crate) mod ffi {
 
         type MLIRContext = crate::IR::MLIRContext::MLIRContext;
 
+        type ShapedType;
         type FunctionType;
         type IntegerType;
         type FloatType;
@@ -30,6 +31,11 @@ pub(crate) mod ffi {
     #[namespace = "mithril_oxide_sys"]
     unsafe extern "C++" {
         include!("mithril-oxide-sys/cpp/IR/BuiltinTypes.hpp");
+
+        pub fn VectorType_to_ShapedType(value: &VectorType) -> UniquePtr<ShapedType>;
+        pub fn MemRefType_to_ShapedType(value: &MemRefType) -> UniquePtr<ShapedType>;
+        pub fn TensorType_to_ShapedType(value: &TensorType) -> UniquePtr<ShapedType>;
+        pub fn RankedTensorType_to_ShapedType(value: &RankedTensorType) -> UniquePtr<ShapedType>;
 
         fn IntegerType_get(
             context: Pin<&mut MLIRContext>,
@@ -50,6 +56,7 @@ macro_rules! impl_type_debug {
     };
 }
 
+impl_type_debug!(ShapedType);
 impl_type_debug!(FunctionType);
 impl_type_debug!(IntegerType);
 impl_type_debug!(FloatType);
@@ -75,7 +82,7 @@ impl ffi::IntegerType {
 
 macro_rules! impl_type_conversion {
     ($type_name:ident, $func_name:ident) => {
-        impl From<&ffi::$type_name> for UniquePtr<crate::IR::Value::ffi::Type> {
+        impl From<&ffi::$type_name> for UniquePtr<crate::IR::Types::ffi::Type> {
             fn from(val: &ffi::$type_name) -> Self {
                 crate::IR::Types::ffi::$func_name(val)
             }
@@ -83,6 +90,17 @@ macro_rules! impl_type_conversion {
     };
 }
 
+macro_rules! impl_shaped_type_conversion {
+    ($type_name:ident, $func_name:ident) => {
+        impl From<&ffi::$type_name> for UniquePtr<crate::IR::BuiltinTypes::ffi::ShapedType> {
+            fn from(val: &ffi::$type_name) -> Self {
+                crate::IR::BuiltinTypes::ffi::$func_name(val)
+            }
+        }
+    };
+}
+
+impl_type_conversion!(ShapedType, ShapedType_to_Type);
 impl_type_conversion!(FunctionType, FunctionType_to_Type);
 impl_type_conversion!(IntegerType, IntegerType_to_Type);
 impl_type_conversion!(FloatType, FloatType_to_Type);
@@ -92,3 +110,8 @@ impl_type_conversion!(MemRefType, MemRefType_to_Type);
 impl_type_conversion!(RankedTensorType, RankedTensorType_to_Type);
 impl_type_conversion!(VectorType, VectorType_to_Type);
 impl_type_conversion!(IndexType, IndexType_to_Type);
+
+impl_shaped_type_conversion!(TensorType, TensorType_to_ShapedType);
+impl_shaped_type_conversion!(MemRefType, MemRefType_to_ShapedType);
+impl_shaped_type_conversion!(RankedTensorType, RankedTensorType_to_ShapedType);
+impl_shaped_type_conversion!(VectorType, VectorType_to_ShapedType);

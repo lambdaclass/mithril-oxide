@@ -10,6 +10,7 @@ pub(crate) mod ffi {
         type Type;
         type Value = crate::IR::Value::Value;
 
+        type ShapedType = crate::IR::BuiltinTypes::ShapedType;
         type FunctionType = crate::IR::BuiltinTypes::FunctionType;
         type IntegerType = crate::IR::BuiltinTypes::IntegerType;
         type FloatType = crate::IR::BuiltinTypes::FloatType;
@@ -107,6 +108,7 @@ pub(crate) mod ffi {
         pub fn RankedTensorType_to_Type(value: &RankedTensorType) -> UniquePtr<Type>;
         pub fn VectorType_to_Type(value: &VectorType) -> UniquePtr<Type>;
         pub fn IndexType_to_Type(value: &IndexType) -> UniquePtr<Type>;
+        pub fn ShapedType_to_Type(value: &ShapedType) -> UniquePtr<Type>;
     }
 }
 

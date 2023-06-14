@@ -1,5 +1,6 @@
 #pragma once
 
+#include "mlir/IR/BuiltinTypeInterfaces.h"
 #include <mlir/IR/Types.h>
 #include <mlir/IR/Value.h>
 #include <mlir/IR/BuiltinTypes.h>
@@ -19,6 +20,7 @@ using mlir::MemRefType;
 using mlir::RankedTensorType;
 using mlir::TensorType;
 using mlir::VectorType;
+using mlir::ShapedType;
 
 // using mlir::AffineExpr;
 
@@ -35,5 +37,6 @@ MITHRIL_CAST_TO_TYPE(MemRefType);
 MITHRIL_CAST_TO_TYPE(RankedTensorType);
 MITHRIL_CAST_TO_TYPE(TensorType);
 MITHRIL_CAST_TO_TYPE(VectorType);
+MITHRIL_CAST_TO_TYPE(ShapedType);
 
 } // namespace mithril_oxide_sys

@@ -25,4 +25,11 @@ using mlir::VectorType;
 
 std::unique_ptr<IntegerType> IntegerType_get(MLIRContext &context, unsigned int width, bool has_sign, bool is_signed);
 
+#define MITHRIL_CAST_TO_SHAPED_TYPE(FROM_TYPE) std::unique_ptr<ShapedType> FROM_TYPE ## _to_ShapedType(const FROM_TYPE &x)
+
+MITHRIL_CAST_TO_SHAPED_TYPE(TensorType);
+MITHRIL_CAST_TO_SHAPED_TYPE(RankedTensorType);
+MITHRIL_CAST_TO_SHAPED_TYPE(VectorType);
+MITHRIL_CAST_TO_SHAPED_TYPE(MemRefType);
+
 } // namespace mithril_oxide_sys
