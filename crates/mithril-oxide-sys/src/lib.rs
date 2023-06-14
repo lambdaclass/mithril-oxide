@@ -88,6 +88,13 @@ pub mod ffi {
         pub fn dump(&self);
     }
 
+    #[codegen(cxx_path = "mlir::UnknownLoc", kind = "opaque-sized")]
+    pub struct UnknownLoc;
+
+    impl UnknownLoc {
+        pub fn get(context: *mut MLIRContext) -> Self;
+    }
+
     #[codegen(cxx_path = "mlir::Attribute", kind = "opaque-sized")]
     pub struct Attribute;
 
@@ -186,4 +193,12 @@ pub mod ffi {
         /// Returns the preferred of the given type in the current scope.
         pub fn getTypePreferredAlignment(&self, t: Type) -> u32;
     }
+
+    include!(
+        "/home/esteve/Documents/LambdaClass/mithril-oxide/crates/mithril-oxide-sys/src/aux.hpp"
+    );
+    pub fn ModuleOp_create(loc: &mut Location) -> ModuleOp;
+    pub fn UnknownLoc_getContext(loc: &mut UnknownLoc) -> *mut MLIRContext;
+    pub fn UnknownLoc_to_Location(loc: &mut UnknownLoc) -> Location;
+    pub fn test_ptr_cpp();
 }
