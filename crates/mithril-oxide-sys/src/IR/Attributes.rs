@@ -1,6 +1,6 @@
 use cxx::UniquePtr;
 
-use self::ffi::*;
+use self::ffi::{Attribute_print, NamedAttribute_getName, NamedAttribute_getValue, NamedAttribute_new, StringAttr};
 pub use self::ffi::{Attribute, NamedAttribute};
 use std::fmt;
 
