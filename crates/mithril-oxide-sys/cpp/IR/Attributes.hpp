@@ -4,7 +4,6 @@
 
 #include <mlir/IR/Attributes.h>
 #include <mlir/IR/BuiltinAttributes.h>
-
 #include <rust/cxx.h>
 
 
@@ -13,6 +12,7 @@ namespace mithril_oxide_sys {
 using mlir::NamedAttribute;
 using mlir::Attribute;
 using mlir::StringAttr;
+
 
 rust::String Attribute_print(const Attribute &op);
 

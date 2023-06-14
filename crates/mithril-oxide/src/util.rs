@@ -4,19 +4,20 @@ use crate::Context;
 pub struct NotSet;
 
 /// Clone of the standard `Into<T>` trait, but with a reference to the MLIR context as an argument.
-pub trait IntoWithContext<T> {
-    fn into_with_context(self, context: &Context) -> T;
+pub trait FromWithContext<T> {
+    fn from_with_context(value: T, context: &Context) -> Self;
 }
 
-impl<T> IntoWithContext<T> for T {
-    fn into_with_context(self, _context: &Context) -> T {
-        self
+impl<T> FromWithContext<T> for T {
+    fn from_with_context(value: T, _context: &Context) -> Self {
+        value
     }
 }
 
+#[macro_export]
 macro_rules! mlir_asm {
     (
-        block =>
+        $block:expr =>
             $( ; $( $( $ret:ident ),+ = )? $op:literal
                 ( $( $( $arg:expr ),+ $(,)? )? ) // Values list.
                 $( [ $( $( ^ $successor:ident $( ( $( $( $successor_arg:expr ),+ $(,)? )? ) )? ),+ $(,)? )? ] )? // Successors.
@@ -27,14 +28,17 @@ macro_rules! mlir_asm {
                 $( loc ( $( $loc:tt )* ) )? // Location.
             )*
     ) => { $(
-        $( let codegen_ret_decl!($($ret),+) = )? {
-            let op = todo!();
+        $( let $crate::codegen_ret_decl!($($ret),+) = )? {
+            let mut builder = $crate::prelude::ops::DynOperation::builder($op);
 
-            $( codegen_ret_extr!(op => $($ret),+) )?
+            let op = $block.push(builder);
+            $( $crate::codegen_ret_extr!(op => $($ret),+) )?
         };
     )* };
 }
 
+#[doc(hidden)]
+#[macro_export]
 macro_rules! codegen_ret_decl {
     // Macro entry points.
     ( $ret:ident ) => { $ret };
@@ -43,21 +47,25 @@ macro_rules! codegen_ret_decl {
     };
 }
 
+#[doc(hidden)]
+#[macro_export]
 macro_rules! codegen_ret_extr {
     // Macro entry points.
-    ( $op:ident => $ret:ident ) => { $op.result($ret) };
-    ( $op:ident => $( $ret:ident ),+ ) => {
-        ( $( codegen_ret_extr!($op => $ret) ),+ )
+    ( $op:ident => $ret:ident ) => {{
+        use $crate::operations::Operation;
+        $op.result(0)
+    }};
+    ( $op:ident => $( $ret:ident ),+ ) => {{
+        let mut idx = 0;
+        ( $( codegen_ret_extr!(INTERNAL idx, $op => $ret) ),+ )
+    }};
+
+    // Internal entry points.
+    ( INTERNAL $count:ident, $op:ident => $ret:ident ) => {
+        {
+            let idx = $count;
+            $count += 1;
+            $op.result(idx)
+        }
     };
 }
-
-// #[cfg(test)]
-// mod test {
-//     fn test() {
-//         mlir_asm! { block =>
-//             ; t0 = "arith.constant"() { value = 0 } : () -> i252
-//             ; t0, t1 = "arith.constant"() { value = 0 } : () -> i252
-//             ; "func.return"(t0) : (i252) -> ()
-//         }
-//     }
-// }

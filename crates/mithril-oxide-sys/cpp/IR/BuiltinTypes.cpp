@@ -4,6 +4,8 @@
 
 #include <mlir/IR/BuiltinAttributes.h>
 #include <mlir/IR/TypeRange.h>
+#include <rust/cxx.h>
+
 
 namespace mithril_oxide_sys {
 

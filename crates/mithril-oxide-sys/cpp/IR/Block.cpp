@@ -2,6 +2,11 @@
 
 #include <memory>
 
+#include <mlir/IR/Block.h>
+#include <mlir/IR/Location.h>
+#include <mlir/IR/Types.h>
+#include <mlir/IR/Value.h>
+
 
 namespace mithril_oxide_sys {
 

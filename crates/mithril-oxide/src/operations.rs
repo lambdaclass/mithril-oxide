@@ -1,9 +1,10 @@
+use crate::Context;
+use mithril_oxide_sys as ffi;
 use std::{
-    fmt::Display,
+    fmt::{self, Display},
+    marker::PhantomData,
     pin::{pin, Pin},
 };
-
-use mithril_oxide_sys::{UniquePtr, IR};
 
 pub mod acc;
 pub mod affine;
@@ -43,20 +44,60 @@ pub mod transform;
 pub mod vector;
 pub mod x86vector;
 
-pub(crate) mod operation_impl {
-    use super::*;
-
-    pub trait OperationInner {
-        fn get_inner(&self) -> &IR::Operation::Operation;
-        fn get_inner_mut(&self) -> Pin<&mut IR::Operation::Operation>;
-    }
-}
-
-pub trait Operation: operation_impl::OperationInner
+pub trait Operation
 where
     Self: Display,
 {
-    fn get_name(&self) -> &str {
-        self.get_inner_mut().get_name()
+    fn num_results(&self) -> usize;
+    fn result(&self, index: usize) -> OperationResult;
+}
+
+pub trait OperationBuilder<'c> {
+    type Target: Operation;
+
+    fn build(self, context: &'c Context) -> Self::Target;
+}
+
+pub struct OperationResult<'a> {
+    // inner: !,
+    phantom: PhantomData<&'a dyn Operation>,
+}
+
+pub struct DynOperation<'c> {
+    inner: *mut ffi::IR::Operation::Operation,
+    phanom: PhantomData<&'c Context>,
+}
+
+impl<'c> DynOperation<'c> {
+    pub fn builder(name: &str) -> DynOperationBuilder<'c> {
+        todo!()
+    }
+}
+
+impl<'c> Operation for DynOperation<'c> {
+    fn num_results(&self) -> usize {
+        todo!()
+    }
+
+    fn result(&self, index: usize) -> OperationResult {
+        todo!()
+    }
+}
+
+impl<'c> fmt::Display for DynOperation<'c> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        todo!()
+    }
+}
+
+pub struct DynOperationBuilder<'c> {
+    context: &'c Context,
+}
+
+impl<'c> OperationBuilder<'c> for DynOperationBuilder<'c> {
+    type Target = DynOperation<'c>;
+
+    fn build(self, context: &'c Context) -> Self::Target {
+        todo!()
     }
 }

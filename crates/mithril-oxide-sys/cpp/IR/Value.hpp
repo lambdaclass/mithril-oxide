@@ -2,7 +2,6 @@
 
 #include <memory>
 
-#include <mlir/IR/Block.h>
 #include <mlir/IR/Value.h>
 #include <rust/cxx.h>
 

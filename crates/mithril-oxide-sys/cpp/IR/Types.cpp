@@ -2,6 +2,12 @@
 
 #include <memory>
 
+#include <mlir/IR/BuiltinTypeInterfaces.h>
+#include <mlir/IR/BuiltinTypes.h>
+#include <mlir/IR/Types.h>
+#include <mlir/IR/Value.h>
+
+
 namespace mithril_oxide_sys {
 
 std::unique_ptr<Type> Value_getType(const Value& value)

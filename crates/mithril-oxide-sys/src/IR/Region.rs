@@ -7,7 +7,11 @@ pub(crate) mod ffi {
     unsafe extern "C++" {
         include!("mithril-oxide-sys/cpp/IR/Region.hpp");
 
+        type Block = crate::IR::Block::Block;
         type Region;
+
+        #[must_use]
+        fn emplaceBlock(self: Pin<&mut Region>) -> Pin<&mut Block>;
     }
 
     #[namespace = "mithril_oxide_sys"]
