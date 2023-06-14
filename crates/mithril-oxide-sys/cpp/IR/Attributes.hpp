@@ -1,8 +1,9 @@
 #pragma once
 
-#include "mlir/IR/BuiltinAttributes.h"
 #include <memory>
+
 #include <mlir/IR/Attributes.h>
+#include <mlir/IR/BuiltinAttributes.h>
 
 #include <rust/cxx.h>
 

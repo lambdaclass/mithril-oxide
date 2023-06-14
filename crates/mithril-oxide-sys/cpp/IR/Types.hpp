@@ -1,9 +1,9 @@
 #pragma once
 
-#include "mlir/IR/BuiltinTypeInterfaces.h"
+#include <mlir/IR/BuiltinTypeInterfaces.h>
+#include <mlir/IR/BuiltinTypes.h>
 #include <mlir/IR/Types.h>
 #include <mlir/IR/Value.h>
-#include <mlir/IR/BuiltinTypes.h>
 
 
 namespace mithril_oxide_sys {
@@ -18,9 +18,9 @@ using mlir::IndexType;
 using mlir::IntegerType;
 using mlir::MemRefType;
 using mlir::RankedTensorType;
+using mlir::ShapedType;
 using mlir::TensorType;
 using mlir::VectorType;
-using mlir::ShapedType;
 
 // using mlir::AffineExpr;
 

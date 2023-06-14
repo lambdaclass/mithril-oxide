@@ -21,8 +21,8 @@ using mlir::IntegerType;
 using mlir::MemRefType;
 using mlir::RankedTensorType;
 using mlir::TensorType;
-using mlir::VectorType;
 using mlir::Type;
+using mlir::VectorType;
 
 std::unique_ptr<IntegerType> IntegerType_get(MLIRContext &context, unsigned int width, bool has_sign, bool is_signed);
 

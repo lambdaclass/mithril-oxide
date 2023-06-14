@@ -2,8 +2,8 @@
 
 #include <memory>
 
-#include <llvm/ADT/StringRef.h>
 #include <llvm/ADT/APSInt.h>
+#include <llvm/ADT/StringRef.h>
 #include <mlir/IR/BuiltinAttributes.h>
 #include <mlir/IR/MLIRContext.h>
 #include <mlir/Support/LLVM.h>

@@ -91,7 +91,7 @@ impl ffi::IntegerType {
 
 impl ffi::FunctionType {
     #[must_use]
-    pub fn new(
+    pub fn new<'a>(
         ctx: Pin<&mut MLIRContext>,
         inputs: impl IntoIterator<Item = &'a Type>,
         results: impl IntoIterator<Item = &'a Type>,
