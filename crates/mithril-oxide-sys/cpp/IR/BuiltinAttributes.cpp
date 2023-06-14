@@ -2,6 +2,8 @@
 
 #include <memory>
 
+#include <llvm/ADT/StringRef.h>
+#include <llvm/ADT/APSInt.h>
 #include <mlir/IR/BuiltinAttributes.h>
 #include <mlir/IR/MLIRContext.h>
 #include <mlir/Support/LLVM.h>
@@ -16,6 +18,17 @@ std::unique_ptr<StringAttr> StringAttr_get(MLIRContext &context, rust::Str value
         &context,
         mlir::StringRef(value.data(), value.length())
     ));
+}
+
+std::unique_ptr<IntegerAttr> IntegerAttr_get(MLIRContext &context, rust::Str value)
+{
+    auto int_val = llvm::APSInt(llvm::StringRef(value.data(), value.length()));
+    return std::make_unique<IntegerAttr>(IntegerAttr::get(&context, int_val));
+}
+
+std::unique_ptr<BoolAttr> BoolAttr_get(MLIRContext &context, bool value)
+{
+    return std::make_unique<BoolAttr>(BoolAttr::get(&context, value));
 }
 
 std::unique_ptr<DenseElementsAttr> DenseElementsAttr_get(

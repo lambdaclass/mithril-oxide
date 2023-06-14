@@ -34,6 +34,8 @@ pub(crate) mod ffi {
         include!("mithril-oxide-sys/cpp/IR/BuiltinAttributes.hpp");
 
         fn StringAttr_get(context: Pin<&mut MLIRContext>, value: &str) -> UniquePtr<StringAttr>;
+        fn IntegerAttr_get(context: Pin<&mut MLIRContext>, value: &str) -> UniquePtr<IntegerAttr>;
+        fn BoolAttr_get(context: Pin<&mut MLIRContext>, value: bool) -> UniquePtr<BoolAttr>;
         fn DenseElementsAttr_get(
             shaped_type: &ShapedType,
             values: &[*const Attribute],
@@ -58,6 +60,20 @@ impl ffi::StringAttr {
     #[must_use]
     pub fn new(context: Pin<&mut MLIRContext>, value: &str) -> UniquePtr<Self> {
         ffi::StringAttr_get(context, value)
+    }
+}
+
+impl ffi::IntegerAttr {
+    #[must_use]
+    pub fn new(context: Pin<&mut MLIRContext>, value: &str) -> UniquePtr<Self> {
+        ffi::IntegerAttr_get(context, value)
+    }
+}
+
+impl ffi::BoolAttr {
+    #[must_use]
+    pub fn new(context: Pin<&mut MLIRContext>, value: bool) -> UniquePtr<Self> {
+        ffi::BoolAttr_get(context, value)
     }
 }
 

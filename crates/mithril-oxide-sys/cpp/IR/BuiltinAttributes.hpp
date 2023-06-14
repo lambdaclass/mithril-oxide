@@ -29,6 +29,8 @@ using mlir::ShapedType;
 
 
 std::unique_ptr<StringAttr> StringAttr_get(MLIRContext &context, rust::Str value);
+std::unique_ptr<IntegerAttr> IntegerAttr_get(MLIRContext &context, rust::Str value);
+std::unique_ptr<BoolAttr> BoolAttr_get(MLIRContext &context, bool value);
 
 std::unique_ptr<DenseElementsAttr> DenseElementsAttr_get(
     const ShapedType &type,
