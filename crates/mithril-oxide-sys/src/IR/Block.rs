@@ -1,6 +1,5 @@
+use self::ffi::{c_void, Block_addArgument, Block_getArgument, Location, Type};
 pub use self::ffi::{Block, BlockArgument};
-use self::ffi::{Block_addArgument, Block_getArgument, Location, Type};
-use cxx::UniquePtr;
 use std::fmt;
 use std::pin::Pin;
 
@@ -35,8 +34,10 @@ pub(crate) mod ffi {
     unsafe extern "C++" {
         include!("mithril-oxide-sys/cpp/IR/Block.hpp");
 
+        type c_void;
+
         fn Block_addArgument(block: Pin<&mut Block>, ttype: &Type, loc: &Location);
-        fn Block_getArgument(block: Pin<&mut Block>, i: u32) -> UniquePtr<BlockArgument>;
+        fn Block_getArgument(block: Pin<&mut Block>, i: u32) -> *mut c_void;
     }
 }
 
@@ -46,7 +47,8 @@ impl ffi::Block {
     }
 
     #[must_use]
-    pub fn get_argument(self: Pin<&mut Self>, i: u32) -> UniquePtr<BlockArgument> {
+    /// returns a pointer to a BlockArgument / Value
+    pub fn get_argument(self: Pin<&mut Self>, i: u32) -> *mut c_void {
         Block_getArgument(self, i)
     }
 }
