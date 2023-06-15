@@ -16,10 +16,12 @@ namespace mithril_oxide_sys {
 using mlir::DictionaryAttr;
 using mlir::func::FuncOp;
 using mlir::func::ReturnOp;
+using mlir::func::CallOp;
 using mlir::FunctionType;
 using mlir::Location;
 using mlir::NamedAttribute;
 using mlir::Value;
+using mlir::Type;
 
 
 std::unique_ptr<FuncOp> FuncOp_create(
@@ -32,6 +34,12 @@ std::unique_ptr<FuncOp> FuncOp_create(
 
 std::unique_ptr<ReturnOp> ReturnOp_create(
     const Location &loc,
+    rust::Slice<const Value *const > operands
+);
+
+std::unique_ptr<CallOp> CallOp_create(
+    const Location &loc,
+    rust::Slice<const Type *const > results,
     rust::Slice<const Value *const > operands
 );
 
