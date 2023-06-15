@@ -4,7 +4,17 @@ pub use ffi::{
     RankedTensorType, ShapedType, TensorType, VectorType,
 };
 
-use self::ffi::{MLIRContext, Type};
+use self::ffi::Type;
+use self::ffi::{
+    MLIRContext, MemRefType_to_ShapedType, RankedTensorType_to_ShapedType,
+    TensorType_to_ShapedType, VectorType_to_ShapedType,
+};
+use super::Types::ffi::{
+    BaseMemRefType_to_Type, FloatType_to_Type, FunctionType_to_Type, IndexType_to_Type,
+    IntegerType_to_Type, MemRefType_to_Type, RankedTensorType_to_Type, ShapedType_to_Type,
+    TensorType_to_Type, VectorType_to_Type,
+};
+use crate::impl_conversion;
 use std::{fmt, pin::Pin};
 
 #[cxx::bridge]
@@ -108,38 +118,18 @@ impl ffi::FunctionType {
     }
 }
 
-macro_rules! impl_type_conversion {
-    ($type_name:ident, $func_name:ident) => {
-        impl From<&ffi::$type_name> for UniquePtr<crate::IR::Types::ffi::Type> {
-            fn from(val: &ffi::$type_name) -> Self {
-                crate::IR::Types::ffi::$func_name(val)
-            }
-        }
-    };
-}
+impl_conversion!(ShapedType, ShapedType_to_Type, Type);
+impl_conversion!(FunctionType, FunctionType_to_Type, Type);
+impl_conversion!(IntegerType, IntegerType_to_Type, Type);
+impl_conversion!(FloatType, FloatType_to_Type, Type);
+impl_conversion!(TensorType, TensorType_to_Type, Type);
+impl_conversion!(BaseMemRefType, BaseMemRefType_to_Type, Type);
+impl_conversion!(MemRefType, MemRefType_to_Type, Type);
+impl_conversion!(RankedTensorType, RankedTensorType_to_Type, Type);
+impl_conversion!(VectorType, VectorType_to_Type, Type);
+impl_conversion!(IndexType, IndexType_to_Type, Type);
 
-macro_rules! impl_shaped_type_conversion {
-    ($type_name:ident, $func_name:ident) => {
-        impl From<&ffi::$type_name> for UniquePtr<crate::IR::BuiltinTypes::ffi::ShapedType> {
-            fn from(val: &ffi::$type_name) -> Self {
-                crate::IR::BuiltinTypes::ffi::$func_name(val)
-            }
-        }
-    };
-}
-
-impl_type_conversion!(ShapedType, ShapedType_to_Type);
-impl_type_conversion!(FunctionType, FunctionType_to_Type);
-impl_type_conversion!(IntegerType, IntegerType_to_Type);
-impl_type_conversion!(FloatType, FloatType_to_Type);
-impl_type_conversion!(TensorType, TensorType_to_Type);
-impl_type_conversion!(BaseMemRefType, BaseMemRefType_to_Type);
-impl_type_conversion!(MemRefType, MemRefType_to_Type);
-impl_type_conversion!(RankedTensorType, RankedTensorType_to_Type);
-impl_type_conversion!(VectorType, VectorType_to_Type);
-impl_type_conversion!(IndexType, IndexType_to_Type);
-
-impl_shaped_type_conversion!(TensorType, TensorType_to_ShapedType);
-impl_shaped_type_conversion!(MemRefType, MemRefType_to_ShapedType);
-impl_shaped_type_conversion!(RankedTensorType, RankedTensorType_to_ShapedType);
-impl_shaped_type_conversion!(VectorType, VectorType_to_ShapedType);
+impl_conversion!(TensorType, TensorType_to_ShapedType, ShapedType);
+impl_conversion!(MemRefType, MemRefType_to_ShapedType, ShapedType);
+impl_conversion!(RankedTensorType, RankedTensorType_to_ShapedType, ShapedType);
+impl_conversion!(VectorType, VectorType_to_ShapedType, ShapedType);
