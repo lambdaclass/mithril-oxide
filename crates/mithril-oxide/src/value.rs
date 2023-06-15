@@ -1,11 +1,11 @@
 use crate::operations::Operation;
 use mithril_oxide_sys as ffi;
-use std::marker::PhantomData;
+use std::{ffi::c_void, marker::PhantomData};
 
 pub trait Value<'c> {}
 
 pub struct OperationResult<'c, 'a> {
-    inner: ffi::UniquePtr<ffi::IR::Operation::OpResult>,
+    inner: *mut c_void,
     phantom: PhantomData<&'a dyn Operation<'c>>,
 }
 

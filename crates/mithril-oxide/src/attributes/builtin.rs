@@ -1,7 +1,7 @@
 use super::Attribute;
 use crate::{context::Context, util::FromWithContext};
 use mithril_oxide_sys as ffi;
-use std::{fmt, marker::PhantomData};
+use std::{ffi::c_void, fmt, marker::PhantomData};
 
 #[derive(Debug)]
 pub struct AffineMapAttr<'c> {
@@ -239,7 +239,7 @@ impl<'c> fmt::Display for StridedLayoutAttr<'c> {
 
 // #[derive(Debug)]
 pub struct StringAttr<'c> {
-    pub(crate) inner: ffi::UniquePtr<ffi::IR::BuiltinAttributes::StringAttr>,
+    pub(crate) inner: *mut c_void,
     phantom: PhantomData<&'c Context>,
 }
 
