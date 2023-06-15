@@ -54,4 +54,26 @@ std::unique_ptr<ReturnOp> ReturnOp_create(
     return std::make_unique<ReturnOp>(op);
 }
 
+std::unique_ptr<CallOp> CallOp_create(
+    const Location &loc,
+    rust::Slice<const Type *const > results,
+    rust::Slice<const Value *const > operands
+)
+{
+    auto builder = mlir::OpBuilder(loc->getContext());
+    auto state = mlir::OperationState(loc, CallOp::getOperationName());
+    std::vector<Value> operands_vec;
+    std::vector<Type> results_vec;
+
+    for (const auto &val : operands)
+        operands_vec.push_back(*val);
+    for (const auto &val : results)
+        results_vec.push_back(*val);
+
+    CallOp::build(builder, state, results_vec, operands_vec);
+
+    auto op = CallOp(builder.create(state));
+    return std::make_unique<CallOp>(op);
+}
+
 } // namespace mithril_oxide_sys
