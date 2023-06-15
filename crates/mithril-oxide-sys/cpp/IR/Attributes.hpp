@@ -9,15 +9,17 @@
 
 namespace mithril_oxide_sys {
 
+using c_void = void;
+
 using mlir::NamedAttribute;
 using mlir::Attribute;
 using mlir::StringAttr;
 
 
-rust::String Attribute_print(const Attribute &op);
+rust::String Attribute_print(const void* attr);
 
-std::unique_ptr<NamedAttribute> NamedAttribute_new(const StringAttr &name, const Attribute &attr);
+std::unique_ptr<NamedAttribute> NamedAttribute_new(const void* name, const void* attr);
 rust::Str NamedAttribute_getName(const NamedAttribute &attr);
-std::unique_ptr<Attribute> NamedAttribute_getValue(const NamedAttribute &attr);
+const void* NamedAttribute_getValue(const NamedAttribute &attr);
 
 } // namespace mithril_oxide_sys

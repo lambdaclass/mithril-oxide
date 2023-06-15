@@ -14,9 +14,10 @@ using mlir::Block;
 using mlir::BlockArgument;
 using mlir::Location;
 using mlir::Type;
+using c_void = void;
 
 
-void Block_addArgument(Block &block, const Type& type, const Location& loc);
-std::unique_ptr<BlockArgument> Block_getArgument(Block &block, unsigned i);
+void Block_addArgument(Block &block, const void*type, const Location& loc);
+void* Block_getArgument(Block &block, unsigned i);
 
 } // namespace mithril_oxide_sys

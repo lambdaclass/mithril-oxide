@@ -14,14 +14,14 @@ std::unique_ptr<ModuleOp> ModuleOp_create(const Location &loc)
     return std::make_unique<ModuleOp>(ModuleOp::create(loc));
 }
 
-void ModuleOp_setSymNameAttr(ModuleOp &op, const StringAttr &value)
+void ModuleOp_setSymNameAttr(ModuleOp &op, const void* value)
 {
-    op.setSymNameAttr(value);
+    op.setSymNameAttr(StringAttr::getFromOpaquePointer(value));
 }
 
-void ModuleOp_setSymVisibilityAttr(ModuleOp &op, const StringAttr &value)
+void ModuleOp_setSymVisibilityAttr(ModuleOp &op, const void* value)
 {
-    op.setSymVisibilityAttr(value);
+    op.setSymVisibilityAttr(StringAttr::getFromOpaquePointer(value));
 }
 
 } // namespace mithril_oxide_sys

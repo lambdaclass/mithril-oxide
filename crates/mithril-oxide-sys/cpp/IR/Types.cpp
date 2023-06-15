@@ -10,25 +10,22 @@
 
 namespace mithril_oxide_sys {
 
-std::unique_ptr<Type> Value_getType(const Value& value)
+const void* Value_getType(const void* value)
 {
-    return std::make_unique<Type>(value.getType());
+    auto val = mlir::Value::getFromOpaquePointer(value);
+    return val.getType().getAsOpaquePointer();
 }
 
-#define MITHRIL_CAST_TO_TYPE_IMPL(FROM_TYPE) std::unique_ptr<Type> FROM_TYPE ## _to_Type(const FROM_TYPE &x) \
-    { \
-         return std::make_unique<Type>(x); \
-    }
+unsigned int Type_getIntOrFloatBitWidth(const void* type)
+{
+    auto t = Type::getFromOpaquePointer(type);
+    return t.getIntOrFloatBitWidth();
+}
 
-MITHRIL_CAST_TO_TYPE_IMPL(BaseMemRefType);
-MITHRIL_CAST_TO_TYPE_IMPL(FloatType);
-MITHRIL_CAST_TO_TYPE_IMPL(FunctionType);
-MITHRIL_CAST_TO_TYPE_IMPL(IndexType);
-MITHRIL_CAST_TO_TYPE_IMPL(IntegerType);
-MITHRIL_CAST_TO_TYPE_IMPL(MemRefType);
-MITHRIL_CAST_TO_TYPE_IMPL(RankedTensorType);
-MITHRIL_CAST_TO_TYPE_IMPL(TensorType);
-MITHRIL_CAST_TO_TYPE_IMPL(VectorType);
-MITHRIL_CAST_TO_TYPE_IMPL(ShapedType);
+void Type_dump(const void* type)
+{
+     auto t = Type::getFromOpaquePointer(type);
+    t.dump();
+}
 
 } // namespace mithril_oxide_sys
