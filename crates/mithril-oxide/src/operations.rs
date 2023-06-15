@@ -1,4 +1,4 @@
-use crate::Context;
+use crate::{value::OperationResult, Context};
 use mithril_oxide_sys as ffi;
 use std::{
     fmt::{self, Display},
@@ -44,23 +44,18 @@ pub mod transform;
 pub mod vector;
 pub mod x86vector;
 
-pub trait Operation
+pub trait Operation<'c>
 where
     Self: Display,
 {
     fn num_results(&self) -> usize;
-    fn result(&self, index: usize) -> OperationResult;
+    fn result(&self, index: usize) -> OperationResult<'c, '_>;
 }
 
 pub trait OperationBuilder<'c> {
-    type Target: Operation;
+    type Target: Operation<'c>;
 
     fn build(self, context: &'c Context) -> Self::Target;
-}
-
-pub struct OperationResult<'a> {
-    // inner: !,
-    phantom: PhantomData<&'a dyn Operation>,
 }
 
 pub struct DynOperation<'c> {
@@ -74,12 +69,12 @@ impl<'c> DynOperation<'c> {
     }
 }
 
-impl<'c> Operation for DynOperation<'c> {
+impl<'c> Operation<'c> for DynOperation<'c> {
     fn num_results(&self) -> usize {
         todo!()
     }
 
-    fn result(&self, index: usize) -> OperationResult {
+    fn result(&self, index: usize) -> OperationResult<'c, '_> {
         todo!()
     }
 }
