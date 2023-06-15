@@ -11,17 +11,22 @@
 
 namespace mithril_oxide_sys {
 
-rust::String Attribute_print(const Attribute &op)
+rust::String Attribute_print(const void* attr)
 {
     std::string s;
     llvm::raw_string_ostream ss(s);
-    op.print(ss);
+    Attribute::getFromOpaquePointer(attr).print(ss);
     return rust::String::lossy(s);
 }
 
-std::unique_ptr<NamedAttribute> NamedAttribute_new(const StringAttr &name, const Attribute &attr)
+//std::unique_ptr<NamedAttribute> NamedAttribute_new(const StringAttr &name, const Attribute &attr)
+std::unique_ptr<NamedAttribute> NamedAttribute_new(const void* name, const void* attr)
 {
-    return std::make_unique<NamedAttribute>(NamedAttribute(name, attr));
+    return std::make_unique<NamedAttribute>(
+        NamedAttribute(
+            StringAttr::getFromOpaquePointer(name),
+            Attribute::getFromOpaquePointer(attr)
+            ));
 }
 
 rust::Str NamedAttribute_getName(const NamedAttribute &attr)
@@ -30,9 +35,9 @@ rust::Str NamedAttribute_getName(const NamedAttribute &attr)
     return rust::Str(ref.data(), ref.size());
 }
 
-std::unique_ptr<Attribute> NamedAttribute_getValue(const NamedAttribute &attr)
+const void* NamedAttribute_getValue(const NamedAttribute &attr)
 {
-    return std::make_unique<Attribute>(attr.getValue());
+    return attr.getValue().getAsOpaquePointer();
 }
 
 } // namespace mithril_oxide_sys

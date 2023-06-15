@@ -11,9 +11,9 @@
 
 namespace mithril_oxide_sys {
 
-void Block_addArgument(Block &block, const Type& type, const Location& loc)
+void Block_addArgument(Block &block, const void*type, const Location& loc)
 {
-    block.addArgument(type, loc);
+    block.addArgument(Type::getFromOpaquePointer(type), loc);
 }
 
 void* Block_getArgument(Block &block, unsigned i)

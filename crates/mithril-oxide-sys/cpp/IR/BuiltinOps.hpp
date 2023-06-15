@@ -9,13 +9,17 @@
 
 namespace mithril_oxide_sys {
 
+using c_void = void;
+
 using mlir::ModuleOp;
 using mlir::Location;
 using mlir::StringAttr;
 
 
 std::unique_ptr<ModuleOp> ModuleOp_create(const Location &loc);
-void ModuleOp_setSymNameAttr(ModuleOp &op, const StringAttr &value);
-void ModuleOp_setSymVisibilityAttr(ModuleOp &op, const StringAttr &value);
+// value - StringAttr
+void ModuleOp_setSymNameAttr(ModuleOp &op, const void* value);
+// value - StringAttr
+void ModuleOp_setSymVisibilityAttr(ModuleOp &op, const void* value);
 
 } // namespace mithril_oxide_sys
