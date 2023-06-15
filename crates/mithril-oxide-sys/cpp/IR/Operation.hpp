@@ -12,11 +12,13 @@ namespace mithril_oxide_sys {
 using mlir::Operation;
 using mlir::OpResult;
 
+using c_void = void;
+
 
 rust::Str Operation_getName(Operation &op);
 
 rust::String Operation_print(Operation &op);
 
-std::unique_ptr<OpResult> Operation_getResult(Operation &op, unsigned idx);
+void* Operation_getResult(Operation &op, unsigned idx);
 
 } // namespace mithril_oxide_sys

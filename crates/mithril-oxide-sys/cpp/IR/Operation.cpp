@@ -25,9 +25,9 @@ rust::String Operation_print(Operation &op)
     return rust::String::lossy(s);
 }
 
-std::unique_ptr<OpResult> Operation_getResult(Operation &op, unsigned idx)
+void* Operation_getResult(Operation &op, unsigned idx)
 {
-    return std::make_unique<OpResult>(op.getResult(idx));
+    return std::make_unique<OpResult>(op.getResult(idx))->getAsOpaquePointer();
 }
 
 } // namespace mithril_oxide_sys

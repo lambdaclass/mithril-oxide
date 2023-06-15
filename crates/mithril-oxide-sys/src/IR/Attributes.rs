@@ -1,11 +1,10 @@
 use cxx::UniquePtr;
 
-pub use self::ffi::{Attribute, NamedAttribute};
-use self::ffi::{
-    Attribute_print, NamedAttribute_getName, NamedAttribute_getValue, NamedAttribute_new,
-    StringAttr,
-};
+pub use self::ffi::{Attribute_print, NamedAttribute};
+use self::ffi::{NamedAttribute_getName, NamedAttribute_getValue, NamedAttribute_new};
 use std::fmt;
+
+use super::Value::ffi::c_void;
 
 #[cxx::bridge]
 pub(crate) mod ffi {
@@ -14,26 +13,27 @@ pub(crate) mod ffi {
         include!("mithril-oxide-sys/cpp/IR/Attributes.hpp");
 
         type NamedAttribute;
-        type Attribute;
-        type StringAttr = crate::IR::BuiltinAttributes::StringAttr;
-        // type MLIRContext = crate::IR::MLIRContext::MLIRContext;
-
-        pub fn dump(self: &Attribute);
     }
 
     #[namespace = "mithril_oxide_sys"]
     unsafe extern "C++" {
         include!("mithril-oxide-sys/cpp/IR/Attributes.hpp");
 
-        #[must_use]
-        fn Attribute_print(attribute: &Attribute) -> String;
+        type c_void = crate::IR::Value::ffi::c_void;
 
         #[must_use]
-        fn NamedAttribute_new(name: &StringAttr, attr: &Attribute) -> UniquePtr<NamedAttribute>;
+        unsafe fn Attribute_print(attribute: *const c_void) -> String;
+
+        #[must_use]
+        /// name: StringAttribute, attr: Attribute
+        unsafe fn NamedAttribute_new(
+            name: *const c_void,
+            attr: *const c_void,
+        ) -> UniquePtr<NamedAttribute>;
         #[must_use]
         fn NamedAttribute_getName(attribute: &NamedAttribute) -> &str;
         #[must_use]
-        fn NamedAttribute_getValue(attribute: &NamedAttribute) -> UniquePtr<Attribute>;
+        fn NamedAttribute_getValue(attribute: &NamedAttribute) -> *const c_void;
     }
 }
 
@@ -43,22 +43,10 @@ impl fmt::Debug for ffi::NamedAttribute {
     }
 }
 
-impl fmt::Debug for ffi::Attribute {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.debug_struct("Attribute").finish_non_exhaustive()
-    }
-}
-
-impl ffi::Attribute {
-    #[must_use]
-    pub fn print(&self) -> String {
-        Attribute_print(self)
-    }
-}
-
 impl ffi::NamedAttribute {
     #[must_use]
-    pub fn new(name: &StringAttr, attr: &Attribute) -> UniquePtr<NamedAttribute> {
+    /// name: StringAttribute, attr: Attribute
+    pub unsafe fn new(name: *const c_void, attr: *const c_void) -> UniquePtr<NamedAttribute> {
         NamedAttribute_new(name, attr)
     }
 
@@ -68,7 +56,7 @@ impl ffi::NamedAttribute {
     }
 
     #[must_use]
-    pub fn get_value(&self) -> UniquePtr<Attribute> {
+    pub fn get_value(&self) -> *const c_void {
         NamedAttribute_getValue(self)
     }
 }

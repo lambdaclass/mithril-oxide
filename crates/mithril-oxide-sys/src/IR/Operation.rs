@@ -1,7 +1,5 @@
-use cxx::UniquePtr;
-
+use self::ffi::{c_void, Operation_getName, Operation_getResult, Operation_print};
 pub use self::ffi::{OpResult, Operation};
-use self::ffi::{Operation_getName, Operation_getResult, Operation_print};
 use std::{fmt, pin::Pin};
 
 #[cxx::bridge]
@@ -32,13 +30,15 @@ pub(crate) mod ffi {
     unsafe extern "C++" {
         include!("mithril-oxide-sys/cpp/IR/Operation.hpp");
 
+        type c_void = crate::IR::Value::ffi::c_void;
+
         #[must_use]
         fn Operation_print(op: Pin<&mut Operation>) -> String;
 
         #[must_use]
         fn Operation_getName(op: Pin<&mut Operation>) -> &str;
 
-        fn Operation_getResult(op: Pin<&mut Operation>, idx: u32) -> UniquePtr<OpResult>;
+        fn Operation_getResult(op: Pin<&mut Operation>, idx: u32) -> *mut c_void;
     }
 }
 
@@ -54,7 +54,7 @@ impl ffi::Operation {
     }
 
     #[must_use]
-    pub fn getResult(self: Pin<&mut Self>, idx: u32) -> UniquePtr<OpResult> {
+    pub fn getResult(self: Pin<&mut Self>, idx: u32) -> *mut c_void {
         Operation_getResult(self, idx)
     }
 }

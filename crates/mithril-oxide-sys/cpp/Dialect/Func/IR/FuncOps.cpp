@@ -14,9 +14,9 @@ namespace mithril_oxide_sys {
 std::unique_ptr<FuncOp> FuncOp_create(
     const Location &loc,
     rust::Str name,
-    const FunctionType &type,
+    const void* type,
     rust::Slice<const NamedAttribute *const> attrs,
-    rust::Slice<const DictionaryAttr *const> argAttrs
+    rust::Slice<const void *const> argAttrs
 )
 {
     std::vector<NamedAttribute> attrs_vec;
@@ -25,12 +25,12 @@ std::unique_ptr<FuncOp> FuncOp_create(
     for (const auto &attr : attrs)
         attrs_vec.push_back(*attr);
     for (const auto &argAttr : argAttrs)
-        argAttrs_vec.push_back(*argAttr);
+        argAttrs_vec.push_back(DictionaryAttr::getFromOpaquePointer(argAttr));
 
     return std::make_unique<FuncOp>(FuncOp::create(
         loc,
         mlir::StringRef(name.data(), name.length()),
-        type,
+        FunctionType::getFromOpaquePointer(type),
         mlir::ArrayRef(attrs_vec.data(), attrs_vec.size()),
         mlir::ArrayRef(argAttrs_vec.data(), argAttrs_vec.size())
     ));
@@ -38,7 +38,7 @@ std::unique_ptr<FuncOp> FuncOp_create(
 
 std::unique_ptr<ReturnOp> ReturnOp_create(
     const Location &loc,
-    rust::Slice<const Value *const > operands
+    rust::Slice<const void *const > operands
 )
 {
     auto builder = mlir::OpBuilder(loc->getContext());
@@ -46,7 +46,7 @@ std::unique_ptr<ReturnOp> ReturnOp_create(
     std::vector<Value> operands_vec;
 
     for (const auto &val : operands)
-        operands_vec.push_back(*val);
+        operands_vec.push_back(Value::getFromOpaquePointer(val));
 
     ReturnOp::build(builder, state, operands_vec);
 

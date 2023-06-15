@@ -1,7 +1,9 @@
 pub use self::ffi::ModuleOp;
-use crate::IR::{BuiltinAttributes::StringAttr, Location::Location};
+use crate::IR::Location::Location;
 use cxx::UniquePtr;
 use std::{fmt, pin::Pin};
+
+use super::Value::ffi::c_void;
 
 #[cxx::bridge]
 pub(crate) mod ffi {
@@ -12,7 +14,6 @@ pub(crate) mod ffi {
         type Location = crate::IR::Location::Location;
         type ModuleOp;
         type Region = crate::IR::Region::Region;
-        type StringAttr = crate::IR::BuiltinAttributes::StringAttr;
         type Operation = crate::IR::Operation::Operation;
 
         #[must_use]
@@ -25,9 +26,11 @@ pub(crate) mod ffi {
     unsafe extern "C++" {
         include!("mithril-oxide-sys/cpp/IR/BuiltinOps.hpp");
 
+        type c_void = crate::IR::Value::ffi::c_void;
+
         fn ModuleOp_create(context: &Location) -> UniquePtr<ModuleOp>;
-        fn ModuleOp_setSymNameAttr(op: Pin<&mut ModuleOp>, value: &StringAttr);
-        fn ModuleOp_setSymVisibilityAttr(op: Pin<&mut ModuleOp>, value: &StringAttr);
+        unsafe fn ModuleOp_setSymNameAttr(op: Pin<&mut ModuleOp>, value: *const c_void);
+        unsafe fn ModuleOp_setSymVisibilityAttr(op: Pin<&mut ModuleOp>, value: *const c_void);
     }
 }
 
@@ -37,11 +40,13 @@ impl ffi::ModuleOp {
         ffi::ModuleOp_create(context)
     }
 
-    pub fn setSymNameAttr(self: Pin<&mut Self>, value: &StringAttr) {
+    /// value - StringAttr
+    pub unsafe fn setSymNameAttr(self: Pin<&mut Self>, value: *const c_void) {
         ffi::ModuleOp_setSymNameAttr(self, value);
     }
 
-    pub fn setSymVisibilityAttr(self: Pin<&mut Self>, value: &StringAttr) {
+    /// value - StringAttr
+    pub unsafe fn setSymVisibilityAttr(self: Pin<&mut Self>, value: *const c_void) {
         ffi::ModuleOp_setSymVisibilityAttr(self, value);
     }
 }

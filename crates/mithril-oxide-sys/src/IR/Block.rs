@@ -12,7 +12,6 @@ pub(crate) mod ffi {
         type Block;
         type BlockArgument;
 
-        type Type = crate::IR::Types::Type;
         type Region = crate::IR::Region::Region;
         type Operation = crate::IR::Operation::Operation;
         type Location = crate::IR::Location::Location;
@@ -34,20 +33,21 @@ pub(crate) mod ffi {
     unsafe extern "C++" {
         include!("mithril-oxide-sys/cpp/IR/Block.hpp");
 
-        type c_void;
+        type c_void = crate::IR::Value::ffi::c_void;
 
-        fn Block_addArgument(block: Pin<&mut Block>, ttype: &Type, loc: &Location);
+        unsafe fn Block_addArgument(block: Pin<&mut Block>, ttype: *const c_void, loc: &Location);
         fn Block_getArgument(block: Pin<&mut Block>, i: u32) -> *mut c_void;
     }
 }
 
 impl ffi::Block {
-    pub fn add_argument(self: Pin<&mut Self>, r#type: &Type, loc: &Location) {
+    // type is a Type.
+    pub unsafe fn add_argument(self: Pin<&mut Self>, r#type: *const c_void, loc: &Location) {
         Block_addArgument(self, r#type, loc);
     }
 
     #[must_use]
-    /// returns a pointer to a BlockArgument / Value
+    /// returns a pointer to a `BlockArgument` / `Value`
     pub fn get_argument(self: Pin<&mut Self>, i: u32) -> *mut c_void {
         Block_getArgument(self, i)
     }

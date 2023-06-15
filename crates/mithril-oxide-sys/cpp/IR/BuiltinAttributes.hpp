@@ -12,6 +12,8 @@
 
 namespace mithril_oxide_sys {
 
+using c_void = void;
+
 using mlir::Attribute;
 using mlir::BoolAttr;
 using mlir::DenseElementsAttr;
@@ -27,32 +29,19 @@ using mlir::ShapedType;
 using mlir::StringAttr;
 
 
-std::unique_ptr<StringAttr> StringAttr_get(MLIRContext &context, rust::Str value);
-std::unique_ptr<IntegerAttr> IntegerAttr_get(MLIRContext &context, rust::Str value);
-std::unique_ptr<BoolAttr> BoolAttr_get(MLIRContext &context, bool value);
+const void* StringAttr_get(MLIRContext &context, rust::Str value);
+const void* IntegerAttr_get(MLIRContext &context, rust::Str value);
+const void* BoolAttr_get(MLIRContext &context, bool value);
 
-std::unique_ptr<DenseElementsAttr> DenseElementsAttr_get(
-    const ShapedType &type,
-    rust::Slice<const Attribute *const> values
+const void* DenseElementsAttr_get(
+    const void* shaped_type, // ShapedType trait
+    // Attribute
+    rust::Slice<const void *const> values
 );
 
-std::unique_ptr<DictionaryAttr> DictionaryAttr_get(
+const void* DictionaryAttr_get(
     MLIRContext &context,
     rust::Slice<const NamedAttribute *const> values
 );
-
-// static DictionaryAttr get(::mlir::MLIRContext *context, ArrayRef<NamedAttribute> value = std::nullopt);
-
-#define MITHRIL_CAST_TO_ATTR(FROM_TYPE) std::unique_ptr<Attribute> FROM_TYPE ## _to_Attribute(const FROM_TYPE &x)
-
-MITHRIL_CAST_TO_ATTR(DictionaryAttr);
-MITHRIL_CAST_TO_ATTR(StringAttr);
-MITHRIL_CAST_TO_ATTR(FloatAttr);
-MITHRIL_CAST_TO_ATTR(IntegerAttr);
-MITHRIL_CAST_TO_ATTR(DenseElementsAttr);
-MITHRIL_CAST_TO_ATTR(DenseIntElementsAttr);
-MITHRIL_CAST_TO_ATTR(DenseFPElementsAttr);
-MITHRIL_CAST_TO_ATTR(BoolAttr);
-MITHRIL_CAST_TO_ATTR(FlatSymbolRefAttr);
 
 } // namespace mithril_oxide_sys
