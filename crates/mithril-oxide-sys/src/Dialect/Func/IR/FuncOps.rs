@@ -1,4 +1,5 @@
-pub use self::ffi::FuncOp;
+use self::ffi::Value;
+pub use self::ffi::{FuncOp, ReturnOp};
 use crate::IR::{
     Attributes::NamedAttribute, BuiltinAttributes::DictionaryAttr, BuiltinTypes::FunctionType,
     Location::Location,
@@ -16,10 +17,13 @@ pub(crate) mod ffi {
         type DictionaryAttr = crate::IR::BuiltinAttributes::DictionaryAttr;
         #[namespace = "mlir::func"]
         type FuncOp;
+        #[namespace = "mlir::func"]
+        type ReturnOp;
         type FunctionType = crate::IR::BuiltinTypes::FunctionType;
         type Location = crate::IR::Location::Location;
         type NamedAttribute = crate::IR::Attributes::NamedAttribute;
         type Operation = crate::IR::Operation::Operation;
+        type Value = crate::IR::Value::Value;
 
         #[must_use]
         pub fn getOperation(self: Pin<&mut FuncOp>) -> *mut Operation;
@@ -36,6 +40,8 @@ pub(crate) mod ffi {
             attrs: &[*const NamedAttribute],
             argAttrs: &[*const DictionaryAttr],
         ) -> UniquePtr<FuncOp>;
+
+        fn ReturnOp_create(context: &Location, operands: &[*const Value]) -> UniquePtr<ReturnOp>;
     }
 }
 
@@ -55,6 +61,15 @@ impl ffi::FuncOp {
             .collect::<Vec<_>>();
 
         ffi::FuncOp_create(context, name, r#type, &attrs_vec, &argAttrs_vec)
+    }
+}
+
+impl ffi::ReturnOp {
+    #[must_use]
+    pub fn new<'a>(loc: &Location, attrs: impl IntoIterator<Item = &'a Value>) -> UniquePtr<Self> {
+        let operands = attrs.into_iter().map(|x| x as *const _).collect::<Vec<_>>();
+
+        ffi::ReturnOp_create(loc, &operands)
     }
 }
 
