@@ -1,38 +1,5 @@
-use super::Type;
-use crate::context::Context;
-use std::{fmt, marker::PhantomData};
+use super::{impl_type, impl_type_new};
 
-#[derive(Debug)]
-pub struct DeviceAsyncTokenType<'c> {
-    phantom: PhantomData<&'c Context>,
-}
+impl_type!(DeviceAsyncTokenType);
 
-impl<'c> Type<'c> for DeviceAsyncTokenType<'c> {
-    fn size(&self) -> usize {
-        todo!()
-    }
-
-    fn size_in_bits(&self) -> usize {
-        todo!()
-    }
-
-    fn abi_alignment(&self) -> usize {
-        todo!()
-    }
-
-    fn preferred_alignment(&self) -> usize {
-        todo!()
-    }
-}
-
-impl<'c> Clone for DeviceAsyncTokenType<'c> {
-    fn clone(&self) -> Self {
-        todo!()
-    }
-}
-
-impl<'c> fmt::Display for DeviceAsyncTokenType<'c> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        todo!()
-    }
-}
+impl_type_new!(DeviceAsyncTokenType);

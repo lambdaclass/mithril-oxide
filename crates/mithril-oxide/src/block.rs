@@ -14,7 +14,7 @@ impl<'c> Block<'c> {
         unsafe { std::mem::transmute(inner) }
     }
 
-    pub fn add_argument(&mut self, location: impl LocationAttr<'c>, r#type: impl Type<'c>) {
+    pub fn add_argument(&mut self, location: impl LocationAttr<'c>, r#type: impl AsRef<Type<'c>>) {
         todo!()
     }
 
