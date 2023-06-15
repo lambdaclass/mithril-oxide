@@ -38,6 +38,7 @@ pub(crate) mod ffi {
         #[must_use]
         fn Operation_getName(op: Pin<&mut Operation>) -> &str;
 
+        #[must_use]
         fn Operation_getResult(op: Pin<&mut Operation>, idx: u32) -> *mut c_void;
     }
 }

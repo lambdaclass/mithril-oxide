@@ -1,4 +1,4 @@
-use self::ffi::{c_void, Block_addArgument, Block_getArgument, Location, Type};
+use self::ffi::{c_void, Block_addArgument, Block_getArgument, Location};
 pub use self::ffi::{Block, BlockArgument};
 use std::fmt;
 use std::pin::Pin;
@@ -36,6 +36,7 @@ pub(crate) mod ffi {
         type c_void = crate::IR::Value::ffi::c_void;
 
         unsafe fn Block_addArgument(block: Pin<&mut Block>, ttype: *const c_void, loc: &Location);
+        #[must_use]
         fn Block_getArgument(block: Pin<&mut Block>, i: u32) -> *mut c_void;
     }
 }

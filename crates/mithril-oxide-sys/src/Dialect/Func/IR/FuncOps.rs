@@ -1,9 +1,6 @@
-use self::ffi::{c_void, Value};
+use self::ffi::c_void;
 pub use self::ffi::{FuncOp, ReturnOp};
-use crate::IR::{
-    Attributes::NamedAttribute, BuiltinAttributes::DictionaryAttr, BuiltinTypes::FunctionType,
-    Location::Location,
-};
+use crate::IR::{Attributes::NamedAttribute, Location::Location};
 use cxx::UniquePtr;
 use std::fmt;
 
@@ -14,7 +11,6 @@ pub(crate) mod ffi {
     unsafe extern "C++" {
         include!("mithril-oxide-sys/cpp/Dialect/Func/IR/FuncOps.hpp");
 
-        type DictionaryAttr = crate::IR::BuiltinAttributes::DictionaryAttr;
         #[namespace = "mlir::func"]
         type FuncOp;
         #[namespace = "mlir::func"]
@@ -55,20 +51,20 @@ impl ffi::FuncOp {
     pub unsafe fn new<'a>(
         context: &Location,
         name: &str,
-        r#type: &FunctionType,
+        function_type: *const c_void,
         attrs: impl IntoIterator<Item = &'a NamedAttribute>,
         argAttrs: impl IntoIterator<Item = *const c_void>,
     ) -> UniquePtr<Self> {
         let attrs_vec = attrs.into_iter().map(|x| x as *const _).collect::<Vec<_>>();
         let argAttrs_vec = argAttrs.into_iter().collect::<Vec<_>>();
 
-        ffi::FuncOp_create(context, name, r#type, &attrs_vec, &argAttrs_vec)
+        ffi::FuncOp_create(context, name, function_type, &attrs_vec, &argAttrs_vec)
     }
 }
 
 impl ffi::ReturnOp {
     #[must_use]
-    pub unsafe fn new<'a>(
+    pub unsafe fn new(
         loc: &Location,
         attrs: impl IntoIterator<Item = *const c_void>,
     ) -> UniquePtr<Self> {

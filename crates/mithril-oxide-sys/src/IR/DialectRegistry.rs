@@ -15,6 +15,7 @@ pub(crate) mod ffi {
     unsafe extern "C++" {
         include!("mithril-oxide-sys/cpp/IR/DialectRegistry.hpp");
 
+        #[must_use]
         fn DialectRegistry_new() -> UniquePtr<DialectRegistry>;
     }
 }
