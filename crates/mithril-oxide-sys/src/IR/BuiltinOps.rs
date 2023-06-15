@@ -40,12 +40,12 @@ impl ffi::ModuleOp {
         ffi::ModuleOp_create(context)
     }
 
-    /// value - StringAttr
+    /// value - `StringAttr`
     pub unsafe fn setSymNameAttr(self: Pin<&mut Self>, value: *const c_void) {
         ffi::ModuleOp_setSymNameAttr(self, value);
     }
 
-    /// value - StringAttr
+    /// value - `StringAttr`
     pub unsafe fn setSymVisibilityAttr(self: Pin<&mut Self>, value: *const c_void) {
         ffi::ModuleOp_setSymVisibilityAttr(self, value);
     }

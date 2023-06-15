@@ -11,6 +11,7 @@ pub(crate) mod ffi {
         /// value must be a mlir Value
         ///
         /// returns a Type
+        #[must_use]
         pub unsafe fn Value_getType(value: *const c_void) -> *const c_void;
 
         /// Return the bit width of an integer or a float type, assert failure on

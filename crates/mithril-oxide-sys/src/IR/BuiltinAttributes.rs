@@ -18,14 +18,19 @@ pub(crate) mod ffi {
 
         type c_void = crate::IR::Value::ffi::c_void;
 
-        unsafe fn StringAttr_get(context: Pin<&mut MLIRContext>, value: &str) -> *const c_void;
-        unsafe fn IntegerAttr_get(context: Pin<&mut MLIRContext>, value: &str) -> *const c_void;
-        unsafe fn BoolAttr_get(context: Pin<&mut MLIRContext>, value: bool) -> *const c_void;
+        #[must_use]
+        fn StringAttr_get(context: Pin<&mut MLIRContext>, value: &str) -> *const c_void;
+        #[must_use]
+        fn IntegerAttr_get(context: Pin<&mut MLIRContext>, value: &str) -> *const c_void;
+        #[must_use]
+        fn BoolAttr_get(context: Pin<&mut MLIRContext>, value: bool) -> *const c_void;
+        #[must_use]
         unsafe fn DenseElementsAttr_get(
             shaped_type: *const c_void, // any type implementing ShapedType trait.
             // Attribute
             values: &[*const c_void],
         ) -> *const c_void;
+        #[must_use]
         unsafe fn DictionaryAttr_get(
             context: Pin<&mut MLIRContext>,
             values: &[*const NamedAttribute],
@@ -35,13 +40,17 @@ pub(crate) mod ffi {
 
 #[cfg(test)]
 mod tests {
+    use crate::IR::{Attributes::Attribute_print, MLIRContext::MLIRContext};
+
     use super::*;
 
     #[test]
     fn string_attr_new() {
         let mut context = MLIRContext::new();
-        let string_attr = StringAttr::new(context.pin_mut(), "hello_world");
-        let attr: UniquePtr<Attribute> = (&*string_attr).into();
-        assert_eq!("\"hello_world\"", attr.print().as_str());
+        let string_attr = StringAttr_get(context.pin_mut(), "hello_world");
+        assert_eq!(
+            "\"hello_world\"",
+            unsafe { Attribute_print(string_attr) }.as_str()
+        );
     }
 }

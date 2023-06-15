@@ -25,7 +25,9 @@ pub(crate) mod ffi {
     unsafe extern "C++" {
         include!("mithril-oxide-sys/cpp/IR/Location.hpp");
 
+        #[must_use]
         fn UnknownLoc_get(context: Pin<&mut MLIRContext>) -> UniquePtr<UnknownLoc>;
+        #[must_use]
         fn UnknownLoc_to_Location(loc: &UnknownLoc) -> UniquePtr<Location>;
     }
 }

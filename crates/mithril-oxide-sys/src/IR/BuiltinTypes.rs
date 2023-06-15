@@ -18,6 +18,7 @@ pub(crate) mod ffi {
         // Constructors
 
         /// returns a type.
+        #[must_use]
         pub fn IntegerType_get(
             context: Pin<&mut MLIRContext>,
             width: u32,
@@ -29,6 +30,7 @@ pub(crate) mod ffi {
         /// - inputs: pointer to a valid Type
         /// - results: pointer to a valid Type
         /// - returns a type.
+        #[must_use]
         pub unsafe fn FunctionType_get(
             context: Pin<&mut MLIRContext>,
             inputs: &[*const c_void],
