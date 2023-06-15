@@ -29,12 +29,12 @@ impl<'c> ModuleOp<'c> {
     }
 }
 
-impl<'c> Operation for ModuleOp<'c> {
+impl<'c> Operation<'c> for ModuleOp<'c> {
     fn num_results(&self) -> usize {
         todo!()
     }
 
-    fn result(&self, index: usize) -> super::OperationResult {
+    fn result(&self, index: usize) -> super::OperationResult<'c, '_> {
         todo!()
     }
 }

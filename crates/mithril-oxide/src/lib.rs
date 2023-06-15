@@ -11,6 +11,7 @@ pub mod operations;
 mod region;
 pub mod types;
 pub mod util;
+pub mod value;
 
 // TODO: What are type constraints? Do we need them?
 // TODO: What are attribute constraints? Do we need them?

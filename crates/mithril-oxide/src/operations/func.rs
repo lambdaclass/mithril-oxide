@@ -52,12 +52,12 @@ impl<'c> FuncOp<'c> {
     }
 }
 
-impl<'c> Operation for FuncOp<'c> {
+impl<'c> Operation<'c> for FuncOp<'c> {
     fn num_results(&self) -> usize {
         todo!()
     }
 
-    fn result(&self, index: usize) -> super::OperationResult {
+    fn result(&self, index: usize) -> super::OperationResult<'c, '_> {
         todo!()
     }
 }
