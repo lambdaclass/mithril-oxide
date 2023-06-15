@@ -1,5 +1,6 @@
 #![allow(dead_code)]
 #![allow(unused)]
+#![feature(concat_idents)]
 
 pub use self::{block::Block, context::Context, location::Location, region::Region};
 
