@@ -1,12 +1,8 @@
 #pragma once
 
-#include <mlir/IR/Region.h>
-
-#include "../lib.hpp"
-
 
 namespace mithril_oxide_sys {
 
-using mlir::Region;
+using c_void = void;
 
 } // namespace mithril_oxide_sys

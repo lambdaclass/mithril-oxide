@@ -4,6 +4,8 @@
 
 #include <mlir/IR/DialectRegistry.h>
 
+#include "../lib.hpp"
+
 
 namespace mithril_oxide_sys {
 

@@ -3,6 +3,8 @@
 #include <mlir/Dialect/Async/IR/AsyncTypes.h>
 #include <mlir/IR/MLIRContext.h>
 
+#include "../../../lib.hpp"
+
 
 namespace mithril_oxide_sys::async {
 

@@ -5,10 +5,10 @@
 #include <mlir/IR/Types.h>
 #include <mlir/IR/Value.h>
 
+#include "../lib.hpp"
+
 
 namespace mithril_oxide_sys {
-
-using c_void = void;
 
 using mlir::Type;
 using mlir::Value;

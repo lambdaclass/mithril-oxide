@@ -6,10 +6,10 @@
 #include <mlir/IR/BuiltinAttributes.h>
 #include <rust/cxx.h>
 
+#include "../lib.hpp"
+
 
 namespace mithril_oxide_sys {
-
-using c_void = void;
 
 using mlir::NamedAttribute;
 using mlir::Attribute;

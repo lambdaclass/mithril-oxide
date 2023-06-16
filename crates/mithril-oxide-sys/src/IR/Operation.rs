@@ -30,7 +30,7 @@ pub(crate) mod ffi {
     unsafe extern "C++" {
         include!("mithril-oxide-sys/cpp/IR/Operation.hpp");
 
-        type c_void = crate::IR::Value::ffi::c_void;
+        type c_void = crate::c_void;
 
         #[must_use]
         fn Operation_print(op: Pin<&mut Operation>) -> String;

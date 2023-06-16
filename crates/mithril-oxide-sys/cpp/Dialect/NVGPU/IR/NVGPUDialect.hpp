@@ -3,6 +3,8 @@
 #include <mlir/Dialect/NVGPU/IR/NVGPUDialect.h>
 #include <mlir/IR/MLIRContext.h>
 
+#include "../../../lib.hpp"
+
 
 namespace mithril_oxide_sys::nvgpu {
 

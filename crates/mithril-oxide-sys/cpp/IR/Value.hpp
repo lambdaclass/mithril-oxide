@@ -5,13 +5,13 @@
 #include <mlir/IR/Value.h>
 #include <rust/cxx.h>
 
+#include "../lib.hpp"
+
 
 namespace mithril_oxide_sys {
 
-
 using mlir::Value;
 
-using c_void = void;
 
 rust::String Value_print(void *value);
 

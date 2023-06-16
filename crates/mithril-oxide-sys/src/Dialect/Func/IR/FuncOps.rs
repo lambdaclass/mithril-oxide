@@ -25,9 +25,12 @@ pub(crate) mod ffi {
 
     #[namespace = "mithril_oxide_sys"]
     unsafe extern "C++" {
-        include!("mithril-oxide-sys/cpp/Dialect/Func/IR/FuncOps.hpp");
+        type c_void = crate::c_void;
+    }
 
-        type c_void = crate::IR::Value::ffi::c_void;
+    #[namespace = "mithril_oxide_sys"]
+    unsafe extern "C++" {
+        include!("mithril-oxide-sys/cpp/Dialect/Func/IR/FuncOps.hpp");
 
         unsafe fn FuncOp_create(
             context: &Location,

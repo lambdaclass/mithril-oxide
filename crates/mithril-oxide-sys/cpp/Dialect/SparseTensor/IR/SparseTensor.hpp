@@ -2,6 +2,8 @@
 
 #include <mlir/Dialect/SparseTensor/IR/SparseTensor.h>
 
+#include "../../../lib.hpp"
+
 
 namespace mithril_oxide_sys::sparse_tensor {
 
