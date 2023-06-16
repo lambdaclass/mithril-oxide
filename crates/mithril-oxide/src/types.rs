@@ -6,7 +6,6 @@ use std::{
     marker::PhantomData,
 };
 
-pub mod acc;
 pub mod r#async;
 pub mod builtin;
 pub mod emitc;
