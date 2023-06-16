@@ -1,6 +1,8 @@
 pub use self::ffi::{
-    BoolAttr_get, DenseElementsAttr_get, DenseFPElementsAttr_get, DenseIntElementsAttr_get,
-    DictionaryAttr_get, FlatSymbolRefAttr_get, IntegerAttr_get, StringAttr_get,
+    BoolAttr_get, DenseBoolArrayAttr_get, DenseElementsAttr_get, DenseF32ArrayAttr_get,
+    DenseF64ArrayAttr_get, DenseFPElementsAttr_get, DenseI16ArrayAttr_get, DenseI32ArrayAttr_get,
+    DenseI64ArrayAttr_get, DenseI8ArrayAttr_get, DenseIntElementsAttr_get, DictionaryAttr_get,
+    FlatSymbolRefAttr_get, IntegerAttr_get, StringAttr_get,
 };
 
 #[cxx::bridge]
@@ -49,6 +51,48 @@ pub(crate) mod ffi {
         unsafe fn DictionaryAttr_get(
             context: Pin<&mut MLIRContext>,
             values: &[*const NamedAttribute],
+        ) -> *const c_void;
+
+        unsafe fn DenseBoolArrayAttr_get(
+            context: Pin<&mut MLIRContext>,
+            // Attribute
+            values: &[bool],
+        ) -> *const c_void;
+
+        unsafe fn DenseI8ArrayAttr_get(
+            context: Pin<&mut MLIRContext>,
+            // Attribute
+            values: &[i8],
+        ) -> *const c_void;
+
+        unsafe fn DenseI16ArrayAttr_get(
+            context: Pin<&mut MLIRContext>,
+            // Attribute
+            values: &[i16],
+        ) -> *const c_void;
+
+        unsafe fn DenseI32ArrayAttr_get(
+            context: Pin<&mut MLIRContext>,
+            // Attribute
+            values: &[i32],
+        ) -> *const c_void;
+
+        unsafe fn DenseI64ArrayAttr_get(
+            context: Pin<&mut MLIRContext>,
+            // Attribute
+            values: &[i64],
+        ) -> *const c_void;
+
+        unsafe fn DenseF32ArrayAttr_get(
+            context: Pin<&mut MLIRContext>,
+            // Attribute
+            values: &[f32],
+        ) -> *const c_void;
+
+        unsafe fn DenseF64ArrayAttr_get(
+            context: Pin<&mut MLIRContext>,
+            // Attribute
+            values: &[f64],
         ) -> *const c_void;
     }
 }

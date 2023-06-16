@@ -87,6 +87,22 @@ const void* DenseIntElementsAttr_get(
         .getAsOpaquePointer();
 }
 
+const void* DenseI64ElementsAttr_get(
+    const void* shaped_type,
+    rust::Slice<const void *const> values
+)
+{
+    std::vector<Attribute> values_vec;
+
+    for (const auto &value : values)
+        values_vec.push_back(Attribute::getFromOpaquePointer(value));
+
+    return DenseIntElementsAttr::get(
+        ShapedType::getFromOpaquePointer(shaped_type), values_vec
+        )
+        .getAsOpaquePointer();
+}
+
 const void* DictionaryAttr_get(
     MLIRContext &context,
     rust::Slice<const NamedAttribute *const> values
@@ -98,6 +114,62 @@ const void* DictionaryAttr_get(
         values_vec.push_back(*value);
 
     return DictionaryAttr::get(&context, values_vec).getAsOpaquePointer();
+}
+
+const void* DenseBoolArrayAttr_get(
+    MLIRContext &context,
+    const rust::Slice<bool> values
+)
+{
+    return DenseBoolArrayAttr::get(&context, mlir::ArrayRef(values.data(), values.size())).getAsOpaquePointer();
+}
+
+const void* DenseI8ArrayAttr_get(
+    MLIRContext &context,
+    rust::Slice<rust::i8> values
+)
+{
+    return DenseI8ArrayAttr::get(&context, mlir::ArrayRef(values.data(), values.size())).getAsOpaquePointer();
+}
+
+const void* DenseI16ArrayAttr_get(
+    MLIRContext &context,
+    const rust::Slice<rust::i16> values
+)
+{
+    return DenseI16ArrayAttr::get(&context, mlir::ArrayRef(values.data(), values.size())).getAsOpaquePointer();
+}
+
+const void* DenseI32ArrayAttr_get(
+    MLIRContext &context,
+    const rust::Slice<rust::i32> values
+)
+{
+    return DenseI32ArrayAttr::get(&context, mlir::ArrayRef(values.data(), values.size())).getAsOpaquePointer();
+}
+
+const void* DenseI64ArrayAttr_get(
+    MLIRContext &context,
+    const rust::Slice<rust::i64> values
+)
+{
+    return DenseI64ArrayAttr::get(&context, mlir::ArrayRef(values.data(), values.size())).getAsOpaquePointer();
+}
+
+const void* DenseF32ArrayAttr_get(
+    MLIRContext &context,
+    const rust::Slice<rust::f32> values
+)
+{
+    return DenseF32ArrayAttr::get(&context, mlir::ArrayRef(values.data(), values.size())).getAsOpaquePointer();
+}
+
+const void* DenseF64ArrayAttr_get(
+    MLIRContext &context,
+    const rust::Slice<rust::f64> values
+)
+{
+    return DenseF64ArrayAttr::get(&context, mlir::ArrayRef(values.data(), values.size())).getAsOpaquePointer();
 }
 
 } // namespace mithril_oxide_sys
