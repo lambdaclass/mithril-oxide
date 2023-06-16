@@ -20,6 +20,14 @@ const void* StringAttr_get(MLIRContext &context, rust::Str value)
     ).getAsOpaquePointer();
 }
 
+const void* FlatSymbolRefAttr_get(MLIRContext &context, rust::Str value)
+{
+    return FlatSymbolRefAttr::get(
+        &context,
+        mlir::StringRef(value.data(), value.length())
+    ).getAsOpaquePointer();
+}
+
 const void* IntegerAttr_get(MLIRContext &context, rust::Str value)
 {
     auto int_val = llvm::APSInt(llvm::StringRef(value.data(), value.length()));
@@ -42,6 +50,38 @@ const void* DenseElementsAttr_get(
         values_vec.push_back(Attribute::getFromOpaquePointer(value));
 
     return DenseElementsAttr::get(
+        ShapedType::getFromOpaquePointer(shaped_type), values_vec
+        )
+        .getAsOpaquePointer();
+}
+
+const void* DenseFPElementsAttr_get(
+    const void* shaped_type,
+    rust::Slice<const void *const> values
+)
+{
+    std::vector<Attribute> values_vec;
+
+    for (const auto &value : values)
+        values_vec.push_back(Attribute::getFromOpaquePointer(value));
+
+    return DenseFPElementsAttr::get(
+        ShapedType::getFromOpaquePointer(shaped_type), values_vec
+        )
+        .getAsOpaquePointer();
+}
+
+const void* DenseIntElementsAttr_get(
+    const void* shaped_type,
+    rust::Slice<const void *const> values
+)
+{
+    std::vector<Attribute> values_vec;
+
+    for (const auto &value : values)
+        values_vec.push_back(Attribute::getFromOpaquePointer(value));
+
+    return DenseIntElementsAttr::get(
         ShapedType::getFromOpaquePointer(shaped_type), values_vec
         )
         .getAsOpaquePointer();
