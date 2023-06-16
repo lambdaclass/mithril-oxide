@@ -12,6 +12,11 @@
 
 namespace mithril_oxide_sys {
 
+const void* UnitAttr_get(MLIRContext &context)
+{
+    return UnitAttr::get(&context).getAsOpaquePointer();
+}
+
 const void* StringAttr_get(MLIRContext &context, rust::Str value)
 {
     return StringAttr::get(
@@ -114,6 +119,19 @@ const void* DictionaryAttr_get(
         values_vec.push_back(*value);
 
     return DictionaryAttr::get(&context, values_vec).getAsOpaquePointer();
+}
+
+const void* ArrayAttr_get(
+    MLIRContext &context,
+    const rust::Slice<const void* const > values
+)
+{
+    std::vector<Attribute> values_vec;
+
+    for (const auto &value : values)
+        values_vec.push_back(Attribute::getFromOpaquePointer(value));
+
+    return ArrayAttr::get(&context, values_vec).getAsOpaquePointer();
 }
 
 const void* DenseBoolArrayAttr_get(

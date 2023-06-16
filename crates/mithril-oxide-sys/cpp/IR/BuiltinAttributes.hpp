@@ -19,6 +19,7 @@ using mlir::BoolAttr;
 using mlir::DenseElementsAttr;
 using mlir::DenseFPElementsAttr;
 using mlir::DenseIntElementsAttr;
+using mlir::ArrayAttr;
 using mlir::DenseI8ArrayAttr;
 using mlir::DenseBoolArrayAttr;
 using mlir::DenseI16ArrayAttr;
@@ -34,9 +35,12 @@ using mlir::MLIRContext;
 using mlir::NamedAttribute;
 using mlir::ShapedType;
 using mlir::StringAttr;
+using mlir::UnitAttr;
+using mlir::Type;
 
 
 const void* StringAttr_get(MLIRContext &context, rust::Str value);
+const void* UnitAttr_get(MLIRContext &context);
 const void* FlatSymbolRefAttr_get(MLIRContext &context, rust::Str value);
 const void* IntegerAttr_get(MLIRContext &context, rust::Str value);
 const void* BoolAttr_get(MLIRContext &context, bool value);
@@ -62,6 +66,11 @@ const void* DenseIntElementsAttr_get(
 const void* DictionaryAttr_get(
     MLIRContext &context,
     rust::Slice<const NamedAttribute *const> values
+);
+
+const void* ArrayAttr_get(
+    MLIRContext &context,
+    const rust::Slice<const void* const > values
 );
 
 const void* DenseBoolArrayAttr_get(
