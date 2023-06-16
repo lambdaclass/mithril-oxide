@@ -6,12 +6,12 @@
 
 namespace mithril_oxide_sys::pdl {
 
+using mlir::MLIRContext;
 using mlir::pdl::AttributeType;
 using mlir::pdl::OperationType;
 using mlir::pdl::RangeType;
 using mlir::pdl::TypeType;
 using mlir::pdl::ValueType;
-using mlir::MLIRContext;
 
 
 const void *AttributeType_get(MLIRContext *ctx);
