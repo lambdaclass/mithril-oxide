@@ -1,15 +1,15 @@
 use super::{impl_type, impl_type_new, Type};
 
-impl_type!(X86MmxType);
-impl_type!(PpcFp128Type);
-impl_type!(TokenType);
-impl_type!(MetadataType);
-impl_type!(VoidType);
-impl_type!(PtrType);
 impl_type!(ArrayType);
 impl_type!(FunctionType);
-impl_type!(VectorType);
+impl_type!(MetadataType);
+impl_type!(PpcFp128Type);
+impl_type!(PtrType);
 impl_type!(StructType);
+impl_type!(TokenType);
+impl_type!(VectorType);
+impl_type!(VoidType);
+impl_type!(X86MmxType);
 
 impl_type_new!(X86MmxType);
 impl_type_new!(PpcFp128Type);
