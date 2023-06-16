@@ -17,6 +17,45 @@ const void* UnitAttr_get(MLIRContext &context)
     return UnitAttr::get(&context).getAsOpaquePointer();
 }
 
+const void* TypeAttr_get(const void* type)
+{
+    return TypeAttr::get(Type::getFromOpaquePointer(type)).getAsOpaquePointer();
+}
+
+const void* StridedLayoutAttr_get(
+    MLIRContext &context,
+    rust::i64 offset,
+    rust::Slice<const rust::i64> strides)
+{
+    return StridedLayoutAttr::get(&context, offset, mlir::ArrayRef(strides.data(), strides.length())).getAsOpaquePointer();
+}
+
+const void* OpaqueAttr_get(
+    const void* dialect, // string_attr
+    rust::Str attr_data,
+    const void* type)
+{
+    return OpaqueAttr::get(
+            StringAttr::getFromOpaquePointer(dialect),
+            mlir::StringRef(attr_data.data(), attr_data.length()),
+            Type::getFromOpaquePointer(type))
+        .getAsOpaquePointer();
+}
+
+const void* SparseElementsAttr_get(
+    const void* shaped_type, // ShapedType
+    const void* indices, // DenseElementsAttr
+    const void* values // DenseElementsAttr
+    )
+{
+    return SparseElementsAttr::get(
+            ShapedType::getFromOpaquePointer(shaped_type),
+            DenseElementsAttr::getFromOpaquePointer(indices).cast<DenseElementsAttr>(),
+            DenseElementsAttr::getFromOpaquePointer(values).cast<DenseElementsAttr>()
+        )
+        .getAsOpaquePointer();
+}
+
 const void* StringAttr_get(MLIRContext &context, rust::Str value)
 {
     return StringAttr::get(

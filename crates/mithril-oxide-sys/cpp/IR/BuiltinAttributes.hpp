@@ -37,13 +37,34 @@ using mlir::ShapedType;
 using mlir::StringAttr;
 using mlir::UnitAttr;
 using mlir::Type;
+using mlir::TypeAttr;
+using mlir::StridedLayoutAttr;
+using mlir::OpaqueAttr;
+using mlir::SparseElementsAttr;
 
 
 const void* StringAttr_get(MLIRContext &context, rust::Str value);
+const void* TypeAttr_get(const void* type);
 const void* UnitAttr_get(MLIRContext &context);
 const void* FlatSymbolRefAttr_get(MLIRContext &context, rust::Str value);
 const void* IntegerAttr_get(MLIRContext &context, rust::Str value);
 const void* BoolAttr_get(MLIRContext &context, bool value);
+
+const void* StridedLayoutAttr_get(
+    MLIRContext &context,
+    rust::i64 offset,
+    rust::Slice<const rust::i64> strides);
+
+const void* OpaqueAttr_get(
+    const void* dialect, // string_attr
+    rust::Str attr_data,
+    const void* type);
+
+const void* SparseElementsAttr_get(
+    const void* shaped_type, // ShapedType
+    const void* indices, // DenseElementsAttr
+    const void* values // DenseElementsAttr
+    );
 
 const void* DenseElementsAttr_get(
     const void* shaped_type, // ShapedType trait
