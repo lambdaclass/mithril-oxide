@@ -10,7 +10,6 @@
 #include <mlir/IR/Value.h>
 #include <rust/cxx.h>
 
-
 namespace mithril_oxide_sys {
 
 using c_void = void;
