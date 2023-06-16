@@ -14,33 +14,33 @@ namespace mithril_oxide_sys {
 
 using c_void = void;
 
+using mlir::ArrayAttr;
 using mlir::Attribute;
 using mlir::BoolAttr;
-using mlir::DenseElementsAttr;
-using mlir::DenseFPElementsAttr;
-using mlir::DenseIntElementsAttr;
-using mlir::ArrayAttr;
-using mlir::DenseI8ArrayAttr;
 using mlir::DenseBoolArrayAttr;
+using mlir::DenseElementsAttr;
+using mlir::DenseF32ArrayAttr;
+using mlir::DenseF64ArrayAttr;
+using mlir::DenseFPElementsAttr;
 using mlir::DenseI16ArrayAttr;
 using mlir::DenseI32ArrayAttr;
 using mlir::DenseI64ArrayAttr;
-using mlir::DenseF32ArrayAttr;
-using mlir::DenseF64ArrayAttr;
+using mlir::DenseI8ArrayAttr;
+using mlir::DenseIntElementsAttr;
 using mlir::DictionaryAttr;
 using mlir::FlatSymbolRefAttr;
 using mlir::FloatAttr;
 using mlir::IntegerAttr;
 using mlir::MLIRContext;
 using mlir::NamedAttribute;
+using mlir::OpaqueAttr;
 using mlir::ShapedType;
+using mlir::SparseElementsAttr;
+using mlir::StridedLayoutAttr;
 using mlir::StringAttr;
-using mlir::UnitAttr;
 using mlir::Type;
 using mlir::TypeAttr;
-using mlir::StridedLayoutAttr;
-using mlir::OpaqueAttr;
-using mlir::SparseElementsAttr;
+using mlir::UnitAttr;
 
 
 const void* StringAttr_get(MLIRContext &context, rust::Str value);
