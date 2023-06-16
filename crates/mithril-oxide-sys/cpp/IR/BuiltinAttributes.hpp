@@ -30,10 +30,23 @@ using mlir::StringAttr;
 
 
 const void* StringAttr_get(MLIRContext &context, rust::Str value);
+const void* FlatSymbolRefAttr_get(MLIRContext &context, rust::Str value);
 const void* IntegerAttr_get(MLIRContext &context, rust::Str value);
 const void* BoolAttr_get(MLIRContext &context, bool value);
 
 const void* DenseElementsAttr_get(
+    const void* shaped_type, // ShapedType trait
+    // Attribute
+    rust::Slice<const void *const> values
+);
+
+const void* DenseFPElementsAttr_get(
+    const void* shaped_type, // ShapedType trait
+    // Attribute
+    rust::Slice<const void *const> values
+);
+
+const void* DenseIntElementsAttr_get(
     const void* shaped_type, // ShapedType trait
     // Attribute
     rust::Slice<const void *const> values

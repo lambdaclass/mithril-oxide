@@ -1,5 +1,6 @@
 pub use self::ffi::{
-    BoolAttr_get, DenseElementsAttr_get, DictionaryAttr_get, IntegerAttr_get, StringAttr_get,
+    BoolAttr_get, DenseElementsAttr_get, DenseFPElementsAttr_get, DenseIntElementsAttr_get,
+    DictionaryAttr_get, FlatSymbolRefAttr_get, IntegerAttr_get, StringAttr_get,
 };
 
 #[cxx::bridge]
@@ -21,11 +22,25 @@ pub(crate) mod ffi {
         #[must_use]
         fn StringAttr_get(context: Pin<&mut MLIRContext>, value: &str) -> *const c_void;
         #[must_use]
+        fn FlatSymbolRefAttr_get(context: Pin<&mut MLIRContext>, value: &str) -> *const c_void;
+        #[must_use]
         fn IntegerAttr_get(context: Pin<&mut MLIRContext>, value: &str) -> *const c_void;
         #[must_use]
         fn BoolAttr_get(context: Pin<&mut MLIRContext>, value: bool) -> *const c_void;
         #[must_use]
         unsafe fn DenseElementsAttr_get(
+            shaped_type: *const c_void, // any type implementing ShapedType trait.
+            // Attribute
+            values: &[*const c_void],
+        ) -> *const c_void;
+        #[must_use]
+        unsafe fn DenseFPElementsAttr_get(
+            shaped_type: *const c_void, // any type implementing ShapedType trait.
+            // Attribute
+            values: &[*const c_void],
+        ) -> *const c_void;
+        #[must_use]
+        unsafe fn DenseIntElementsAttr_get(
             shaped_type: *const c_void, // any type implementing ShapedType trait.
             // Attribute
             values: &[*const c_void],
