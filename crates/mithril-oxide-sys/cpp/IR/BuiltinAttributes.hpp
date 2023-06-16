@@ -19,6 +19,13 @@ using mlir::BoolAttr;
 using mlir::DenseElementsAttr;
 using mlir::DenseFPElementsAttr;
 using mlir::DenseIntElementsAttr;
+using mlir::DenseI8ArrayAttr;
+using mlir::DenseBoolArrayAttr;
+using mlir::DenseI16ArrayAttr;
+using mlir::DenseI32ArrayAttr;
+using mlir::DenseI64ArrayAttr;
+using mlir::DenseF32ArrayAttr;
+using mlir::DenseF64ArrayAttr;
 using mlir::DictionaryAttr;
 using mlir::FlatSymbolRefAttr;
 using mlir::FloatAttr;
@@ -55,6 +62,41 @@ const void* DenseIntElementsAttr_get(
 const void* DictionaryAttr_get(
     MLIRContext &context,
     rust::Slice<const NamedAttribute *const> values
+);
+
+const void* DenseBoolArrayAttr_get(
+    MLIRContext &context,
+    const rust::Slice<const bool> values
+);
+
+const void* DenseI8ArrayAttr_get(
+    MLIRContext &context,
+    const rust::Slice<const rust::i8> values
+);
+
+const void* DenseI16ArrayAttr_get(
+    MLIRContext &context,
+    const rust::Slice<const rust::i16> values
+);
+
+const void* DenseI32ArrayAttr_get(
+    MLIRContext &context,
+    const rust::Slice<const rust::i32> values
+);
+
+const void* DenseI64ArrayAttr_get(
+    MLIRContext &context,
+    const rust::Slice<const rust::i64> values
+);
+
+const void* DenseF32ArrayAttr_get(
+    MLIRContext &context,
+    const rust::Slice<const rust::f32> values
+);
+
+const void* DenseF64ArrayAttr_get(
+    MLIRContext &context,
+    const rust::Slice<const rust::f64> values
 );
 
 } // namespace mithril_oxide_sys
