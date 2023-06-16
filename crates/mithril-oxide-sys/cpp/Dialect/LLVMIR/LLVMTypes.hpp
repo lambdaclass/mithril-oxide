@@ -4,6 +4,8 @@
 #include <mlir/IR/MLIRContext.h>
 #include <rust/cxx.h>
 
+#include "../../lib.hpp"
+
 
 namespace mithril_oxide_sys::llvm {
 
@@ -25,7 +27,7 @@ const void *LLVMArrayType_get(const void *elementType, unsigned int numElements)
 const void *LLVMFixedVectorType_get(const void *elementType, unsigned int numElements);
 const void *LLVMFunctionType_get(
     const void *result,
-    rust::Slice<const void*> arguments,
+    rust::Slice<const void *const> arguments,
     bool isVarArg
 );
 const void *LLVMMetadataType_get(MLIRContext *ctx);
@@ -34,7 +36,7 @@ const void *LLVMPPCFP128Type_get(MLIRContext *ctx);
 const void *LLVMScalableVectorType_get(const void *elementType, unsigned int numElements);
 const void *LLVMStructType_getLiteral(
     MLIRContext *ctx,
-    rust::Slice<const void*> fields,
+    rust::Slice<const void *const> fields,
     bool isPacked
 );
 const void *LLVMTokenType_get(MLIRContext *ctx);

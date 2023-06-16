@@ -2,6 +2,8 @@
 
 #include <mlir/Dialect/SPIRV/IR/SPIRVTypes.h>
 
+#include "../../../lib.hpp"
+
 
 namespace mithril_oxide_sys::spirv {
 

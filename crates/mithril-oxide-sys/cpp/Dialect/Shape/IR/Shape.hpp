@@ -3,6 +3,8 @@
 #include <mlir/Dialect/Shape/IR/Shape.h>
 #include <mlir/IR/MLIRContext.h>
 
+#include "../../../lib.hpp"
+
 
 namespace mithril_oxide_sys::shape {
 

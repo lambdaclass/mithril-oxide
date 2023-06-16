@@ -39,6 +39,7 @@ pub(self) use impl_type;
 macro_rules! impl_type_new {
     ( $name:ident $({ $( $( $arg_name:ident : $arg_ty:ty ),+ $(,)? )? })? ) => {
         impl<'c> $name<'c> {
+            #[allow(clippy::new_without_default)]
             pub fn new($($($($arg_name: $arg_ty),+)?)?) -> Self {
                 // concat_idents!($name, _new)();
                 todo!()

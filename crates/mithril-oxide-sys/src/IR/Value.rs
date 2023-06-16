@@ -6,7 +6,7 @@ pub(crate) mod ffi {
     unsafe extern "C++" {
         include!("mithril-oxide-sys/cpp/IR/Value.hpp");
 
-        type c_void;
+        type c_void = crate::c_void;
 
         #[must_use]
         pub unsafe fn Value_print(value: *mut c_void) -> String;

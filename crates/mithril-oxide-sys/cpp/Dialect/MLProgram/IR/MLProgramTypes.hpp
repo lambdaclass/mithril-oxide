@@ -3,6 +3,8 @@
 #include <mlir/Dialect/MLProgram/IR/MLProgramTypes.h>
 #include <mlir/IR/MLIRContext.h>
 
+#include "../../../lib.hpp"
+
 
 namespace mithril_oxide_sys::ml_program {
 

@@ -6,7 +6,7 @@ pub(crate) mod ffi {
     unsafe extern "C++" {
         include!("mithril-oxide-sys/cpp/IR/Types.hpp");
 
-        type c_void = crate::IR::Value::ffi::c_void;
+        type c_void = crate::c_void;
 
         /// value must be a mlir Value
         ///

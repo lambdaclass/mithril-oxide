@@ -13,28 +13,36 @@ mod ffi {
         type MLIRContext = crate::IR::MLIRContext::MLIRContext;
     }
 
+    #[namespace = "mithril_oxide_sys"]
+    unsafe extern "C++" {
+        type c_void = crate::c_void;
+    }
+
     #[namespace = "mithril_oxide_sys::llvm"]
     unsafe extern "C++" {
         include!("mithril-oxide-sys/cpp/Dialect/LLVMIR/LLVMTypes.hpp");
 
-        type c_void = crate::IR::Value::ffi::c_void;
-
+        #[must_use]
         pub unsafe fn LLVMArrayType_get(
             elementType: *const c_void,
             numElements: u32,
         ) -> *const c_void;
+        #[must_use]
         pub unsafe fn LLVMFixedVectorType_get(
             elementType: *const c_void,
             numElements: u32,
         ) -> *const c_void;
+        #[must_use]
         pub unsafe fn LLVMFunctionType_get(
             result: *const c_void,
             arguments: &[*const c_void],
             isVarArg: bool,
         ) -> *const c_void;
         pub unsafe fn LLVMMetadataType_get(ctx: *mut MLIRContext) -> *const c_void;
+        #[must_use]
         pub unsafe fn LLVMPointerType_get(ctx: *const c_void) -> *const c_void;
         pub unsafe fn LLVMPPCFP128Type_get(ctx: *mut MLIRContext) -> *const c_void;
+        #[must_use]
         pub unsafe fn LLVMScalableVectorType_get(
             elementType: *const c_void,
             numElements: u32,

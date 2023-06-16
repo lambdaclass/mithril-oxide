@@ -4,6 +4,8 @@
 #include <mlir/IR/MLIRContext.h>
 #include <rust/cxx.h>
 
+#include "../../../lib.hpp"
+
 
 namespace mithril_oxide_sys::transform {
 

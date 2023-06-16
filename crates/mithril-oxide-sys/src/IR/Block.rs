@@ -33,7 +33,7 @@ pub(crate) mod ffi {
     unsafe extern "C++" {
         include!("mithril-oxide-sys/cpp/IR/Block.hpp");
 
-        type c_void = crate::IR::Value::ffi::c_void;
+        type c_void = crate::c_void;
 
         unsafe fn Block_addArgument(block: Pin<&mut Block>, ttype: *const c_void, loc: &Location);
         #[must_use]

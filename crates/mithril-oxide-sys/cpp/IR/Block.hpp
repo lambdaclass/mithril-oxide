@@ -7,6 +7,8 @@
 #include <mlir/IR/Types.h>
 #include <mlir/IR/Value.h>
 
+#include "../lib.hpp"
+
 
 namespace mithril_oxide_sys {
 
@@ -14,7 +16,6 @@ using mlir::Block;
 using mlir::BlockArgument;
 using mlir::Location;
 using mlir::Type;
-using c_void = void;
 
 
 void Block_addArgument(Block &block, const void*type, const Location& loc);

@@ -6,10 +6,10 @@
 #include <mlir/IR/BuiltinOps.h>
 #include <mlir/IR/Location.h>
 
+#include "../lib.hpp"
+
 
 namespace mithril_oxide_sys {
-
-using c_void = void;
 
 using mlir::ModuleOp;
 using mlir::Location;

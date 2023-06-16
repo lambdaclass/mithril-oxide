@@ -8,22 +8,22 @@ namespace mithril_oxide_sys::shape {
 
 const void *ShapeType_get(MLIRContext *ctx)
 {
-    return ShapeType::get(ctx);
+    return ShapeType::get(ctx).getAsOpaquePointer();
 }
 
 const void *SizeType_get(MLIRContext *ctx)
 {
-    return SizeType::get(ctx);
+    return SizeType::get(ctx).getAsOpaquePointer();
 }
 
 const void *ValueShapeType_get(MLIRContext *ctx)
 {
-    return ValueShapeType::get(ctx);
+    return ValueShapeType::get(ctx).getAsOpaquePointer();
 }
 
 const void *WitnessType_get(MLIRContext *ctx)
 {
-    return WitnessType::get(ctx);
+    return WitnessType::get(ctx).getAsOpaquePointer();
 }
 
 } // namespace mithril_oxide_sys::shape

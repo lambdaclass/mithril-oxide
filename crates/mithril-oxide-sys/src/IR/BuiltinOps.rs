@@ -26,7 +26,7 @@ pub(crate) mod ffi {
     unsafe extern "C++" {
         include!("mithril-oxide-sys/cpp/IR/BuiltinOps.hpp");
 
-        type c_void = crate::IR::Value::ffi::c_void;
+        type c_void = crate::c_void;
 
         fn ModuleOp_create(context: &Location) -> UniquePtr<ModuleOp>;
         unsafe fn ModuleOp_setSymNameAttr(op: Pin<&mut ModuleOp>, value: *const c_void);

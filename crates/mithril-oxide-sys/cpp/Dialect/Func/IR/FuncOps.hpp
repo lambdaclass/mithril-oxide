@@ -10,9 +10,10 @@
 #include <mlir/IR/Value.h>
 #include <rust/cxx.h>
 
-namespace mithril_oxide_sys {
+#include "../../../lib.hpp"
 
-using c_void = void;
+
+namespace mithril_oxide_sys {
 
 using mlir::DictionaryAttr;
 using mlir::func::FuncOp;

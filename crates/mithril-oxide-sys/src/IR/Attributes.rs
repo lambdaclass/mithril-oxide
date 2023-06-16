@@ -19,7 +19,7 @@ pub(crate) mod ffi {
     unsafe extern "C++" {
         include!("mithril-oxide-sys/cpp/IR/Attributes.hpp");
 
-        type c_void = crate::IR::Value::ffi::c_void;
+        type c_void = crate::c_void;
 
         #[must_use]
         unsafe fn Attribute_print(attribute: *const c_void) -> String;
