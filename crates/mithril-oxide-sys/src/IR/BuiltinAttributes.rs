@@ -2,7 +2,8 @@ pub use self::ffi::{
     ArrayAttr_get, BoolAttr_get, DenseBoolArrayAttr_get, DenseElementsAttr_get,
     DenseF32ArrayAttr_get, DenseF64ArrayAttr_get, DenseFPElementsAttr_get, DenseI16ArrayAttr_get,
     DenseI32ArrayAttr_get, DenseI64ArrayAttr_get, DenseI8ArrayAttr_get, DenseIntElementsAttr_get,
-    DictionaryAttr_get, FlatSymbolRefAttr_get, IntegerAttr_get, StringAttr_get, UnitAttr_get,
+    DictionaryAttr_get, FlatSymbolRefAttr_get, IntegerAttr_get, OpaqueAttr_get,
+    SparseElementsAttr_get, StridedLayoutAttr_get, StringAttr_get, TypeAttr_get, UnitAttr_get,
 };
 
 #[cxx::bridge]
@@ -24,6 +25,8 @@ pub(crate) mod ffi {
         #[must_use]
         fn UnitAttr_get(context: Pin<&mut MLIRContext>) -> *const c_void;
         #[must_use]
+        unsafe fn TypeAttr_get(ttype: *const c_void) -> *const c_void;
+        #[must_use]
         fn StringAttr_get(context: Pin<&mut MLIRContext>, value: &str) -> *const c_void;
         #[must_use]
         fn FlatSymbolRefAttr_get(context: Pin<&mut MLIRContext>, value: &str) -> *const c_void;
@@ -31,6 +34,28 @@ pub(crate) mod ffi {
         fn IntegerAttr_get(context: Pin<&mut MLIRContext>, value: &str) -> *const c_void;
         #[must_use]
         fn BoolAttr_get(context: Pin<&mut MLIRContext>, value: bool) -> *const c_void;
+
+        #[must_use]
+        unsafe fn StridedLayoutAttr_get(
+            context: Pin<&mut MLIRContext>,
+            offset: i64,
+            strides: &[i64],
+        ) -> *const c_void;
+
+        #[must_use]
+        unsafe fn OpaqueAttr_get(
+            dialect: *const c_void, // StringAttr
+            attr_data: &str,
+            ttype: *const c_void, // Type
+        ) -> *const c_void;
+
+        #[must_use]
+        unsafe fn SparseElementsAttr_get(
+            shaped_type: *const c_void, // ShapedType
+            indices: *const c_void,     // DenseElementsAttr
+            values: *const c_void,      // DenseElementsAttr
+        ) -> *const c_void;
+
         #[must_use]
         unsafe fn DenseElementsAttr_get(
             shaped_type: *const c_void, // any type implementing ShapedType trait.
