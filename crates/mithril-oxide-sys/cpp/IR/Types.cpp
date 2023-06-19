@@ -28,4 +28,13 @@ void Type_dump(const void* type)
     t.dump();
 }
 
+rust::String Type_print(const void* type_ptr)
+{
+    auto type = Type::getFromOpaquePointer(type_ptr);
+    std::string s;
+    llvm::raw_string_ostream ss(s);
+    type.print(ss);
+    return rust::String::lossy(s);
+}
+
 } // namespace mithril_oxide_sys

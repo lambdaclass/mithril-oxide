@@ -1,4 +1,4 @@
-pub use ffi::{Type_dump, Type_getIntOrFloatBitWidth, Value_getType};
+pub use ffi::{Type_dump, Type_getIntOrFloatBitWidth, Type_print, Value_getType};
 
 #[cxx::bridge]
 pub(crate) mod ffi {
@@ -21,11 +21,9 @@ pub(crate) mod ffi {
 
         pub unsafe fn Type_dump(type_ptr: *const c_void);
 
+        #[must_use]
+        pub unsafe fn Type_print(type_ptr: *const c_void) -> String;
+
         // todo: more utility methods?
     }
-}
-
-#[cfg(test)]
-mod tests {
-    // use super::*;
 }
