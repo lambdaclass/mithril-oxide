@@ -13,6 +13,7 @@ pub mod Dialect;
 pub mod IR;
 pub mod InitAllDialects;
 pub mod InitAllTranslations;
+pub mod Interfaces;
 
 #[cxx::bridge]
 mod ffi {
