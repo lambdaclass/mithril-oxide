@@ -38,3 +38,29 @@ pub(crate) mod ffi {
         ) -> *const c_void;
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::IR::{MLIRContext::MLIRContext, Types::Type_print};
+
+    use super::*;
+
+    #[test]
+    fn function_type() {
+        let mut context = MLIRContext::new();
+
+        unsafe {
+            let a = IntegerType_get(context.pin_mut(), 1, false, false);
+            let a_str = Type_print(a);
+            assert_eq!("i1", a_str.as_str());
+
+            let b = IntegerType_get(context.pin_mut(), 8, false, false);
+            let b_str = Type_print(b);
+            assert_eq!("i8", b_str.as_str());
+
+            let func_type = FunctionType_get(context.pin_mut(), &[a], &[b]);
+            let func_str = Type_print(func_type);
+            assert_eq!("(i1) -> i8", func_str.as_str());
+        }
+    }
+}

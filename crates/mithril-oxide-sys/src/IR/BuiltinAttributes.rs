@@ -133,17 +133,28 @@ pub(crate) mod ffi {
 
 #[cfg(test)]
 mod tests {
-    use crate::IR::{Attributes::Attribute_print, MLIRContext::MLIRContext};
+    use crate::IR::{
+        Attributes::Attribute_print,
+        BuiltinTypes::{FunctionType_get, IntegerType_get},
+        MLIRContext::MLIRContext,
+        Types::Type_print,
+    };
 
     use super::*;
 
     #[test]
     fn string_attr_new() {
         let mut context = MLIRContext::new();
-        let string_attr = StringAttr_get(context.pin_mut(), "hello_world");
-        assert_eq!(
-            "\"hello_world\"",
-            unsafe { Attribute_print(string_attr) }.as_str()
-        );
+
+        unsafe {
+            let string_attr = StringAttr_get(context.pin_mut(), "hello_world");
+            assert_eq!("\"hello_world\"", Attribute_print(string_attr).as_str());
+
+            let a = IntegerType_get(context.pin_mut(), 1, false, false);
+            let b = IntegerType_get(context.pin_mut(), 8, false, false);
+            let func_type = FunctionType_get(context.pin_mut(), &[a], &[b]);
+            let type_str = Type_print(func_type);
+            println!("{type_str}");
+        }
     }
 }
