@@ -1,21 +1,17 @@
-use cxx::UniquePtr;
 use mithril_oxide_sys::{
     InitAllDialects::registerAllDialects,
-    IR::{
-        BuiltinOps::ModuleOp,
-        Location::{Location, UnknownLoc},
-        MLIRContext::MLIRContext,
-    },
+    IR::{BuiltinOps::ModuleOp, Location::UnknownLoc_get, MLIRContext::MLIRContext},
 };
 
 fn main() {
     let mut context = MLIRContext::new();
     registerAllDialects(context.pin_mut());
 
-    let loc = UnknownLoc::get(context.pin_mut());
-    let loc: UniquePtr<Location> = (&*loc).into();
+    unsafe {
+        let loc = UnknownLoc_get(context.pin_mut());
 
-    let module_op = ModuleOp::new(&loc);
+        let module_op = ModuleOp::new(loc);
 
-    dbg!(context, loc, module_op);
+        dbg!(context, loc, module_op);
+    }
 }

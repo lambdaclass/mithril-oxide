@@ -4,25 +4,34 @@
 
 #include <mlir/IR/Location.h>
 #include <mlir/IR/MLIRContext.h>
+#include <mlir/IR/Attributes.h>
+#include <mlir/IR/BuiltinAttributes.h>
 
 
 namespace mithril_oxide_sys {
 
-// TODO: Proxies for CallSiteLoc.
-// TODO: Proxies for FileLineColLoc.
 // TODO: Proxies for FusedLoc.
 // TODO: Proxies for Location.
 // TODO: Proxies for NameLoc.
 // TODO: Proxies for OpaqueLoc.
 
-std::unique_ptr<UnknownLoc> UnknownLoc_get(MLIRContext &ctx)
+const void* UnknownLoc_get(MLIRContext &ctx)
 {
-    return std::make_unique<UnknownLoc>(UnknownLoc::get(&ctx));
+    return UnknownLoc::get(&ctx).getAsOpaquePointer();
 }
 
-std::unique_ptr<Location> UnknownLoc_to_Location(const UnknownLoc &loc)
+const void* FileLineColLoc_get(const void* filename_ptr, unsigned line, unsigned column)
 {
-    return std::make_unique<Location>(loc);
+    auto filename = mlir::StringAttr::getFromOpaquePointer(filename_ptr);
+    return FileLineColLoc::get(filename, line, column).getAsOpaquePointer();
+}
+
+const void* CallSiteLoc_get(const void* callee_ptr, const void* caller_ptr)
+{
+    return CallSiteLoc::get(
+        Location::getFromOpaquePointer(callee_ptr),
+        Location::getFromOpaquePointer(caller_ptr)
+    ).getAsOpaquePointer();
 }
 
 } // namespace mithril_oxide_sys

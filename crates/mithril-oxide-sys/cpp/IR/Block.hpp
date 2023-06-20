@@ -18,7 +18,7 @@ using mlir::Location;
 using mlir::Type;
 
 
-void Block_addArgument(Block &block, const void*type, const Location& loc);
+void Block_addArgument(Block &block, const void*type, const void* loc);
 void* Block_getArgument(Block &block, unsigned i);
 
 } // namespace mithril_oxide_sys

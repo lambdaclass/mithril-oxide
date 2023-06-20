@@ -19,15 +19,18 @@ using mlir::NameLoc;
 using mlir::OpaqueLoc;
 using mlir::UnknownLoc;
 
-
-// TODO: Proxies for CallSiteLoc.
-// TODO: Proxies for FileLineColLoc.
 // TODO: Proxies for FusedLoc.
 // TODO: Proxies for Location.
 // TODO: Proxies for NameLoc.
 // TODO: Proxies for OpaqueLoc.
 
-std::unique_ptr<UnknownLoc> UnknownLoc_get(MLIRContext &ctx);
-std::unique_ptr<Location> UnknownLoc_to_Location(const UnknownLoc &loc);
+const void* UnknownLoc_get(MLIRContext &ctx);
+
+// filename - stringattr
+const void* FileLineColLoc_get(const void* filename, unsigned line, unsigned column);
+
+// callee - location
+// caller - location
+const void* CallSiteLoc_get(const void* callee, const void* caller);
 
 } // namespace mithril_oxide_sys

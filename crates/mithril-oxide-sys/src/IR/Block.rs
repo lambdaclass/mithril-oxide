@@ -1,4 +1,4 @@
-use self::ffi::{c_void, Block_addArgument, Block_getArgument, Location};
+use self::ffi::{c_void, Block_addArgument, Block_getArgument};
 pub use self::ffi::{Block, BlockArgument};
 use std::fmt;
 use std::pin::Pin;
@@ -14,7 +14,6 @@ pub(crate) mod ffi {
 
         type Region = crate::IR::Region::Region;
         type Operation = crate::IR::Operation::Operation;
-        type Location = crate::IR::Location::Location;
 
         #[must_use]
         pub fn getParent(self: &Block) -> *mut Region;
@@ -35,7 +34,11 @@ pub(crate) mod ffi {
 
         type c_void = crate::c_void;
 
-        unsafe fn Block_addArgument(block: Pin<&mut Block>, ttype: *const c_void, loc: &Location);
+        unsafe fn Block_addArgument(
+            block: Pin<&mut Block>,
+            ttype: *const c_void,
+            loc: *const c_void,
+        );
         #[must_use]
         fn Block_getArgument(block: Pin<&mut Block>, i: u32) -> *mut c_void;
     }
@@ -43,7 +46,7 @@ pub(crate) mod ffi {
 
 impl ffi::Block {
     // type is a Type.
-    pub unsafe fn add_argument(self: Pin<&mut Self>, r#type: *const c_void, loc: &Location) {
+    pub unsafe fn add_argument(self: Pin<&mut Self>, r#type: *const c_void, loc: *const c_void) {
         Block_addArgument(self, r#type, loc);
     }
 

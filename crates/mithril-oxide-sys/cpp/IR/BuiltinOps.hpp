@@ -16,7 +16,7 @@ using mlir::Location;
 using mlir::StringAttr;
 
 
-std::unique_ptr<ModuleOp> ModuleOp_create(const Location &loc);
+std::unique_ptr<ModuleOp> ModuleOp_create(const void* loc);
 // value - StringAttr
 void ModuleOp_setSymNameAttr(ModuleOp &op, const void* value);
 // value - StringAttr

@@ -94,7 +94,7 @@ impl<'c, OpLocation, SymName, SymVisibility>
     {
         let location: self::Location<'c> = self.location.into();
 
-        let mut ffi_module = ffi::IR::BuiltinOps::ModuleOp::new(&location.inner);
+        let mut ffi_module = unsafe { ffi::IR::BuiltinOps::ModuleOp::new(location.ptr.cast()) };
 
         if let Some(sym_name) = self.sym_name {
             let sym_name = StringAttr::from_with_context(sym_name, context);

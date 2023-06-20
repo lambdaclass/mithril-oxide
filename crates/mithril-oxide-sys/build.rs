@@ -30,7 +30,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         )
     };
 
-    cxx_build::bridges(&src_sources)
+    cxx_build::bridges(src_sources)
         .files(&cpp_sources)
         .flag("-std=c++17")
         .flag(&format!("-I{}/include", var("MLIR_SYS_160_PREFIX")?))
@@ -40,9 +40,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Build script re-run conditions.
     println!("cargo:rerun-if-changed={CPP_PREFIX}");
+    /*
     for src_path in &src_sources {
         println!("cargo:rerun-if-changed={}", src_path.to_str().unwrap());
-    }
+    }*/
 
     // Linker flags.
     println!(

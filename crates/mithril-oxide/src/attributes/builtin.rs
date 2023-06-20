@@ -298,15 +298,15 @@ impl<'c> fmt::Display for UnitAttr<'c> {
 
 // #[derive(Debug)]
 pub struct UnknownLoc<'c> {
-    pub(crate) inner: ffi::UniquePtr<ffi::IR::Location::UnknownLoc>,
+    pub(crate) ptr: *const std::ffi::c_void,
     phantom: PhantomData<&'c Context>,
 }
 
 impl<'c> UnknownLoc<'c> {
     pub fn new(context: &'c Context) -> Self {
         Self {
-            inner: unsafe {
-                ffi::IR::Location::UnknownLoc::get(context.inner.borrow_mut().pin_mut())
+            ptr: unsafe {
+                ffi::IR::Location::UnknownLoc_get(context.inner.borrow_mut().pin_mut()).cast()
             },
             phantom: PhantomData,
         }

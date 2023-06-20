@@ -12,7 +12,7 @@
 namespace mithril_oxide_sys {
 
 std::unique_ptr<FuncOp> FuncOp_create(
-    const Location &loc,
+    const void* loc,
     rust::Str name,
     const void* type,
     rust::Slice<const NamedAttribute *const> attrs,
@@ -28,7 +28,7 @@ std::unique_ptr<FuncOp> FuncOp_create(
         argAttrs_vec.push_back(DictionaryAttr::getFromOpaquePointer(argAttr));
 
     return std::make_unique<FuncOp>(FuncOp::create(
-        loc,
+        Location::getFromOpaquePointer(loc),
         mlir::StringRef(name.data(), name.length()),
         FunctionType::getFromOpaquePointer(type),
         mlir::ArrayRef(attrs_vec.data(), attrs_vec.size()),
@@ -37,10 +37,11 @@ std::unique_ptr<FuncOp> FuncOp_create(
 }
 
 std::unique_ptr<ReturnOp> ReturnOp_create(
-    const Location &loc,
+    const void* loc_ptr,
     rust::Slice<const void *const > operands
 )
 {
+    auto loc = Location::getFromOpaquePointer(loc_ptr);
     auto builder = mlir::OpBuilder(loc->getContext());
     auto state = mlir::OperationState(loc, ReturnOp::getOperationName());
     std::vector<Value> operands_vec;
@@ -55,11 +56,12 @@ std::unique_ptr<ReturnOp> ReturnOp_create(
 }
 
 std::unique_ptr<CallOp> CallOp_create(
-    const Location &loc,
+    const void* loc_ptr,
     rust::Slice<const Type *const > results,
     rust::Slice<const Value *const > operands
 )
 {
+    auto loc = Location::getFromOpaquePointer(loc_ptr);
     auto builder = mlir::OpBuilder(loc->getContext());
     auto state = mlir::OperationState(loc, CallOp::getOperationName());
     std::vector<Value> operands_vec;
