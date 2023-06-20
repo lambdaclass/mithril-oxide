@@ -62,3 +62,33 @@ impl fmt::Debug for ffi::DataLayout {
         f.debug_struct("DataLayout").finish_non_exhaustive()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::IR::{
+        BuiltinTypes::IntegerType_get, Location::UnknownLoc_get, MLIRContext::MLIRContext,
+    };
+
+    use super::*;
+
+    #[test]
+    fn datalayout() {
+        let mut context = MLIRContext::new();
+
+        unsafe {
+            let loc = UnknownLoc_get(context.pin_mut());
+            assert!(!loc.is_null());
+            let module_op = ModuleOp::new(loc);
+            assert!(!module_op.is_null());
+            let datalayout = DataLayout::new(&module_op);
+
+            let int_type = IntegerType_get(context.pin_mut(), 8, false, false);
+            let size = datalayout.getTypeSize(int_type);
+            assert_eq!(size, 1);
+
+            let int_type = IntegerType_get(context.pin_mut(), 16, false, false);
+            let size = datalayout.getTypeSize(int_type);
+            assert_eq!(size, 2);
+        }
+    }
+}
