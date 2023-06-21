@@ -71,11 +71,18 @@ impl<'c> DynOperation<'c> {
 
 impl<'c> Operation<'c> for DynOperation<'c> {
     fn num_results(&self) -> usize {
-        todo!()
+        let op = unsafe { Pin::new_unchecked(&mut *self.inner) };
+        op.getNumResults() as usize
     }
 
     fn result(&self, index: usize) -> OperationResult<'c, '_> {
-        todo!()
+        let op = unsafe { Pin::new_unchecked(&mut *self.inner) };
+        if index >= self.num_results() {
+            panic!("index out of bounds");
+        }
+        let result = op.getResult(index.try_into().unwrap());
+        let res = unsafe { OperationResult::from_ffi(result.cast()) };
+        res
     }
 }
 
