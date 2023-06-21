@@ -19,3 +19,19 @@ impl<'c, 'a> OperationResult<'c, 'a> {
         }
     }
 }
+
+pub struct BlockArgument<'c, 'a> {
+    inner: *mut c_void,
+    phantom: PhantomData<&'a dyn Operation<'c>>,
+}
+
+impl<'c, 'a> Value<'c> for BlockArgument<'c, 'a> {}
+
+impl<'c, 'a> BlockArgument<'c, 'a> {
+    pub(crate) unsafe fn from_ffi(inner: *mut c_void) -> Self {
+        Self {
+            inner,
+            phantom: PhantomData,
+        }
+    }
+}

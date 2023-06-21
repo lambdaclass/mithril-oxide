@@ -1,4 +1,7 @@
-use crate::{attributes::LocationAttr, operations::OperationBuilder, types::Type, Context};
+use crate::{
+    attributes::LocationAttr, operations::OperationBuilder, types::Type, value::BlockArgument,
+    Context,
+};
 use mithril_oxide_sys as ffi;
 use std::{marker::PhantomData, pin::Pin};
 
@@ -16,6 +19,21 @@ impl<'c> Block<'c> {
 
     pub fn add_argument(&mut self, location: impl LocationAttr<'c>, r#type: impl AsRef<Type<'c>>) {
         todo!()
+    }
+
+    fn num_arguments(&self) -> usize {
+        let block = unsafe { Pin::new_unchecked(&mut *self.inner) };
+        block.getNumArguments() as usize
+    }
+
+    fn result(&self, index: usize) -> BlockArgument<'c, '_> {
+        let block = unsafe { Pin::new_unchecked(&mut *self.inner) };
+        if index >= self.num_arguments() {
+            panic!("index out of bounds");
+        }
+        let result = block.getArgument(index.try_into().unwrap());
+        let res = unsafe { BlockArgument::from_ffi(result.cast()) };
+        res
     }
 
     pub fn push<Op>(&mut self, builder: impl OperationBuilder<'c, Target = Op>) -> &Op {

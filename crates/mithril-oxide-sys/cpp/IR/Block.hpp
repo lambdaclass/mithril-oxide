@@ -6,6 +6,7 @@
 #include <mlir/IR/Location.h>
 #include <mlir/IR/Types.h>
 #include <mlir/IR/Value.h>
+#include <rust/cxx.h>
 
 #include "../lib.hpp"
 
@@ -20,5 +21,7 @@ using mlir::Type;
 
 void Block_addArgument(Block &block, const void*type, const void* loc);
 void* Block_getArgument(Block &block, unsigned i);
+
+rust::String Block_print(Block &block);
 
 } // namespace mithril_oxide_sys
