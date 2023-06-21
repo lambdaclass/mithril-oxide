@@ -1,6 +1,6 @@
 use self::ffi::c_void;
-pub use self::ffi::{FuncOp, ReturnOp};
-use crate::IR::{Attributes::NamedAttribute, Location::Location};
+pub use self::ffi::{CallOp, FuncOp, ReturnOp};
+use crate::IR::Attributes::NamedAttribute;
 use cxx::UniquePtr;
 use std::fmt;
 
@@ -15,7 +15,8 @@ pub(crate) mod ffi {
         type FuncOp;
         #[namespace = "mlir::func"]
         type ReturnOp;
-        type Location = crate::IR::Location::Location;
+        #[namespace = "mlir::func"]
+        type CallOp;
         type NamedAttribute = crate::IR::Attributes::NamedAttribute;
         type Operation = crate::IR::Operation::Operation;
 
@@ -33,7 +34,7 @@ pub(crate) mod ffi {
         include!("mithril-oxide-sys/cpp/Dialect/Func/IR/FuncOps.hpp");
 
         unsafe fn FuncOp_create(
-            context: &Location,
+            context: *const c_void,
             name: &str,
             func_type: *const c_void,
             attrs: &[*const NamedAttribute],
@@ -42,9 +43,15 @@ pub(crate) mod ffi {
         ) -> UniquePtr<FuncOp>;
 
         unsafe fn ReturnOp_create(
-            context: &Location,
+            context: *const c_void,
             operands: &[*const c_void],
         ) -> UniquePtr<ReturnOp>;
+
+        unsafe fn CallOp_create(
+            context: *const c_void,
+            operands: &[*const c_void], // values
+            results: &[*const c_void],  // types
+        ) -> UniquePtr<CallOp>;
     }
 }
 
@@ -52,7 +59,7 @@ impl ffi::FuncOp {
     #[must_use]
     /// argAttrs is a array of DictionaryAttr
     pub unsafe fn new<'a>(
-        context: &Location,
+        loc: *const c_void,
         name: &str,
         function_type: *const c_void,
         attrs: impl IntoIterator<Item = &'a NamedAttribute>,
@@ -61,19 +68,35 @@ impl ffi::FuncOp {
         let attrs_vec = attrs.into_iter().map(|x| x as *const _).collect::<Vec<_>>();
         let argAttrs_vec = argAttrs.into_iter().collect::<Vec<_>>();
 
-        ffi::FuncOp_create(context, name, function_type, &attrs_vec, &argAttrs_vec)
+        ffi::FuncOp_create(loc, name, function_type, &attrs_vec, &argAttrs_vec)
     }
 }
 
 impl ffi::ReturnOp {
     #[must_use]
     pub unsafe fn new(
-        loc: &Location,
+        loc: *const c_void,
         attrs: impl IntoIterator<Item = *const c_void>,
     ) -> UniquePtr<Self> {
         let operands = attrs.into_iter().collect::<Vec<_>>();
 
         ffi::ReturnOp_create(loc, &operands)
+    }
+}
+
+impl ffi::CallOp {
+    #[must_use]
+    pub unsafe fn new(
+        loc: *const c_void,
+        // values
+        operands: impl IntoIterator<Item = *const c_void>,
+        // types
+        results: impl IntoIterator<Item = *const c_void>,
+    ) -> UniquePtr<Self> {
+        let operands = operands.into_iter().collect::<Vec<_>>();
+        let results = results.into_iter().collect::<Vec<_>>();
+
+        ffi::CallOp_create(loc, &operands, &results)
     }
 }
 

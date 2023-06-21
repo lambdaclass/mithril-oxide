@@ -1,9 +1,4 @@
-pub use self::ffi::{
-    CallSiteLoc, FileLineColLoc, FusedLoc, Location, NameLoc, OpaqueLoc, UnknownLoc,
-};
-use crate::IR::MLIRContext::MLIRContext;
-use cxx::UniquePtr;
-use std::{fmt, pin::Pin};
+pub use self::ffi::{CallSiteLoc_get, FileLineColLoc_get, UnknownLoc_get};
 
 #[cxx::bridge]
 pub(crate) mod ffi {
@@ -11,48 +6,33 @@ pub(crate) mod ffi {
     unsafe extern "C++" {
         include!("mithril-oxide-sys/cpp/IR/Location.hpp");
 
-        type CallSiteLoc;
-        type FileLineColLoc;
-        type FusedLoc;
-        type Location;
         type MLIRContext = crate::IR::MLIRContext::MLIRContext;
-        type NameLoc;
-        type OpaqueLoc;
-        type UnknownLoc;
     }
 
     #[namespace = "mithril_oxide_sys"]
     unsafe extern "C++" {
         include!("mithril-oxide-sys/cpp/IR/Location.hpp");
 
+        type c_void = crate::c_void;
+
         #[must_use]
-        fn UnknownLoc_get(context: Pin<&mut MLIRContext>) -> UniquePtr<UnknownLoc>;
+        pub unsafe fn UnknownLoc_get(ctx: Pin<&mut MLIRContext>) -> *const c_void;
+
+        // filename - stringattr
         #[must_use]
-        fn UnknownLoc_to_Location(loc: &UnknownLoc) -> UniquePtr<Location>;
-    }
-}
+        pub unsafe fn FileLineColLoc_get(
+            filename: *const c_void,
+            line: u32,
+            column: u32,
+        ) -> *const c_void;
 
-impl fmt::Debug for ffi::Location {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.debug_struct("Location").finish_non_exhaustive()
-    }
-}
-
-impl ffi::UnknownLoc {
-    #[must_use]
-    pub fn get(context: Pin<&mut MLIRContext>) -> UniquePtr<Self> {
-        ffi::UnknownLoc_get(context)
-    }
-}
-
-impl fmt::Debug for ffi::UnknownLoc {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.debug_struct("UnknownLoc").finish_non_exhaustive()
-    }
-}
-
-impl From<&ffi::UnknownLoc> for UniquePtr<ffi::Location> {
-    fn from(val: &ffi::UnknownLoc) -> Self {
-        ffi::UnknownLoc_to_Location(val)
+        // callee - location
+        // caller - location
+        #[must_use]
+        #[allow(clippy::similar_names)]
+        pub unsafe fn CallSiteLoc_get(
+            callee_ptr: *const c_void,
+            caller_ptr: *const c_void,
+        ) -> *const c_void;
     }
 }

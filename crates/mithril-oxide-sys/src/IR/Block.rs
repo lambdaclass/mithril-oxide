@@ -1,5 +1,5 @@
-use self::ffi::{c_void, Block_addArgument, Block_getArgument, Location};
-pub use self::ffi::{Block, BlockArgument};
+pub use self::ffi::Block;
+use self::ffi::{c_void, Block_addArgument, Block_getArgument, Block_print};
 use std::fmt;
 use std::pin::Pin;
 
@@ -10,11 +10,9 @@ pub(crate) mod ffi {
         include!("mithril-oxide-sys/cpp/IR/Block.hpp");
 
         type Block;
-        type BlockArgument;
 
         type Region = crate::IR::Region::Region;
         type Operation = crate::IR::Operation::Operation;
-        type Location = crate::IR::Location::Location;
 
         #[must_use]
         pub fn getParent(self: &Block) -> *mut Region;
@@ -35,34 +33,40 @@ pub(crate) mod ffi {
 
         type c_void = crate::c_void;
 
-        unsafe fn Block_addArgument(block: Pin<&mut Block>, ttype: *const c_void, loc: &Location);
+        unsafe fn Block_addArgument(
+            block: Pin<&mut Block>,
+            ttype: *const c_void,
+            loc: *const c_void,
+        );
         #[must_use]
         fn Block_getArgument(block: Pin<&mut Block>, i: u32) -> *mut c_void;
+
+        #[must_use]
+        fn Block_print(op: Pin<&mut Block>) -> String;
     }
 }
 
 impl ffi::Block {
     // type is a Type.
-    pub unsafe fn add_argument(self: Pin<&mut Self>, r#type: *const c_void, loc: &Location) {
+    pub unsafe fn addArgument(self: Pin<&mut Self>, r#type: *const c_void, loc: *const c_void) {
         Block_addArgument(self, r#type, loc);
     }
 
     #[must_use]
     /// returns a pointer to a `BlockArgument` / `Value`
-    pub fn get_argument(self: Pin<&mut Self>, i: u32) -> *mut c_void {
+    pub fn getArgument(self: Pin<&mut Self>, i: u32) -> *mut c_void {
         Block_getArgument(self, i)
+    }
+
+    #[must_use]
+    pub fn print(self: Pin<&mut Self>) -> String {
+        Block_print(self)
     }
 }
 
 impl fmt::Debug for ffi::Block {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.debug_struct("Block").finish_non_exhaustive()
-    }
-}
-
-impl fmt::Debug for ffi::BlockArgument {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.debug_struct("BlockArgument").finish_non_exhaustive()
     }
 }
 

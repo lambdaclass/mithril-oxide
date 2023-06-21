@@ -1,5 +1,4 @@
 pub use self::ffi::ModuleOp;
-use crate::IR::Location::Location;
 use cxx::UniquePtr;
 use std::{fmt, pin::Pin};
 
@@ -11,7 +10,6 @@ pub(crate) mod ffi {
     unsafe extern "C++" {
         include!("mithril-oxide-sys/cpp/IR/BuiltinOps.hpp");
 
-        type Location = crate::IR::Location::Location;
         type ModuleOp;
         type Region = crate::IR::Region::Region;
         type Operation = crate::IR::Operation::Operation;
@@ -28,7 +26,7 @@ pub(crate) mod ffi {
 
         type c_void = crate::c_void;
 
-        fn ModuleOp_create(context: &Location) -> UniquePtr<ModuleOp>;
+        unsafe fn ModuleOp_create(loc: *const c_void) -> UniquePtr<ModuleOp>;
         unsafe fn ModuleOp_setSymNameAttr(op: Pin<&mut ModuleOp>, value: *const c_void);
         unsafe fn ModuleOp_setSymVisibilityAttr(op: Pin<&mut ModuleOp>, value: *const c_void);
     }
@@ -36,8 +34,8 @@ pub(crate) mod ffi {
 
 impl ffi::ModuleOp {
     #[must_use]
-    pub fn new(context: &Location) -> UniquePtr<Self> {
-        ffi::ModuleOp_create(context)
+    pub unsafe fn new(loc: *const c_void) -> UniquePtr<Self> {
+        ffi::ModuleOp_create(loc)
     }
 
     /// value - `StringAttr`
@@ -54,5 +52,24 @@ impl ffi::ModuleOp {
 impl fmt::Debug for ffi::ModuleOp {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.debug_struct("ModuleOp").finish_non_exhaustive()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::IR::{Location::UnknownLoc_get, MLIRContext::MLIRContext};
+
+    use super::*;
+
+    #[test]
+    fn moduleop_new() {
+        let mut context = MLIRContext::new();
+
+        unsafe {
+            let loc = UnknownLoc_get(context.pin_mut());
+            assert!(!loc.is_null());
+            let module_op = ModuleOp::new(loc);
+            assert!(!module_op.is_null());
+        }
     }
 }

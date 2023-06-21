@@ -7,7 +7,7 @@ use std::marker::PhantomData;
 
 /// A generic location.
 pub struct Location<'c> {
-    pub(crate) inner: ffi::UniquePtr<ffi::IR::Location::Location>,
+    pub(crate) ptr: *const std::ffi::c_void,
     phantom: PhantomData<&'c Context>,
 }
 
@@ -44,7 +44,7 @@ impl<'c> From<OpaqueLoc<'c>> for Location<'c> {
 impl<'c> From<UnknownLoc<'c>> for Location<'c> {
     fn from(value: UnknownLoc<'c>) -> Self {
         Self {
-            inner: (&*value.inner).into(),
+            ptr: value.ptr,
             phantom: PhantomData,
         }
     }

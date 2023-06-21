@@ -9,9 +9,9 @@
 
 namespace mithril_oxide_sys {
 
-std::unique_ptr<ModuleOp> ModuleOp_create(const Location &loc)
+std::unique_ptr<ModuleOp> ModuleOp_create(const void * loc)
 {
-    return std::make_unique<ModuleOp>(ModuleOp::create(loc));
+    return std::make_unique<ModuleOp>(ModuleOp::create(Location::getFromOpaquePointer(loc)));
 }
 
 void ModuleOp_setSymNameAttr(ModuleOp &op, const void* value)

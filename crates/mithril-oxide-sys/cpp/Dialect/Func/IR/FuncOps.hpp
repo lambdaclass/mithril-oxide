@@ -27,7 +27,7 @@ using mlir::Type;
 
 
 std::unique_ptr<FuncOp> FuncOp_create(
-    const Location &loc,
+    const void* loc,
     rust::Str name,
     // FunctionType
     const void *function_type,
@@ -37,12 +37,12 @@ std::unique_ptr<FuncOp> FuncOp_create(
 );
 
 std::unique_ptr<ReturnOp> ReturnOp_create(
-    const Location &loc,
+    const void* loc,
     rust::Slice<const void *const > operands
 );
 
 std::unique_ptr<CallOp> CallOp_create(
-    const Location &loc,
+    const void* loc,
     rust::Slice<const void *const > results,
     rust::Slice<const void *const > operands
 );

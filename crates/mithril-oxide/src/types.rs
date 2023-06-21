@@ -51,7 +51,7 @@ pub(self) use impl_type_new;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct Type<'c> {
-    ptr: *mut std::ffi::c_void,
+    pub(crate) ptr: *mut std::ffi::c_void,
     phantom: std::marker::PhantomData<&'c Context>,
 }
 
